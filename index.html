@@ -1,0 +1,202 @@
+<!doctype html>
+<html lang="sv">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<title>Björn</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<canvas id="view"></canvas>
+
+<!-- In-game HUD -->
+<div id="hud" class="hidden">
+  <div class="hud-left">
+    <div class="hud-time" id="hudTime">00:00,00</div>
+    <div class="hud-sub"><span id="replayBadge" class="badge hidden">REPRIS</span><span id="hudLevel"></span></div>
+  </div>
+  <div class="hud-right">
+    <div class="hud-hives"><span class="hive-dot"></span><span id="hudHives">0</span></div>
+    <div class="hud-sub" id="hudBest"></div>
+    <div class="hud-sub" id="hudGhost"></div>
+  </div>
+</div>
+
+<div id="startHint" class="hint hidden">
+  <kbd>↑</kbd> gas &nbsp;·&nbsp; <kbd>↓</kbd> broms &nbsp;·&nbsp;
+  <kbd>←</kbd><kbd>→</kbd> volt &nbsp;·&nbsp; <kbd>Space</kbd> vänd
+</div>
+
+<div id="toast" class="hidden"></div>
+
+<!-- Touch controls. Hidden unless the device has a coarse pointer. -->
+<div id="touchTop" class="hidden">
+  <button class="tbtn small" data-action="pause" aria-label="Paus">❚❚</button>
+  <button class="tbtn small" data-action="restart" aria-label="Börja om">⟳</button>
+</div>
+<div id="touch" class="hidden">
+  <div class="touch-cluster left">
+    <button class="tbtn" data-code="ArrowLeft" aria-label="Volt vänster">↺</button>
+    <button class="tbtn" data-code="ArrowRight" aria-label="Volt höger">↻</button>
+  </div>
+  <div class="touch-cluster mid">
+    <button class="tbtn wide" data-code="Space" aria-label="Vänd">VÄND</button>
+  </div>
+  <div class="touch-cluster right">
+    <button class="tbtn" data-code="ArrowDown" aria-label="Broms">▼</button>
+    <button class="tbtn big" data-code="ArrowUp" aria-label="Gas">▲</button>
+  </div>
+</div>
+<div id="rotateHint">Vrid telefonen på längden för mer utrymme</div>
+
+<!-- Main menu -->
+<div id="menu" class="overlay">
+  <div class="panel">
+    <header class="brand">
+      <div class="brand-mark" aria-hidden="true">
+        <svg viewBox="0 0 48 48" width="52" height="52">
+          <circle cx="14" cy="13" r="6" fill="#6b4425"/>
+          <circle cx="34" cy="13" r="6" fill="#6b4425"/>
+          <circle cx="24" cy="24" r="15" fill="#8a5a33"/>
+          <ellipse cx="24" cy="30" rx="8" ry="6" fill="#d9b38c"/>
+          <ellipse cx="24" cy="26" rx="3" ry="2.2" fill="#2a1a0e"/>
+          <circle cx="18" cy="20" r="2.1" fill="#1b1109"/>
+          <circle cx="30" cy="20" r="2.1" fill="#1b1109"/>
+        </svg>
+      </div>
+      <div>
+        <h1>Björn</h1>
+        <p class="tagline">En björn. En motorcykel. Alldeles för mjuk fjädring.</p>
+      </div>
+    </header>
+
+    <div class="progress">
+      <div class="progress-bar"><span id="progressFill"></span></div>
+      <div class="progress-text" id="progressText">0 av 10 banor klarade</div>
+    </div>
+
+    <nav class="tabs">
+      <button class="tab active" data-tab="levels">Banor</button>
+      <button class="tab" data-tab="custom">Egna banor</button>
+      <button class="tab" data-tab="help">Så spelar du</button>
+      <button class="tab" data-tab="about">Om fysiken</button>
+    </nav>
+
+    <section class="tabpane" data-pane="levels">
+      <ul id="levelList" class="level-list"></ul>
+    </section>
+
+    <section class="tabpane hidden" data-pane="custom">
+      <ul id="customList" class="level-list"></ul>
+      <p class="fine" id="customEmpty">Du har inga egna banor än. Öppna baneditorn och rita en.</p>
+      <div class="row">
+        <button id="btnEditor">Öppna baneditorn</button>
+        <button id="btnImport" class="secondary">Importera fil…</button>
+        <input type="file" id="fileInput" accept=".json" hidden>
+      </div>
+    </section>
+
+    <section class="tabpane hidden" data-pane="help">
+      <p><strong>Målet:</strong> plocka alla bikupor och kör sedan in i honungskrukan.</p>
+      <p><strong>Du dör</strong> om björnens huvud nuddar marken eller en vägg, eller om huvudet
+         eller ett hjul rör en getingsvärm. Kroppen får gå rakt igenom väggar — det är meningen.</p>
+      <table class="keys">
+        <tr><td><kbd>↑</kbd></td><td>Gas. Håll in för länge och du slår runt bakåt.</td></tr>
+        <tr><td><kbd>↓</kbd></td><td>Broms. Låser båda hjulen, oavsett körriktning.</td></tr>
+        <tr><td><kbd>←</kbd> <kbd>→</kbd></td><td>Volt — roterar cykeln. Alltid samma håll,
+            även när du vänt. Båda samtidigt = supervolt.</td></tr>
+        <tr><td><kbd>Space</kbd></td><td>Vänd cykeln</td></tr>
+        <tr><td><kbd>Enter</kbd> / <kbd>R</kbd></td><td>Börja om</td></tr>
+        <tr><td><kbd>P</kbd></td><td>Paus</td></tr>
+        <tr><td><kbd>G</kbd></td><td>Visa/dölj ghost (ditt bästa lopp)</td></tr>
+        <tr><td><kbd>M</kbd></td><td>Ljud av/på</td></tr>
+        <tr><td><kbd>Esc</kbd></td><td>Tillbaka till menyn</td></tr>
+      </table>
+      <p class="fine">Tiden mäts i hundradelar. Banan är inte klar förrän alla kupor är tagna —
+         krukan gör ingenting innan dess.</p>
+      <p class="fine">Ditt bästa lopp spelas in och visas som en genomskinlig ghost nästa gång du
+         kör banan. Klicka på ▶ i banlistan för att se reprisen.</p>
+      <p class="fine">På mobil och surfplatta dyker knappar upp på skärmen. Ligg på längden.</p>
+    </section>
+
+    <section class="tabpane hidden" data-pane="about">
+      <p>Fysiken är portad rad för rad från Elasto Manias egen källkod: fjäderstyvhet
+         10000&nbsp;N/m, dämpning 1000, gravitation 10&nbsp;m/s², hjulmassa 10&nbsp;kg mot
+         ramens 200, huvudradie 0,238&nbsp;m.</p>
+      <p>Hjulen kolliderar mot upp till två ankarpunkter åt gången. Med en punkt
+         <em>rullar</em> hjulet runt punkten enligt parallellaxelteoremet; med två låser det
+         sig helt. Det är därför man kan fastna i hörn.</p>
+      <p>Volten ger 12&nbsp;rad/s gratis som tas tillbaka en tiondel senare — men bara ner till
+         farten du hade innan. Hinner du växla rotationen till fart får du behålla den.
+         Den buggen är kvar med flit; hela rekordjakten bygger på den.</p>
+      <p class="fine">Banorna är egna. Varje bana testas automatiskt av en skriptad förare
+         innan den släpps in i spelet, så alla tio går bevisligen att klara.</p>
+    </section>
+
+    <footer class="menu-footer">
+      <span id="demoLabel">Demo</span>
+      <div class="options">
+        <label class="toggle"><input type="checkbox" id="optGhost" checked> Ghost</label>
+        <label class="toggle"><input type="checkbox" id="optSound"> Ljud</label>
+        <button id="btnReset" class="link">Nollställ rekord</button>
+      </div>
+    </footer>
+  </div>
+</div>
+
+<!-- Pause -->
+<div id="pause" class="overlay hidden">
+  <div class="panel narrow">
+    <h2>Paus</h2>
+    <div class="row">
+      <button id="btnResume">Fortsätt</button>
+      <button id="btnPauseRestart" class="secondary">Börja om</button>
+      <button id="btnPauseMenu" class="secondary">Meny</button>
+    </div>
+  </div>
+</div>
+
+<!-- Result -->
+<div id="dialog" class="overlay hidden">
+  <div class="panel narrow">
+    <h2 id="dialogTitle"></h2>
+    <p id="dialogText"></p>
+    <div class="row" id="dialogButtons"></div>
+  </div>
+</div>
+
+<!-- Editor chrome -->
+<div id="editorBar" class="hidden">
+  <div class="group">
+    <input type="text" id="edName" placeholder="Banans namn">
+  </div>
+  <div class="group tools">
+    <button data-tool="poly" class="active">Polygon</button>
+    <button data-tool="edit">Redigera</button>
+    <button data-tool="start">Start</button>
+    <button data-tool="apple">Bikupa</button>
+    <button data-tool="killer">Getingar</button>
+    <button data-tool="exit">Honung</button>
+  </div>
+  <div class="group">
+    <label><input type="checkbox" id="edGrass"> Gräs</label>
+    <label><input type="checkbox" id="edSnap" checked> Rutnät</label>
+  </div>
+  <div class="group">
+    <button id="edTest">Testa ▶</button>
+    <button id="edSave">Spara</button>
+    <button id="edExport">Exportera</button>
+    <button id="edNew" class="secondary">Ny</button>
+    <button id="edExit" class="secondary">Stäng</button>
+  </div>
+</div>
+<div id="editorHint" class="hidden">
+  Klicka för att sätta hörn · <kbd>Enter</kbd> stäng polygon · <kbd>Esc</kbd> avbryt ·
+  <kbd>Shift</kbd>+dra panorera · scroll zoom · <kbd>Delete</kbd> ta bort ·
+  <kbd>Alt</kbd>+klick på bikupa = gravitation · <kbd>1</kbd>–<kbd>6</kbd> verktyg
+</div>
+
+<script type="module" src="js/main.js"></script>
+</body>
+</html>

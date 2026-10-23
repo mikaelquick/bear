@@ -1,0 +1,11 @@
+{
+  "name": "bjorn",
+  "version": "0.1.0",
+  "description": "Elasto Mania-klon med bj\u00f6rn och bikupor. Fysiken \u00e4r portad fr\u00e5n elma-classic.",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "start": "python3 tools/dev-server.py 8080",
+    "test": "node test/physics.test.js && node test/replay.test.js && node test/levels.test.js"
+  }
+}
