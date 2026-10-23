@@ -14,8 +14,32 @@ npm start            # http://localhost:8080
 npm test
 ```
 
-Ingen byggkedja och inga beroenden — rena ES-moduler och Canvas 2D. Dev-servern skickar
-`no-store`, annars serverar webbläsaren gamla moduler efter att du ändrat en fil.
+Ingen byggkedja och inga beroenden — rena ES-moduler och Canvas 2D.
+
+Dev-servern skickar `no-store`. Det är inte kosmetiskt: med vanliga `http.server` cachar
+webbläsaren ES-modulerna, och en ändrad fil syns inte förrän du hårdladdar. Två riktiga
+buggar hann gömma sig bakom det under bygget.
+
+Spelet lägger upp `window.bjorn` i konsolen för felsökning och automatiserade kontroller:
+
+```js
+bjorn.startLevel(0)      // starta bana (index i menylistan)
+bjorn.startReplay(0)     // spela upp rekordet
+bjorn.showMenu()
+bjorn.openEditor()
+bjorn.game               // tillstånd: .state .motor .ghost .recorder .level
+bjorn.renderer           // .sx(x)/.sy(y) världskoordinat → skärm
+bjorn.settings           // { ghost, sound }
+```
+
+Hela klarbarhetssökningen går att köra i webbläsaren mot den skarpa koden:
+
+```js
+const { Level } = await import('/js/level.js');
+const { LEVELS } = await import('/js/levels.js');
+const { solve } = await import('/test/autopilot.js');
+LEVELS.map(d => [d.name, solve(new Level(d), 1200).result]);
+```
 
 ## Så spelar du
 
