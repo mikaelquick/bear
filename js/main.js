@@ -72,7 +72,7 @@ let replay = null;
 let toastTimer = null;
 const settings = loadSettings();
 
-// `spela/` redirects here with ?web. It is the bookmarkable way in for
+// `play/` redirects here with ?web. It is the bookmarkable way in for
 // someone who only ever wants the browser, so arriving that way answers the
 // question rather than raising it. An existing choice is left alone.
 if (new URLSearchParams(location.search).has('web')) {

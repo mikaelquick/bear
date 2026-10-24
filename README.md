@@ -114,7 +114,7 @@ Safari på iPhone inte har något API alls och bara kan beskrivas i ord. Modulen
 på två frågor — går det att fråga rakt av, och om inte, vad ska spelaren få läsa.
 Instruktionerna finns som fyra färdiga listor i `index.html`, en per plattform.
 
-**`spela/`** är webbens egen adress: <https://mikaelquick.github.io/bear/spela/>.
+**`play/`** är webbens egen adress: <https://mikaelquick.github.io/bear/play/>.
 Sidan är bara en vidarebefordran till `../?web`, och `?web` får spelet att hoppa över
 frågan. Den som aldrig tänker installera något kan bokmärka och dela den länken i
 stället för roten.
@@ -189,7 +189,7 @@ tools/dev-server.py      statisk server utan cachning
 tools/mobile-preview.html  spelet i en telefonstor iframe
 tools/make-icons.py        genererar app-ikonerna utan bildbibliotek
 manifest.webmanifest       Lägg till på hemskärmen
-spela/index.html           webbens egen adress, vidarebefordrar till ../?web
+play/index.html            webbens egen adress, vidarebefordrar till ../?web
 icons/                     genererade app-ikoner
 js/
   constants.js   fysikkonstanter, portade oförändrade
