@@ -1,5 +1,7 @@
 # Björn
 
+**▶ Spela: https://mikaelquick.github.io/bear/**
+
 En webbklon av **Elasto Mania** (Balázs Rózsa, 2000) där kuskin är en björn och äpplena
 är bikupor. Fysiken är portad rad för rad från originalets publicerade källkod, så den
 elastiska fjädringen, hörnlåsningarna och volt-exploiten beter sig som i originalet.
@@ -13,6 +15,10 @@ elastiska fjädringen, hörnlåsningarna och volt-exploiten beter sig som i orig
 npm start            # http://localhost:8080
 npm test
 ```
+
+Spelet ligger publicerat på GitHub Pages från `main` i roten — varje push
+driftsätts automatiskt. Pages cachar med `max-age=600`, så en ändring kan ta upp till
+tio minuter innan återvändande besökare ser den.
 
 Ingen byggkedja och inga beroenden — rena ES-moduler och Canvas 2D.
 
