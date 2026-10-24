@@ -1029,8 +1029,10 @@ body.touch #touchTop:not(.hidden) { display: flex; }
    the panel with resume, restart and back-to-menu. */
 #touchTop {
   position: fixed;
-  top: max(10px, var(--sa-top));
-  right: max(10px, var(--sa-right));
+  /* Right into the corner. The safe area still wins where there is one —
+     this only decides how close it sits when there is nothing in the way. */
+  top: max(5px, var(--sa-top));
+  right: max(5px, var(--sa-right));
   gap: 8px;
   z-index: 4;
 }
