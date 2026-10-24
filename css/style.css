@@ -162,6 +162,16 @@ html, body {
   .welcome h2 { font-size: 21px; }
   .welcome .tagline { display: none; }
   .welcome .fine { margin-top: 12px; }
+
+  /* The install sheet has the same problem and the same answer: the steps
+     are the point, the spacing around them is not. */
+  #install .panel { padding: 18px 22px; }
+  #install h2 { font-size: 20px; margin-bottom: 10px; }
+  /* The steps and what to do afterwards are the sheet. The sales pitch above
+     them is not, so on a short screen it is what goes. */
+  #install .intro { display: none; }
+  .steps { margin: 0 0 14px; line-height: 1.55; }
+  .next-step { margin-bottom: 15px; }
 }
 
 /* ---------- Install instructions ---------- */
@@ -175,9 +185,20 @@ html, body {
 }
 .steps li { margin-bottom: 6px; }
 
+/* The question the sheet used to leave unanswered: and then what? */
+.next-step {
+  text-align: left;
+  border-left: 2px solid var(--accent);
+  padding-left: 12px;
+  margin: 0 0 20px;
+}
+
 /* Stands in for a button or an icon the player is about to look for. */
 .steps .ico {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  vertical-align: -3px;
   min-width: 21px;
   text-align: center;
   background: var(--panel-2);
@@ -216,6 +237,23 @@ html, body {
 .panel.narrow { width: min(430px, 94vw); text-align: center; padding-bottom: 26px; }
 
 .brand { display: flex; align-items: center; gap: 16px; margin-bottom: 18px; }
+
+/* The one place it is certain to be seen. In the footer it sat below twenty
+   levels' worth of scrolling, which on a phone is the same as not being
+   there at all. */
+.install-pill {
+  margin-left: auto;
+  flex: none;
+  background: var(--panel-2);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 8px 14px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.install-pill:hover { background: #2b3448; }
 .brand-mark {
   flex: none;
   width: 62px; height: 62px;
@@ -592,10 +630,11 @@ body.touch #hud .hud-right { padding-right: 96px; }
 
 .touch-cluster { display: flex; gap: 10px; align-items: flex-end; pointer-events: auto; }
 
-/* Turn sits above the volts: the thumb rests low and stretches up, so the
-   top of the stack is the easiest reach after the bottom row. */
-.touch-cluster.left { flex-direction: column; align-items: center; gap: 9px; }
-.volt-row { display: flex; gap: 10px; }
+/* Vänd sits above the pedals, on the thumb that is already over there, and
+   spans them both: the thumb rests low and stretches up, so the top of the
+   stack is the easiest reach after the bottom row. */
+.touch-cluster.right { flex-direction: column; align-items: center; gap: 9px; }
+.volt-row, .pedal-row { display: flex; gap: 10px; align-items: flex-end; }
 
 .tbtn {
   background: rgba(28, 35, 50, 0.52);
@@ -648,17 +687,21 @@ body.touch #hud .hud-right { padding-right: 96px; }
   stroke-linejoin: round;
 }
 
-/* Wide pill spanning the volt pair, so it is a big target even though it is
-   the furthest button from a resting thumb. */
+/* Spans both pedals, so it stays a big target despite being the furthest
+   button from a resting thumb. Shaped and tinted like the pedals rather
+   than like a pill — same soft rectangle, same gradient, same caption —
+   so the three read as one stack. */
 .tbtn.turn {
   width: 100%;
-  height: 42px;
-  border-radius: 21px;
+  height: 40px;
+  border-radius: 18px / 14px;
   flex-direction: row;
-  gap: 7px;
+  gap: 8px;
+  border-color: rgba(143, 155, 179, 0.45);
+  background: linear-gradient(180deg, rgba(143, 155, 179, 0.17), rgba(28, 35, 50, 0.55));
 }
 .tbtn.turn .glyph { font-size: 17px; }
-.tbtn.turn .cap { font-size: 10px; opacity: 0.85; }
+.tbtn.turn .cap { font-size: 10px; opacity: 0.85; font-weight: 700; }
 
 .tbtn.small {
   width: 40px; height: 40px; border-radius: 50%;

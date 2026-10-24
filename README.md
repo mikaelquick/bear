@@ -69,8 +69,8 @@ igenom väggar — det är så originalet fungerar och det är det banorna är b
 Tiden mäts i hundradelar och sparas per bana i `localStorage`.
 
 **Mobil och surfplatta:** knappar dyker upp på skärmen när enheten har pekskärm.
-Volt och vänd till vänster, broms och gas som pedaler till höger, kugghjul uppe i
-hörnet för paus och meny. När du dött räcker ett tryck var som helst för att köra om.
+Volt till vänster; vänd, broms och gas som en stapel till höger, med vänd tvärs över
+de två pedalerna. Kugghjul uppe i hörnet för paus och meny. När du dött räcker ett tryck var som helst för att köra om.
 
 Spelet kräver landskapsläge — i porträtt pausas det och en spärr ber dig vrida
 telefonen. Kameran zoomar efter skärmen så en telefon ser ungefär lika mycket bana som
@@ -104,7 +104,9 @@ För iPhone är rätt väg **Lägg till på hemskärmen**: `manifest.webmanifest
 Första gången spelet öppnas på en pekskärm får man därför välja själv, i en ruta
 framför menyn: *Lägg till på hemskärmen* eller *Spela i webbläsaren*. Valet sparas i
 `settings.launch` och frågan kommer aldrig igen. Den som valde webben hittar knappen
-igen längst ner i menyn. På dator visas ingenting av detta — där gör fullskärmsknappen
+igen uppe i menyhuvudet, bredvid titeln — i foten låg den under tjugo banors scrollning,
+vilket på en telefon är detsamma som att inte finnas. På dator visas ingenting av
+detta — där gör fullskärmsknappen
 redan samma nytta.
 
 `js/homescreen.js` håller ihop installationen och laddas dynamiskt bakom en

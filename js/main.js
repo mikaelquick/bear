@@ -502,6 +502,18 @@ function openInstall() {
 const installOpen = () => !$('install').classList.contains('hidden');
 const welcomeOpen = () => !$('welcome').classList.contains('hidden');
 
+// Launched from the home screen: the route worked. Nothing else in the game
+// ever says so, and after following a list of steps in another app entirely
+// the player deserves to be told the thing they did took.
+function confirmStandalone() {
+  if (!fullscreen.isStandalone()) return;
+  const first = !settings.standaloneSeen;
+  settings.standaloneSeen = true;
+  settings.launch = 'app';
+  saveSettings();
+  if (first) toast('Björn körs som app nu. Adressfältet är borta.', 4500);
+}
+
 // Nothing to offer once the game is already an app, or on a desktop.
 function syncInstallUi() {
   const offer = document.body.classList.contains('touch') && !fullscreen.isStandalone();
@@ -746,7 +758,7 @@ $('installNow').addEventListener('click', async () => {
   const accepted = await homescreen.prompt();
   hideAll('install');
   syncInstallUi();
-  if (!accepted) toast('Ingen fara — knappen finns kvar längst ner i menyn.', 3500);
+  if (!accepted) toast('Ingen fara — knappen finns kvar uppe i menyn.', 3500);
 });
 $('fsYes').addEventListener('click', () => answerFullscreen(true));
 $('fsNo').addEventListener('click', () => answerFullscreen(false));
@@ -931,5 +943,6 @@ renderer.fitScale();
 applySettings();
 syncInstallUi();
 showMenu();
+confirmStandalone();
 maybeShowWelcome();
 requestAnimationFrame(frame);

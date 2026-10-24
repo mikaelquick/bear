@@ -82,12 +82,8 @@
   </button>
 </div>
 <div id="touch" class="hidden">
-  <!-- Left thumb: rotate the bike in the air, and flip which way it faces.
-       Both live on this side because the right thumb is busy on the pedals. -->
+  <!-- Left thumb: the volts, and nothing else to compete with them. -->
   <div class="touch-cluster left">
-    <button class="tbtn turn" data-code="Space" aria-label="Vänd cykeln">
-      <span class="glyph">⇄</span><span class="cap">vänd</span>
-    </button>
     <div class="volt-row">
       <button class="tbtn volt" data-code="ArrowLeft" aria-label="Volt bakåt">
         <svg class="arrow" viewBox="0 0 24 24" width="27" height="27" aria-hidden="true">
@@ -101,14 +97,20 @@
       </button>
     </div>
   </div>
-  <!-- Right thumb: brake inboard, throttle outboard where it is easiest to hold. -->
+  <!-- Right thumb: vänd across the top, then brake inboard and throttle
+       outboard where it is easiest to hold. -->
   <div class="touch-cluster right">
-    <button class="tbtn pedal brake" data-code="ArrowDown" aria-label="Broms">
-      <span class="cap">broms</span>
+    <button class="tbtn turn" data-code="Space" aria-label="Vänd cykeln">
+      <span class="glyph">⇄</span><span class="cap">vänd</span>
     </button>
-    <button class="tbtn pedal gas" data-code="ArrowUp" aria-label="Gas">
-      <span class="cap">gas</span>
-    </button>
+    <div class="pedal-row">
+      <button class="tbtn pedal brake" data-code="ArrowDown" aria-label="Broms">
+        <span class="cap">broms</span>
+      </button>
+      <button class="tbtn pedal gas" data-code="ArrowUp" aria-label="Gas">
+        <span class="cap">gas</span>
+      </button>
+    </div>
   </div>
 </div>
 <div id="rotateGate">
@@ -130,6 +132,9 @@
         <h1>Björn</h1>
         <p class="tagline">En björn. En motorcykel. Alldeles för mjuk fjädring.</p>
       </div>
+      <button id="btnInstall" class="install-pill hidden">
+        <span aria-hidden="true">⬇</span> Ladda ner appen
+      </button>
     </header>
 
     <div class="progress">
@@ -181,9 +186,9 @@
          kör banan. Klicka på ▶ i banlistan för att se reprisen.</p>
       <p class="fine"><strong>På iPhone</strong> finns ingen fullskärmsknapp — Safari
          tillåter det inte. Lägg i stället Björn på hemskärmen, så startar spelet utan
-         adressfält. <em>Ladda ner appen</em> längst ner visar hur.</p>
+         adressfält. <em>Ladda ner appen</em> uppe i menyn visar hur.</p>
       <p class="fine"><strong>På mobil:</strong> knappar dyker upp på skärmen —
-         volt och vänd till vänster, broms och gas till höger. Kugghjulet uppe i hörnet
+         volt till vänster, vänd ovanför broms och gas till höger. Kugghjulet uppe i hörnet
          pausar och öppnar menyn. När du dött räcker det att trycka var som helst för att
          köra om. Spelet kräver landskapsläge.</p>
     </section>
@@ -209,7 +214,6 @@
         <label class="toggle"><input type="checkbox" id="optSound"> Ljud</label>
         <label class="toggle" id="optFullscreenWrap">
           <input type="checkbox" id="optFullscreen"> Fullskärm</label>
-        <button id="btnInstall" class="link hidden">⬇ Ladda ner appen</button>
         <button id="btnReset" class="link">Nollställ rekord</button>
       </div>
     </footer>
@@ -266,7 +270,7 @@
         </span>
       </button>
     </div>
-    <p class="fine">Du kan byta när som helst — knappen finns kvar längst ner i menyn.</p>
+    <p class="fine">Du kan byta när som helst — knappen finns kvar uppe i menyn.</p>
   </div>
 </div>
 
@@ -275,11 +279,16 @@
 <div id="install" class="overlay hidden">
   <div class="panel narrow">
     <h2>Lägg Björn på hemskärmen</h2>
-    <p class="fine">Spelet får en egen ikon och startar utan adressfält, i landskapsläge.
-       Ingen butik, inget konto — det är samma sida, bara utan webbläsaren runt omkring.</p>
+    <p class="fine intro">Egen ikon, inget adressfält. Ingen butik, inget konto — samma
+       sida, bara utan webbläsaren runt omkring.</p>
 
     <ol class="steps hidden" data-steps="ios-safari">
-      <li>Tryck på <strong>Dela</strong> <span class="ico">⬆</span> i Safaris nedre kant.</li>
+      <li>Tryck på <strong>Dela</strong> <span class="ico"><svg viewBox="0 0 24 24" width="12" height="15" aria-hidden="true">
+            <path d="M12 3.4v10.4M8.6 6.6 12 3.2l3.4 3.4" fill="none" stroke="currentColor"
+                  stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M7.6 10.4H6.2a1.6 1.6 0 0 0-1.6 1.6v7.2a1.6 1.6 0 0 0 1.6 1.6h11.6a1.6 1.6 0 0 0 1.6-1.6V12a1.6 1.6 0 0 0-1.6-1.6h-1.4"
+                  fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg></span> i Safaris nedre kant.</li>
       <li>Bläddra ner i listan och välj <strong>Lägg till på hemskärmen</strong>.</li>
       <li>Tryck <strong>Lägg till</strong>. Björn hamnar bland dina appar.</li>
     </ol>
@@ -287,7 +296,12 @@
     <ol class="steps hidden" data-steps="ios-other">
       <li>Öppna den här sidan i <strong>Safari</strong> — på iPhone är det bara Safari som
           kan lägga till appar på hemskärmen.</li>
-      <li>Tryck på <strong>Dela</strong> <span class="ico">⬆</span> och välj
+      <li>Tryck på <strong>Dela</strong> <span class="ico"><svg viewBox="0 0 24 24" width="12" height="15" aria-hidden="true">
+            <path d="M12 3.4v10.4M8.6 6.6 12 3.2l3.4 3.4" fill="none" stroke="currentColor"
+                  stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M7.6 10.4H6.2a1.6 1.6 0 0 0-1.6 1.6v7.2a1.6 1.6 0 0 0 1.6 1.6h11.6a1.6 1.6 0 0 0 1.6-1.6V12a1.6 1.6 0 0 0-1.6-1.6h-1.4"
+                  fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg></span> och välj
           <strong>Lägg till på hemskärmen</strong>.</li>
     </ol>
 
@@ -301,6 +315,9 @@
       <li>Leta efter <strong>Installera</strong> eller <strong>Lägg till på hemskärmen</strong>
           i webbläsarens meny.</li>
     </ol>
+
+    <p class="fine next-step">Sedan: <strong>stäng den här fliken</strong> och starta Björn
+       från den nya ikonen. Det är där adressfältet försvinner och spelet får hela skärmen.</p>
 
     <div class="row">
       <button id="installNow" class="hidden">Installera nu</button>
