@@ -324,27 +324,56 @@ h2 { margin: 0 0 14px; font-size: 24px; }
 }
 .progress-text { margin-top: 7px; font-size: 12px; color: var(--muted); }
 
+/* Four big soft buttons rather than a strip of underlined words. They are
+   the first thing anyone has to aim at, and the emoji above each label is
+   there so a child who cannot read the words can still find the one they
+   want. The whole row stretches, so the targets are as wide as the panel
+   allows. */
 .tabs {
   display: flex;
-  gap: 2px;
-  margin-bottom: 14px;
-  border-bottom: 1px solid var(--border);
+  gap: 8px;
+  margin-bottom: 16px;
 }
 
 .tab {
-  background: none;
-  border: none;
-  border-bottom: 2px solid transparent;
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 5px;
+  background: #1a2130;
+  border: 1.5px solid var(--border);
+  border-radius: 18px;
   color: var(--muted);
-  padding: 9px 13px;
-  font-size: 14px;
+  padding: 12px 8px 11px;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.25;
+  text-align: center;
   cursor: pointer;
-  border-radius: 0;
-  margin-bottom: -1px;
+  transition: background 0.12s, border-color 0.12s, transform 0.12s, color 0.12s;
 }
 
-.tab:hover { color: var(--text); background: none; }
-.tab.active { color: var(--text); border-bottom-color: var(--accent); }
+.tab-ico { font-size: 26px; line-height: 1; }
+
+.tab:hover {
+  color: var(--text);
+  background: #202940;
+  border-color: #46557a;
+  transform: translateY(-2px);
+}
+
+/* The open one is lit rather than underlined: at this size a one-pixel
+   line under a button is easy to miss. */
+.tab.active {
+  color: var(--text);
+  background: rgba(240, 168, 48, 0.15);
+  border-color: var(--accent);
+  box-shadow: 0 5px 16px rgba(240, 168, 48, 0.13);
+}
+.tab.active:hover { background: rgba(240, 168, 48, 0.19); border-color: var(--accent); }
 
 /* ---------- Worlds ---------- */
 
@@ -420,10 +449,22 @@ button.back {
   color: var(--text);
   border: 1px solid var(--border);
   border-radius: 999px;
-  padding: 6px 13px;
-  font-size: 12px;
+  padding: 9px 17px;
+  font-size: 14px;
+  font-weight: 600;
 }
 button.back:hover { background: #2b3448; }
+
+/* On a phone this is a thumb, not a cursor, so it gets a real target —
+   and it is the exception to the short-screen shrinking, because the way
+   back out is the one control you need to be able to hit without looking. */
+body.touch button.back {
+  padding: 12px 20px;
+  font-size: 16px;
+  min-height: 46px;
+}
+body.touch .biome-bar { gap: 13px; }
+body.touch .biome-title { font-size: 17px; }
 
 /* Cards, not rows. A picture of the cave tells you which level this is
    before you have read anything, which matters most to whoever cannot yet
@@ -713,8 +754,9 @@ body.short h1 { font-size: 24px; }
 body.short .tagline { display: none; }
 body.short .progress { margin-bottom: 10px; }
 body.short .progress-text { margin-top: 5px; }
-body.short .tabs { margin-bottom: 8px; }
-body.short .tab { padding: 6px 10px; font-size: 13px; }
+body.short .tabs { margin-bottom: 9px; gap: 6px; }
+body.short .tab { padding: 7px 6px 6px; font-size: 11.5px; border-radius: 14px; gap: 3px; }
+body.short .tab-ico { font-size: 19px; }
 body.short .level-list { grid-template-columns: repeat(auto-fill, minmax(132px, 1fr)); gap: 9px; }
 body.short .biome-list { grid-template-columns: repeat(auto-fit, minmax(158px, 1fr)); gap: 9px; }
 body.short .biome { padding: 12px 12px 11px; gap: 3px; }

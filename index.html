@@ -142,11 +142,21 @@
       <div class="progress-text" id="progressText">0 av 10 banor klarade</div>
     </div>
 
+    <!-- The emoji is not decoration: it is there so someone who cannot yet
+         read the labels can still tell which button they want. -->
     <nav class="tabs">
-      <button class="tab active" data-tab="levels">Banor</button>
-      <button class="tab" data-tab="custom">Egna banor</button>
-      <button class="tab" data-tab="help">Så spelar du</button>
-      <button class="tab" data-tab="about">Om fysiken</button>
+      <button class="tab active" data-tab="levels">
+        <span class="tab-ico" aria-hidden="true">🗺️</span>Banor
+      </button>
+      <button class="tab" data-tab="custom">
+        <span class="tab-ico" aria-hidden="true">✏️</span>Egna banor
+      </button>
+      <button class="tab" data-tab="help">
+        <span class="tab-ico" aria-hidden="true">🎮</span>Så spelar du
+      </button>
+      <button class="tab" data-tab="about">
+        <span class="tab-ico" aria-hidden="true">⚙️</span>Om fysiken
+      </button>
     </nav>
 
     <section class="tabpane" data-pane="levels">
