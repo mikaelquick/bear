@@ -739,8 +739,9 @@ body.sideways #touchTop {
   border-color: rgba(143, 155, 179, 0.45);
   background: linear-gradient(180deg, rgba(143, 155, 179, 0.17), rgba(28, 35, 50, 0.55));
 }
-.tbtn.turn .glyph { font-size: 17px; }
-.tbtn.turn .cap { font-size: 10px; opacity: 0.85; font-weight: 700; }
+/* The arrows say it on their own, the way the volts do. Nothing left in
+   the button for a long press to try to magnify, either. */
+.tbtn.turn .glyph { font-size: 21px; }
 
 .tbtn.small {
   width: 40px; height: 40px; border-radius: 50%;
@@ -887,7 +888,7 @@ body.short .tbtn.small { width: 36px; height: 36px; }
 body.short.touch #hud .hud-right { padding-right: 84px; }
 body.short .tbtn.pedal { width: 64px; height: 88px; }
 body.short .tbtn.brake { height: 74px; }
-body.short .tbtn .glyph { font-size: 19px; }
+body.short .tbtn.turn .glyph { font-size: 19px; }
 body.short.touch .hud-time { font-size: 24px; }
 body.short.touch .hud-hives { font-size: 21px; }
 body.short.touch .hive-dot { width: 15px; height: 15px; }
