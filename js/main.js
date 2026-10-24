@@ -9,6 +9,7 @@ import { Editor, TOOLS, emptyLevel } from './editor.js';
 import { Touchpad } from './touchpad.js';
 import { OBJ, MS_TO_PHYS_TIME, TIME_TO_CENTISECONDS } from './constants.js';
 import { loadGhost, levelFingerprint, REPLAY_VERSION } from './replay.js';
+import { cachedThumbnail } from './thumbnail.js';
 
 // Fullscreen is a nice-to-have, and its module is exactly the sort of file a
 // content blocker swallows. Loaded dynamically behind a no-op fallback so a
@@ -160,18 +161,28 @@ function difficultyDots(n) {
   return html + '</span>';
 }
 
+// A card rather than a row: a picture of the cave says more about which
+// level this is than its name does, and a tick you can see across a room
+// says more about having finished it than a time in small print.
 function levelRow(entry, index, times) {
   const best = times[entry.data.name];
   const done = best !== undefined;
   const li = document.createElement('li');
   if (done) li.classList.add('done');
+  const shot = cachedThumbnail(entry.data, !entry.custom);
   li.innerHTML = `
-    <span class="num">${done ? '✓' : index + 1}</span>
+    <span class="shot">
+      <img src="${shot}" alt="" draggable="false">
+      <span class="num">${index + 1}</span>
+      ${done ? '<span class="tick" title="Klarad">✓</span>' : ''}
+    </span>
     <span class="name">
       ${escapeHtml(entry.data.name)}
-      <div class="meta">${hiveCount(entry.data)} kupor${difficultyDots(entry.data.difficulty)}</div>
+      <span class="meta">${hiveCount(entry.data)} kupor${difficultyDots(entry.data.difficulty)}</span>
     </span>
-    <span class="time ${done ? '' : 'none'}">${done ? formatTime(best) : '–'}</span>
+    <span class="foot">
+      <span class="time ${done ? '' : 'none'}">${done ? formatTime(best) : ''}</span>
+    </span>
   `;
   li.addEventListener('click', () => startLevel(index));
 
@@ -181,7 +192,7 @@ function levelRow(entry, index, times) {
     play.textContent = '▶';
     play.title = 'Se reprisen av ditt rekord';
     play.addEventListener('click', (e) => { e.stopPropagation(); startReplay(index); });
-    li.appendChild(play);
+    li.querySelector('.foot').appendChild(play);
   }
   return li;
 }
@@ -210,7 +221,7 @@ function renderLevelList() {
       const i = customLevels.indexOf(entry.data);
       if (i >= 0) { customLevels.splice(i, 1); saveCustom(); renderLevelList(); }
     });
-    li.appendChild(del);
+    li.querySelector('.foot').appendChild(del);
     custom.appendChild(li);
   });
   $('customEmpty').classList.toggle('hidden', customLevels.length > 0);

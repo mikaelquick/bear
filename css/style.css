@@ -346,53 +346,113 @@ h2 { margin: 0 0 14px; font-size: 24px; }
 .tab:hover { color: var(--text); background: none; }
 .tab.active { color: var(--text); border-bottom-color: var(--accent); }
 
-.level-list { list-style: none; margin: 0 0 14px; padding: 0; }
+/* Cards, not rows. A picture of the cave tells you which level this is
+   before you have read anything, which matters most to whoever cannot yet
+   read the names. The tiles grow to fill whatever width there is. */
+.level-list {
+  list-style: none;
+  margin: 0 0 14px;
+  padding: 2px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(168px, 1fr));
+  gap: 12px;
+}
 
 .level-list li {
+  position: relative;
   display: flex;
-  align-items: center;
-  gap: 13px;
-  padding: 11px 13px;
-  border-radius: 11px;
+  flex-direction: column;
+  gap: 7px;
+  padding: 7px 7px 9px;
+  border-radius: 14px;
   cursor: pointer;
-  border: 1px solid transparent;
-  transition: background 0.12s, border-color 0.12s, transform 0.12s;
+  background: #1a2130;
+  border: 1px solid var(--border);
+  transition: border-color 0.12s, transform 0.12s, box-shadow 0.12s;
 }
 
 .level-list li:hover {
-  background: var(--panel-2);
-  border-color: var(--border);
-  transform: translateX(2px);
+  border-color: #46557a;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.38);
 }
 
-.level-list .num {
-  flex: none;
-  width: 28px; height: 28px;
-  display: grid; place-items: center;
+/* Finished levels wear it plainly: a gold edge and a tick, both readable
+   from across a room. */
+.level-list li.done {
+  border-color: rgba(95, 207, 126, 0.55);
+  background: rgba(95, 207, 126, 0.07);
+}
+.level-list li.done:hover { border-color: var(--ok); }
+
+.level-list .shot {
+  position: relative;
+  display: block;
   border-radius: 9px;
-  background: #1b2232;
-  border: 1px solid var(--border);
-  font-size: 12px;
+  overflow: hidden;
+  background: #11151f;
+  line-height: 0;
+}
+.level-list .shot img { width: 100%; height: auto; display: block; }
+
+/* On the picture, not beside it: the tile is the thing you aim at. */
+.level-list .num {
+  position: absolute;
+  top: 5px; left: 5px;
+  min-width: 23px; height: 23px;
+  padding: 0 5px;
+  display: grid; place-items: center;
+  border-radius: 8px;
+  background: rgba(10, 13, 20, 0.78);
+  border: 1px solid rgba(143, 155, 179, 0.3);
+  font-size: 13px;
   font-weight: 700;
+  color: var(--text);
+}
+
+.level-list .tick {
+  position: absolute;
+  top: 5px; right: 5px;
+  width: 23px; height: 23px;
+  display: grid; place-items: center;
+  border-radius: 50%;
+  background: var(--ok);
+  color: #0d2413;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.level-list .name {
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.25;
+  padding: 0 3px;
+}
+.level-list .meta {
+  display: block;
+  font-size: 11px;
+  font-weight: 400;
   color: var(--muted);
-}
-.level-list li.done .num {
-  background: rgba(95, 207, 126, 0.16);
-  border-color: rgba(95, 207, 126, 0.5);
-  color: var(--ok);
+  margin-top: 3px;
 }
 
-.level-list .name { flex: 1; font-size: 15px; }
-.level-list .meta { font-size: 12px; color: var(--muted); margin-top: 2px; }
-
+/* The card's bottom row: the record, then whatever buttons this level has
+   earned. One row so they never land on top of each other. */
+.level-list .foot {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 22px;
+  padding: 0 3px;
+}
 .level-list .time {
+  margin-right: auto;
   font-variant-numeric: tabular-nums;
   color: var(--accent);
-  font-size: 14px;
-  min-width: 74px;
-  text-align: right;
+  font-size: 13px;
+  font-weight: 600;
 }
-.level-list .time.none { color: #5b6477; }
+.level-list .time.none { margin-right: auto; }
 
 .dots { display: inline-flex; gap: 3px; vertical-align: middle; margin-left: 8px; }
 .dots i {
@@ -404,10 +464,14 @@ h2 { margin: 0 0 14px; font-size: 24px; }
 .dots i.on { background: var(--accent); }
 
 .level-list .del {
-  background: none; border: none; color: #5b6477;
-  cursor: pointer; font-size: 15px; padding: 4px 6px; line-height: 1;
+  flex: none;
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  color: #5b6477;
+  cursor: pointer; font-size: 11px; padding: 2px 7px; line-height: 1.3;
 }
-.level-list .del:hover { color: var(--danger); background: none; }
+.level-list .del:hover { color: var(--danger); border-color: var(--danger); background: none; }
 
 button {
   background: var(--accent);
@@ -572,10 +636,11 @@ body.short .progress { margin-bottom: 10px; }
 body.short .progress-text { margin-top: 5px; }
 body.short .tabs { margin-bottom: 8px; }
 body.short .tab { padding: 6px 10px; font-size: 13px; }
-body.short .level-list li { padding: 7px 11px; gap: 10px; }
-body.short .level-list .num { width: 24px; height: 24px; border-radius: 7px; }
-body.short .level-list .name { font-size: 14px; }
-body.short .level-list .meta { font-size: 11px; }
+body.short .level-list { grid-template-columns: repeat(auto-fill, minmax(132px, 1fr)); gap: 9px; }
+body.short .level-list .num { min-width: 20px; height: 20px; border-radius: 6px; font-size: 11px; }
+body.short .level-list .tick { width: 20px; height: 20px; font-size: 12px; }
+body.short .level-list .name { font-size: 12.5px; }
+body.short .level-list .meta { font-size: 10px; }
 body.short .menu-footer { margin-top: 10px; padding-top: 9px; }
 body.short .panel.narrow { padding: 16px 18px; }
 body.short .result-time { font-size: 30px; }
@@ -613,13 +678,14 @@ body.short h2 { font-size: 19px; margin-bottom: 9px; }
 .toggle input { accent-color: var(--accent); cursor: pointer; }
 
 .level-list .play {
+  flex: none;
   background: none;
   border: 1px solid var(--border);
   color: var(--muted);
-  border-radius: 8px;
-  padding: 3px 9px;
-  font-size: 12px;
-  line-height: 1.2;
+  border-radius: 7px;
+  padding: 2px 8px;
+  font-size: 11px;
+  line-height: 1.3;
 }
 .level-list .play:hover { color: var(--accent); border-color: var(--accent); background: none; }
 

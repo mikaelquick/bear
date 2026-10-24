@@ -168,6 +168,27 @@ så att det inte behövs något bildbibliotek och ingen binär behöver handredi
 **Ljudet är avstängt som standard** tills vi har riktiga ljud. Syntkoden finns kvar
 bakom `M` och växeln i menyn.
 
+
+## Banväljaren
+
+Banorna visas som kort med en ritad bild av banan, inte som en lista med namn. En bild
+av grottan säger vilken bana det är innan man läst någonting, vilket spelar störst roll
+för den som ännu inte läser namnen. Klarade banor bär det tydligt: guldgrön kant och en
+bock, läsbara tvärs över ett rum.
+
+`js/thumbnail.js` ritar bilderna. Det är ingen nedkrympt skärmdump — spelrenderaren bär
+på kamera, cykel och parallaxhimmel, och inget av det hör hemma i en 200 px stor ruta.
+Den ritar det en bild måste säga: grottans form, och var kuporna, getingarna och krukan
+sitter. Banor är hål urgröpta ur berg, så fyllningen använder samma knep som renderaren:
+måla hela rutan och dra bort polygonerna med even-odd.
+
+Två saker att veta om den: den läser **rådata**, inte ett laddat `Level`, eftersom ett
+`Level` bygger ett kollisionsrutnät och väljaren inte har någon nytta av tjugo sådana
+varje gång den ritas om. Och den återanvänder en enda canvas och sparar resultatet som
+data-URL:er — tjugo levande canvaselement är megabyte av bildminne för bilder som aldrig
+ändras. Inbyggda banor ritas en gång per sidladdning, egna banor varje gång, eftersom
+editorn kan ha ändrat dem.
+
 ## Repriser och ghosts
 
 Ditt bästa lopp per bana spelas in. Nästa gång du kör banan visas det som en blek,
@@ -242,6 +263,7 @@ js/
   forces.js      cykelns kraftmodell, volt, objektkollisioner
   sim.js         en bildrutas simulering: (tid, knappar) in, tillstånd ut
   replay.js      inspelning, kodning, ghost
+  thumbnail.js   ritar banbilderna till väljaren
   level.js       polygoner, segment, kollisionsrutnät
   levels.js      de tjugo inbyggda banorna
   render.js      Canvas 2D: terräng, parallax, björn, objekt, ghost
