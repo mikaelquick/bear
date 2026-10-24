@@ -206,7 +206,16 @@ lästes vevarmen som en lös stötta i stället för som något fötterna vred r
 pumpande ben säger "trampar" på egen hand. Takten kommer från det hjul som faktiskt
 driver, nedväxlat, för en vev snurrar långt långsammare än hjulet den driver och i
 hjulfart hade benen bara varit en suddighet. Han trampar alltså i den takt han kör och
-frihjular när han slutar. På motorcykeln vilar benet på en fotpinne som förut.
+frihjular när han slutar.
+
+Takten **ackumuleras**, den läses inte av hjulets `rotation`. Fysiken slår om den till
+[-π, π] (`forces.js:99`), så ett uttryck byggt rakt på den hoppar en sjundedels varv
+varje gång hjulet rullar förbi skarven — mätt till 1,35 radianer i ett enda
+bildrutesteg, sex gånger på tre sekunder. Det var "blinkandet". Genom att i stället
+summera den kortaste vägens delta blir skarven osynlig: största steg 0,18 radianer och
+noll hopp. Föraren, ghosten, reprisen och demon räknar var sin takt, annars slåss de om
+samma räknare. `GEAR` i `drawBear` är siffran att ändra om trampandet ska vara lugnare
+eller ivrigare. På motorcykeln vilar benet på en fotpinne som förut.
 
 **`test/levels.test.js` bevisar varje bana på varje fordon**, fyrtio körningar på knappt
 fem sekunder. Den provar tre frön och tar en målgång som bevis. Det sista är inte

@@ -1094,7 +1094,7 @@ function renderReplay(dtSeconds, wallClock) {
   r.clear();
   r.drawTerrain(replay.level);
   r.drawObjects(replay.level, wallClock, armed);
-  r.drawBike(pose, false);
+  r.drawBike(pose, false, 'replay');
   r.drawOverlays(effects);
 
   $('hudTime').textContent = formatTime(replay.time * TIME_TO_CENTISECONDS);

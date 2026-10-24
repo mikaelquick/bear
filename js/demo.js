@@ -94,7 +94,7 @@ export class Demo {
     r.clear();
     r.drawTerrain(this.level);
     r.drawObjects(this.level, wallClock, this.motor.appleCount >= this.level.totalApples);
-    r.drawBike(this.motor, !this.alive && !this.finished);
+    r.drawBike(this.motor, !this.alive && !this.finished, 'demo');
     r.drawParticles(this.effects);
     r.drawOverlays(this.effects);
   }

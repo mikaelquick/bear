@@ -35,6 +35,8 @@ function shade(hex, t) {
   return `rgb(${r},${g},${b})`;
 }
 
+const TURN = Math.PI * 2;
+
 export class Renderer {
   constructor(canvas) {
     this.canvas = canvas;
@@ -497,7 +499,32 @@ export class Renderer {
     ctx.restore();
   }
 
-  drawBike(mot, dead) {
+  // How far round the pedals are, for one rider.
+  //
+  // The physics wraps a wheel's rotation into [-pi, pi], so reading the
+  // cadence straight off it makes the legs snap a seventh of a turn every
+  // time the wheel rolls past that seam — which is the flicker, not a
+  // matter of taste. Accumulating the shortest-way delta instead makes the
+  // wrap invisible: across the seam the delta is tiny, and what comes out
+  // is continuous however long the ride.
+  pedalPhase(key, rotation, gear) {
+    this.pedals ??= new Map();
+    let st = this.pedals.get(key);
+    if (!st) { st = { phase: 0, prev: rotation }; this.pedals.set(key, st); }
+    let d = rotation - st.prev;
+    if (d > Math.PI) d -= TURN;
+    if (d < -Math.PI) d += TURN;
+    st.prev = rotation;
+    st.phase -= d * gear;
+    return st.phase;
+  }
+
+  /**
+   * @param {string} [rider] whose pedals to keep track of. The player, the
+   *   ghost and the demo each turn their own, or they would fight over one
+   *   accumulator and jitter.
+   */
+  drawBike(mot, dead, rider = 'player') {
     const { ctx } = this;
     const rot = mot.bike.rotation;
     const i1 = { x: Math.cos(rot), y: Math.sin(rot) };
@@ -525,7 +552,7 @@ export class Renderer {
     this.drawWheel(mot.leftWheel);
     this.drawWheel(mot.rightWheel);
     this.drawFrame(mot, bx, by, rot, face);
-    this.drawBear(mot, handlebar, toWorld, face, dead);
+    this.drawBear(mot, handlebar, toWorld, face, dead, rider);
   }
 
   // Frame drawn in bike-local metres: +x forward, +y up. The transform maps
@@ -616,7 +643,7 @@ export class Renderer {
     // Washed out as well as translucent, so it never reads as a second bear.
     // `filter` is ignored by older engines; the alpha alone still works.
     ctx.filter = 'grayscale(0.9) brightness(1.3)';
-    this.drawBike(pose, false);
+    this.drawBike(pose, false, 'ghost');
     ctx.restore();
   }
 
@@ -654,7 +681,7 @@ export class Renderer {
     ctx.restore();
   }
 
-  drawBear(mot, handlebar, toWorld, face, dead) {
+  drawBear(mot, handlebar, toWorld, face, dead, rider = 'player') {
     const { ctx } = this;
     const s = this.scale;
 
@@ -682,10 +709,12 @@ export class Renderer {
       // Geared down from the driving wheel, because a crank turns far
       // slower than the wheel it drives and at wheel speed the legs would
       // be an unreadable blur. So he pedals at the speed he rides and
-      // freewheels when he stops.
+      // freewheels when he stops — in a tall gear, which is the calmer
+      // cadence and the one that reads at this size.
       const SWING = 0.13; // metres a foot travels, up to down
+      const GEAR = 0.22;  // pedal turns per wheel turn
       const driven = mot.flipped ? mot.leftWheel : mot.rightWheel;
-      const angle = -driven.rotation * 0.32;
+      const angle = this.pedalPhase(rider, driven.rotation, GEAR);
       const drawLeg = (phase, colour) => {
         const foot = toWorld(0.08, -0.16 + Math.sin(angle + phase) * SWING);
         // A knee, bent forward, so the leg reads as a leg rather than a
