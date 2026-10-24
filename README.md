@@ -99,14 +99,24 @@ Kameran zoomar efter skärmen så en telefon ser ungefär lika mycket bana som e
 och styrkorset spårar fingrarna globalt så att man kan glida mellan pedalerna och hålla
 två knappar samtidigt.
 
-Pedalerna rör sig med cykeln. `updatePedalFeel` i `js/main.js` läser bakhjulets
-`angularVelocity` varje bildruta och sätter två CSS-variabler på `#touch`: `--tread`
-flyttar mönstret på pedalerna i hjulets takt, `--rev` lyser upp gasen hårdare ju
-fortare hjulet snurrar. Inget är en förinspelad animation — rullar hjulet rullar
-mönstret, låser bromsen hjulet står mönstret stilla. Siffrorna är mätta, inte gissade:
-bakhjulet ligger kring 6 rad/s på plant underlag och når trettiotalet utför eller fritt
-i luften, så mönstret kapas före det för att inte stroboskopera och glöden
-kvadratrotas så vanlig körning hamnar mitt i skalan.
+**Bromspedalen** rör sig med cykeln. `updatePedalFeel` i `js/main.js` läser framhjulets
+`angularVelocity` varje bildruta och sätter `--tread` på `#touch`, som flyttar mönstret
+på bromsen i hjulets takt. Ingen förinspelad animation — rullar hjulet rullar mönstret,
+och det saktar in märkbart när bromsen tar. Inte till fullt stopp: bromsen håller
+hjulet mot ramen, inte mot marken, så en ram som nickar bär hjulet med sig.
+
+Vilket hjul som är framhjulet byts varje gång cykeln vänds. Det är **det släpande**
+hjulet som drivs (se gaspådraget i `forces.js`), så med `flipped` — standardläget, cykeln
+kör åt höger — driver vänster hjul och höger är fram.
+
+Gaspedalen är med flit stillastående. Den är en knapp man trycker på, inte en mätare.
+Siffrorna är mätta, inte gissade: ett hjul ligger kring 6 rad/s på plant underlag och
+når trettiotalet utför eller fritt i luften, så mönstret kapas före det för att inte
+stroboskopera.
+
+Nedtryckt sjunker pedalen in i sin egen ram: kanten står kvar där den var — det är
+pedalens kant, och kanter flyttar sig inte — medan ytan glider ner några pixlar och
+överkanten går i skugga. Ytan får 70 ms att färdas; inmatningen väntar inte på den.
 
 `tools/mobile-preview.html` visar spelet i en telefonstor iframe med riktiga
 viewport-mått, för att slippa gissa hur det ser ut.

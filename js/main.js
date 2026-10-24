@@ -910,30 +910,32 @@ let lastFrame = performance.now();
 // from the simulation rather than from a canned animation, so what the
 // thumb sees is what the bike is doing — the tread even locks solid when
 // the brake locks the wheels.
-// Measured rather than guessed: the rear wheel sits around 6 rad/s rolling
-// along the flat and reaches the mid thirties running downhill or spinning
-// free in the air. So the tread is capped short of that to stop it
-// strobing, and the glow is square-rooted so ordinary riding uses the
-// middle of the range instead of the bottom inch of it.
+// Only the brake carries it. The throttle stays put: it is a button you
+// push, not a readout.
+//
+// Measured rather than guessed: a wheel sits around 6 rad/s rolling along
+// the flat and reaches the mid thirties running downhill or spinning free
+// in the air, so the tread is capped short of that to stop it strobing.
 const TREAD_PERIOD = 9;    // px; the gradient period in the stylesheet
 const TREAD_PER_RAD = 3.5; // px of travel per radian of wheel rotation
 const TREAD_CAP = 24;      // rad/s past which the tread stops speeding up
-const REV_FULL = 25;       // rad/s that lights the throttle fully
 
 let tread = 0;
+
+// The trailing wheel is the one the gas drives, so the leading one is the
+// other, and which is which swaps every time the bike is flipped. See the
+// gas branch in forces.js: flipped drives the left wheel.
+const frontWheel = (motor) => (motor.flipped ? motor.rightWheel : motor.leftWheel);
 
 function updatePedalFeel(dtSeconds) {
   if (!document.body.classList.contains('touch')) return;
   const motor = game.run && game.run.motor;
   // Forward is a negative angular velocity, and the tread should roll down
   // towards the rider as the bike pulls away.
-  const spin = motor ? -motor.rightWheel.angularVelocity : 0;
+  const spin = motor ? -frontWheel(motor).angularVelocity : 0;
   const capped = Math.max(-TREAD_CAP, Math.min(TREAD_CAP, spin));
   tread = (tread + capped * TREAD_PER_RAD * dtSeconds) % TREAD_PERIOD;
-  const el = $('touch');
-  el.style.setProperty('--tread', tread.toFixed(2) + 'px');
-  el.style.setProperty('--rev',
-    Math.min(1, Math.sqrt(Math.abs(spin) / REV_FULL)).toFixed(3));
+  $('touch').style.setProperty('--tread', tread.toFixed(2) + 'px');
 }
 
 function frame(now) {
