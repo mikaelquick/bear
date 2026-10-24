@@ -847,8 +847,13 @@ body.touch #touchTop:not(.hidden) { display: flex; }
   z-index: 4;
 }
 
+/* An installed app has no browser chrome to hide, so the button that
+   would hide it is removed rather than left there doing nothing. */
+body.standalone .tbtn[data-action="fullscreen"] { display: none; }
+
 /* Keep the hive counter clear of those buttons. */
 body.touch #hud .hud-right { padding-right: 96px; }
+body.standalone.touch #hud .hud-right { padding-right: 52px; }
 
 /* Turned a quarter clockwise, the stage's bottom edge runs along the
    device's right, its left edge along the device's top, and so on round. */

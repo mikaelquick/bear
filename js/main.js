@@ -627,6 +627,10 @@ function maybeShowHowto() {
 // the player deserves to be told the thing they did took.
 function confirmStandalone() {
   if (!fullscreen.isStandalone()) return;
+  // Launched from the home screen there is no browser chrome left to hide,
+  // so the fullscreen button is a button that does nothing. The menu toggle
+  // already hides itself; this takes the one in the corner of the game.
+  document.body.classList.add('standalone');
   const first = !settings.standaloneSeen;
   settings.standaloneSeen = true;
   settings.launch = 'app';
