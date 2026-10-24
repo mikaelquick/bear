@@ -120,6 +120,9 @@ html, body {
   border-radius: 999px;
   font-size: 14px;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
+  /* Above the overlays, or a toast raised from the menu is drawn behind it
+     and never seen. Still below the portrait gate, which is a hard stop. */
+  z-index: 20;
 }
 
 /* ---------- Welcome: app or browser ---------- */
