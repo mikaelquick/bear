@@ -171,6 +171,48 @@ så att det inte behövs något bildbibliotek och ingen binär behöver handredi
 bakom `M` och växeln i menyn.
 
 
+
+## Fordon
+
+Man väljer fordon på bankortet: en knapp per fordon, och ett tryck är både valet och
+starten — att välja ska inte kosta ett extra tryck. Valet följer med till nästa bana och
+överlever omstart, så `R` sätter en aldrig tyst på en annan maskin.
+
+`js/vehicles.js` beskriver maskinerna. Motorn bär en **spec** — den handfull siffror som
+skiljer fordon åt — i stället för att läsa dem som modulkonstanter. Motorcykelns spec
+*är* de portade konstanterna: `constants.js` säger fortfarande att de inte är rattar att
+skruva på, och det gäller. Varje annat fordon är en öppen avvikelse, skriven på ett
+ställe i stället för utspridd i `forces.js`.
+
+Ett fordon är bara värt att ha om det är bättre på något. En maskin som bara är
+långsammare är aldrig rätt svar på någon bana, så varje fordon byter bort något:
+
+| | Motorcykeln 🏍️ | Cykeln 🚲 |
+|---|---|---|
+| Dragkraft | 600 | 420 |
+| Topp (hjulvarv × radie) | 110 × 0,4 | 98 × 0,36 |
+| Vikt | 200 | 120 |
+| Hjulbas | 1,7 | 1,3 |
+| Volt | 12 | 15 |
+
+Cykeln ger alltså upp fart och drag mot lätthet, kort hjulbas och snabbare volt — den
+att ta in i ett trångt schakt, och fel val på en lång öppen sträcka.
+
+**`test/levels.test.js` bevisar varje bana på varje fordon**, fyrtio körningar på knappt
+fem sekunder. Den provar tre frön och tar en målgång som bevis. Det sista är inte
+kosmetik: drivrutinen är trubbig och dess tur varierar med fröet, och ett enda otursfrö
+fick två banor att se omöjliga ut som uppenbart inte är det.
+
+**Rekord och repriser ligger per bana och fordon.** En tid går bara att jämföra med
+tider satta på samma maskin. Motorcykeln behåller det nakna bannamnet som nyckel, så
+varje rekord satt innan fordon fanns ligger kvar precis där spelet letar — ingen
+migrering, inget förlorat. Och en repris sparar *inmatning*, inte positioner, så den
+återskapar bara loppet på den maskin den kördes på: reprisen bär därför ett
+`vehicle`-fält, och saknas det var det en motorcykel.
+
+Kortet visar vilka fordon banan är klarad med som emoji, och tiden för det fordon man
+just nu skulle åka iväg på — det är den man ska slå.
+
 ## Banväljaren
 
 Knapparna är avsiktligt tecknade. Tre saker gör det, och alla tre bor i `:root`:
@@ -315,6 +357,7 @@ js/
   replay.js      inspelning, kodning, ghost
   thumbnail.js   ritar banbilderna till väljaren
   biomes.js      världarna och vilken bana som hör till vilken
+  vehicles.js    fordonen; motorcykelns spec är de portade konstanterna
   level.js       polygoner, segment, kollisionsrutnät
   levels.js      de tjugo inbyggda banorna
   render.js      Canvas 2D: terräng, parallax, björn, objekt, ghost

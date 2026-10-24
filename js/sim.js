@@ -11,8 +11,8 @@ export const INPUT = { GAS: 1, BRAKE: 2, LEFT: 4, RIGHT: 8, TURN: 16 };
 
 const MAX_SUBSTEPS_PER_FRAME = 40;
 
-export function createRun(level) {
-  const motor = new Motor();
+export function createRun(level, vehicleId) {
+  const motor = new Motor(vehicleId);
   motor.spawn(level.start);
   return {
     motor,

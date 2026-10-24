@@ -26,6 +26,15 @@ const PALETTE = {
   danger: '#e0453a',
 };
 
+// Lighten (t > 0) or darken (t < 0) a #rrggbb by a fraction, so one frame
+// colour per vehicle is enough to paint its whole gradient.
+function shade(hex, t) {
+  const n = parseInt(hex.slice(1), 16);
+  const mix = (c) => Math.round(t > 0 ? c + (255 - c) * t : c * (1 + t));
+  const r = mix((n >> 16) & 255), g = mix((n >> 8) & 255), b = mix(n & 255);
+  return `rgb(${r},${g},${b})`;
+}
+
 export class Renderer {
   constructor(canvas) {
     this.canvas = canvas;
@@ -549,13 +558,16 @@ export class Renderer {
     ctx.lineTo(-0.16, -0.04);
     ctx.quadraticCurveTo(-0.46, 0.0, -0.58, 0.22);
     ctx.closePath();
+    // Each machine has its own frame colour; the light and dark ends are
+    // mixed from it so one number paints the whole frame.
+    const base = mot.frameColor || PALETTE.frame;
     const g = ctx.createLinearGradient(-0.6, 0, 0.5, 0.45);
-    g.addColorStop(0, '#9c2f23');
-    g.addColorStop(0.5, PALETTE.frame);
-    g.addColorStop(1, '#f07a5a');
+    g.addColorStop(0, shade(base, -0.3));
+    g.addColorStop(0.5, base);
+    g.addColorStop(1, shade(base, 0.35));
     ctx.fillStyle = g;
     ctx.fill();
-    ctx.strokeStyle = '#6d1d14';
+    ctx.strokeStyle = shade(mot.frameColor || PALETTE.frame, -0.5);
     ctx.lineWidth = 0.03;
     ctx.stroke();
 

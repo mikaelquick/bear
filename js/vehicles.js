@@ -30,7 +30,7 @@ const WHEEL_DROP = DEFAULT_BIKE.r.y - DEFAULT_LEFT_WHEEL.r.y; // 0.6
  * absolute spawn coordinates.
  */
 function build({ wheelbase, mass, inertia, wheelRadius, wheelMass, wheelInertia,
-                 gasTorque, maxAngularVelocity, voltAngularVelocity }) {
+                 gasTorque, maxAngularVelocity, voltAngularVelocity, frameColor }) {
   const half = wheelbase / 2;
   const anchor = DEFAULT_BIKE.r;
   const wheelY = anchor.y - WHEEL_DROP;
@@ -48,6 +48,11 @@ function build({ wheelbase, mass, inertia, wheelRadius, wheelMass, wheelInertia,
     gasTorque,
     maxAngularVelocity,
     voltAngularVelocity,
+    // Presentation, not physics, but it belongs with the machine: the
+    // renderer reads it so the two are told apart at a glance. The
+    // silhouette already differs — shorter, smaller wheels — and the
+    // colour finishes the job.
+    frameColor,
   };
 }
 
@@ -68,6 +73,7 @@ export const VEHICLES = [
       gasTorque: GAS_TORQUE,
       maxAngularVelocity: MAX_ANGULAR_VELOCITY,
       voltAngularVelocity: VOLT_ANGULAR_VELOCITY,
+      frameColor: '#d04a3a',
     }),
   },
   {
@@ -97,6 +103,7 @@ export const VEHICLES = [
       gasTorque: 420,
       maxAngularVelocity: 98,
       voltAngularVelocity: 15,
+      frameColor: '#2f9fb8',
     }),
   },
 ];

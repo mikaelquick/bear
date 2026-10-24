@@ -11,6 +11,7 @@ import { OBJ, MS_TO_PHYS_TIME, TIME_TO_CENTISECONDS } from './constants.js';
 import { loadGhost, levelFingerprint, REPLAY_VERSION } from './replay.js';
 import { cachedThumbnail } from './thumbnail.js';
 import { BIOMES, DEFAULT_BIOME, biomeOf, findBiome } from './biomes.js';
+import { VEHICLES, DEFAULT_VEHICLE, findVehicle } from './vehicles.js';
 
 // Fullscreen is a nice-to-have, and its module is exactly the sort of file a
 // content blocker swallows. Loaded dynamically behind a no-op fallback so a
@@ -69,6 +70,7 @@ let demo = null;
 let mode = 'menu'; // 'menu' | 'play' | 'editor' | 'replay'
 let returnToEditor = false;
 let currentIndex = 0;
+let currentVehicle = DEFAULT_VEHICLE;
 let customLevels = loadCustom();
 let replay = null;
 let toastTimer = null;
@@ -111,26 +113,41 @@ function saveSettings() {
   writeJson(SETTINGS_KEY, settings);
 }
 
-function saveTime(name, centiseconds) {
+// A time is only comparable against times set on the same machine, so each
+// one keeps its own record. The motorbike keeps the bare level name, which
+// means every record set before vehicles existed is still exactly where the
+// game looks for it — no migration, nothing lost. The separator is a NUL,
+// which no level name can contain.
+const recordKey = (name, vehicleId) =>
+  (vehicleId && vehicleId !== DEFAULT_VEHICLE) ? `${name}\u0000${vehicleId}` : name;
+
+function saveTime(name, centiseconds, vehicleId) {
   const times = loadTimes();
-  const prev = times[name];
+  const key = recordKey(name, vehicleId);
+  const prev = times[key];
   if (prev === undefined || centiseconds < prev) {
-    times[name] = centiseconds;
+    times[key] = centiseconds;
     writeJson(TIMES_KEY, times);
     return true;
   }
   return false;
 }
 
+// Which machines this level has been finished on, in menu order.
+function clearedOn(times, name) {
+  return VEHICLES.filter((v) => times[recordKey(name, v.id)] !== undefined);
+}
+
 // Stores the run as input, not positions — a minute is a few kilobytes.
 // Silently gives up if the recording is too long or storage is full; the time
 // is still kept either way.
-function saveReplay(level, centiseconds, recorder) {
+function saveReplay(level, centiseconds, recorder, vehicleId) {
   const frames = recorder.encode();
   if (!frames) return false;
   const replays = loadReplays();
-  replays[level.name] = {
+  replays[recordKey(level.name, vehicleId)] = {
     v: REPLAY_VERSION,
+    vehicle: vehicleId,
     time: centiseconds,
     fingerprint: levelFingerprint(level),
     frames,
@@ -138,8 +155,8 @@ function saveReplay(level, centiseconds, recorder) {
   return writeJson(REPLAYS_KEY, replays);
 }
 
-function hasReplay(name) {
-  const stored = loadReplays()[name];
+function hasReplay(name, vehicleId) {
+  const stored = loadReplays()[recordKey(name, vehicleId)];
   return !!stored && stored.v === REPLAY_VERSION;
 }
 
@@ -169,8 +186,12 @@ function difficultyDots(n) {
 // level this is than its name does, and a tick you can see across a room
 // says more about having finished it than a time in small print.
 function levelRow(entry, index, times) {
-  const best = times[entry.data.name];
-  const done = best !== undefined;
+  const name = entry.data.name;
+  const cleared = clearedOn(times, name);
+  const done = cleared.length > 0;
+  // The time shown is the one for the machine you would set off on, since
+  // that is the one you are about to try to beat.
+  const best = times[recordKey(name, currentVehicle)];
   const li = document.createElement('li');
   if (done) li.classList.add('done');
   const shot = cachedThumbnail(entry.data, !entry.custom);
@@ -178,24 +199,39 @@ function levelRow(entry, index, times) {
     <span class="shot">
       <img src="${shot}" alt="" draggable="false">
       <span class="num">${index + 1}</span>
-      ${done ? '<span class="tick" title="Klarad">✓</span>' : ''}
+      ${done ? `<span class="tick" title="Klarad med ${cleared.map((v) => v.name.toLowerCase()).join(' och ')}">${cleared.map((v) => v.emoji).join('')}</span>` : ''}
     </span>
     <span class="name">
-      ${escapeHtml(entry.data.name)}
+      ${escapeHtml(name)}
       <span class="meta">${hiveCount(entry.data)} kupor${difficultyDots(entry.data.difficulty)}</span>
     </span>
+    <span class="rides"></span>
     <span class="foot">
-      <span class="time ${done ? '' : 'none'}">${done ? formatTime(best) : ''}</span>
+      <span class="time ${best === undefined ? 'none' : ''}">${best === undefined ? '' : formatTime(best)}</span>
     </span>
   `;
+
+  // One button per machine. Tapping one is both the choice and the start,
+  // which keeps it to a single press — a child should not have to pick a
+  // vehicle and then separately press go.
+  const rides = li.querySelector('.rides');
+  for (const vehicle of VEHICLES) {
+    const btn = document.createElement('button');
+    btn.className = 'ride' + (vehicle.id === currentVehicle ? ' on' : '');
+    btn.innerHTML = `<span aria-hidden="true">${vehicle.emoji}</span>`;
+    btn.title = `Kör ${vehicle.name.toLowerCase()}`;
+    btn.setAttribute('aria-label', `${escapeHtml(name)} med ${vehicle.name.toLowerCase()}`);
+    btn.addEventListener('click', (e) => { e.stopPropagation(); startLevel(index, vehicle.id); });
+    rides.appendChild(btn);
+  }
   li.addEventListener('click', () => startLevel(index));
 
-  if (hasReplay(entry.data.name)) {
+  if (hasReplay(name, currentVehicle)) {
     const play = document.createElement('button');
     play.className = 'play';
     play.textContent = '▶';
     play.title = 'Se reprisen av ditt rekord';
-    play.addEventListener('click', (e) => { e.stopPropagation(); startReplay(index); });
+    play.addEventListener('click', (e) => { e.stopPropagation(); startReplay(index, currentVehicle); });
     li.querySelector('.foot').appendChild(play);
   }
   return li;
@@ -205,7 +241,7 @@ function levelRow(entry, index, times) {
 // is the point — it is what tells you which world you left unfinished.
 function biomeCard(biome, entries, times) {
   const mine = entries.filter((e) => !e.custom && biomeOf(e.data) === biome.id);
-  const cleared = mine.filter((e) => times[e.data.name] !== undefined).length;
+  const cleared = mine.filter((e) => clearedOn(times, e.data.name).length > 0).length;
   const share = mine.length ? (cleared / mine.length) * 100 : 0;
   const li = document.createElement('li');
   li.className = 'biome' + (biome.locked ? ' locked' : '');
@@ -266,7 +302,7 @@ function renderLevelList() {
   });
   $('customEmpty').classList.toggle('hidden', customLevels.length > 0);
 
-  const cleared = LEVELS.filter((l) => times[l.name] !== undefined).length;
+  const cleared = LEVELS.filter((l) => clearedOn(times, l.name).length > 0).length;
   $('progressFill').style.width = `${(cleared / LEVELS.length) * 100}%`;
   $('progressText').textContent = `${cleared} av ${LEVELS.length} banor klarade`;
 }
@@ -343,25 +379,28 @@ function showMenu() {
   hideToast();
 }
 
-function startLevel(index) {
+function startLevel(index, vehicleId = currentVehicle) {
   const entries = allLevels();
   if (!entries[index]) return;
   rememberBiomeScroll();
   currentIndex = index;
+  currentVehicle = findVehicle(vehicleId).id;
   replay = null;
   sfx.ensure();
   renderer.fitScale();
 
   const level = new Level(entries[index].data);
-  game.load(level);
-  game.setGhost(settings.ghost ? loadGhost(level, loadReplays()[level.name]) : null);
+  game.load(level, currentVehicle);
+  game.setGhost(settings.ghost
+    ? loadGhost(level, loadReplays()[recordKey(level.name, currentVehicle)])
+    : null);
 
   mode = 'play';
   document.body.classList.add('playing');
   hideAll('menu', 'dialog', 'pause', 'editorBar', 'editorHint', 'replayBadge');
   show('hud', 'startHint', 'touch', 'touchTop');
   $('hudLevel').textContent = level.name;
-  const best = loadTimes()[level.name];
+  const best = loadTimes()[recordKey(level.name, currentVehicle)];
   $('hudBest').textContent = best === undefined ? 'inget rekord än' : 'bäst ' + formatTime(best);
   $('hudGhost').textContent = '';
   hideToast();
@@ -370,13 +409,13 @@ function startLevel(index) {
 
 // Plays back the stored record. Nothing is simulated live: the recording is
 // re-run once up front and this just walks the resulting trajectory.
-function startReplay(index) {
+function startReplay(index, vehicleId = currentVehicle) {
   const entries = allLevels();
   const entry = entries[index];
   if (!entry) return;
 
   const level = new Level(entry.data);
-  const ghost = loadGhost(level, loadReplays()[entry.data.name]);
+  const ghost = loadGhost(level, loadReplays()[recordKey(entry.data.name, vehicleId)]);
   if (!ghost) {
     toast('Ingen inspelning sparad för den banan.');
     return;
@@ -464,11 +503,11 @@ function showResult() {
   const entries = allLevels();
   const name = game.level.name;
   const time = game.finalTime;
-  const isRecord = returnToEditor ? false : saveTime(name, time);
+  const isRecord = returnToEditor ? false : saveTime(name, time, currentVehicle);
 
   let replaySaved = false;
-  if (isRecord) replaySaved = saveReplay(game.level, time, game.recorder);
-  const best = loadTimes()[name];
+  if (isRecord) replaySaved = saveReplay(game.level, time, game.recorder, currentVehicle);
+  const best = loadTimes()[recordKey(name, currentVehicle)];
 
   $('dialogTitle').textContent = isRecord ? 'Nytt rekord!' : 'Klarat!';
   $('dialogText').innerHTML =
@@ -488,8 +527,8 @@ function showResult() {
     const hasNext = currentIndex + 1 < entries.length;
     if (hasNext) addButton(buttons, 'Nästa bana →', () => startLevel(currentIndex + 1));
     addButton(buttons, 'Kör igen', restartRun, hasNext);
-    if (replaySaved || hasReplay(name)) {
-      addButton(buttons, 'Se reprisen', () => startReplay(currentIndex), true);
+    if (replaySaved || hasReplay(name, currentVehicle)) {
+      addButton(buttons, 'Se reprisen', () => startReplay(currentIndex, currentVehicle), true);
     }
     addButton(buttons, 'Meny', showMenu, true);
   }
@@ -657,7 +696,8 @@ function setGhostEnabled(on) {
   game.showGhost = on;
   $('optGhost').checked = on;
   if (on && mode === 'play' && !game.ghost && game.level) {
-    game.setGhost(loadGhost(game.level, loadReplays()[game.level.name]));
+    game.setGhost(loadGhost(game.level,
+      loadReplays()[recordKey(game.level.name, currentVehicle)]));
   }
 }
 

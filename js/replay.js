@@ -11,6 +11,7 @@
 
 import { createRun, advanceFrame, INPUT } from './sim.js';
 import { TIME_TO_CENTISECONDS } from './constants.js';
+import { specOf, DEFAULT_VEHICLE } from './vehicles.js';
 
 export const REPLAY_VERSION = 1;
 const MAX_FRAMES = 18000; // ~5 minutes at 60fps
@@ -102,9 +103,9 @@ export function levelFingerprint(level) {
 
 // Re-runs a replay and samples the bike pose at every physics substep.
 // Returns whatever it managed to simulate, even if the run diverged.
-export function simulateReplay(level, frames) {
+export function simulateReplay(level, frames, vehicleId) {
   level.objects.forEach((o) => { o.taken = false; });
-  const run = createRun(level);
+  const run = createRun(level, vehicleId);
   const samples = [];
   // When each hive was collected, so playback can make them vanish on cue.
   const events = [];
@@ -155,10 +156,11 @@ const lerpAngle = (a, b, t) => {
 // Samples a simulated replay by simulation time, and shapes the result so the
 // renderer can draw it with the same code it uses for the player.
 export class Ghost {
-  constructor(samples, centiseconds, events = []) {
+  constructor(samples, centiseconds, events = [], vehicleId = DEFAULT_VEHICLE) {
     this.samples = samples;
     this.centiseconds = centiseconds;
     this.events = events;
+    this.vehicleId = vehicleId;
     this.cursor = 0;
   }
 
@@ -195,7 +197,7 @@ export class Ghost {
     const span = b.t - a.t;
     const k = span > 1e-9 ? (time - a.t) / span : 0;
 
-    const m = blankMotor();
+    const m = blankMotor(this.vehicleId);
     m.bike.r.x = lerp(a.bx, b.bx, k);
     m.bike.r.y = lerp(a.by, b.by, k);
     m.bike.rotation = lerpAngle(a.brot, b.brot, k);
@@ -214,14 +216,19 @@ export class Ghost {
   }
 }
 
-function blankMotor() {
+// Motor-shaped, but only the parts the renderer reads. The wheel radii and
+// the colour come from the vehicle, or a ghost of a bicycle would be drawn
+// on a motorbike's wheels.
+function blankMotor(vehicleId) {
+  const spec = specOf(vehicleId);
   return {
-    bike: { r: { x: 0, y: 0 }, rotation: 0, radius: 0.3 },
-    leftWheel: { r: { x: 0, y: 0 }, rotation: 0, radius: 0.4 },
-    rightWheel: { r: { x: 0, y: 0 }, rotation: 0, radius: 0.4 },
+    bike: { r: { x: 0, y: 0 }, rotation: 0, radius: spec.bike.radius },
+    leftWheel: { r: { x: 0, y: 0 }, rotation: 0, radius: spec.leftWheel.radius },
+    rightWheel: { r: { x: 0, y: 0 }, rotation: 0, radius: spec.rightWheel.radius },
     bodyR: { x: 0, y: 0 },
     headR: { x: 0, y: 0 },
     flipped: true,
+    frameColor: spec.frameColor,
   };
 }
 
@@ -230,10 +237,14 @@ export function loadGhost(level, stored) {
   if (!stored || stored.v !== REPLAY_VERSION) return null;
   if (stored.fingerprint && stored.fingerprint !== levelFingerprint(level)) return null;
   try {
+    // A replay is stored input, not positions, so it only reproduces the run
+    // on the machine it was driven on. Recordings written before vehicles
+    // existed have no field and were all motorbike, which is the default.
+    const vehicleId = stored.vehicle || DEFAULT_VEHICLE;
     const frames = decodeFrames(stored.frames);
-    const result = simulateReplay(level, frames);
+    const result = simulateReplay(level, frames, vehicleId);
     if (result.samples.length < 2) return null;
-    return new Ghost(result.samples, stored.time, result.events);
+    return new Ghost(result.samples, stored.time, result.events, vehicleId);
   } catch {
     return null;
   }

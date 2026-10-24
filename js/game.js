@@ -43,8 +43,11 @@ export class Game {
     this.showGhost = true;
   }
 
-  load(level) {
+  // `vehicleId` sticks for every restart of this level, so pressing R does
+  // not quietly put the player back on a different machine.
+  load(level, vehicleId) {
     this.level = level;
+    this.vehicleId = vehicleId;
     this.renderer.horizonY = level.bounds.maxY * 0.55 + level.bounds.minY * 0.45;
     this.restart();
   }
@@ -58,7 +61,7 @@ export class Game {
 
   restart() {
     for (const obj of this.level.objects) obj.taken = false;
-    this.run = createRun(this.level);
+    this.run = createRun(this.level, this.vehicleId);
     this.recorder.reset();
 
     this.state = STATE.READY;

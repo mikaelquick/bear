@@ -32,6 +32,9 @@ export class Motor {
   constructor(vehicleId = DEFAULT_VEHICLE) {
     this.vehicleId = vehicleId;
     this.spec = specOf(vehicleId);
+    // Carried on the motor rather than looked up, so a ghost's pose — which
+    // is motor-shaped but has no spec — can be drawn the same way.
+    this.frameColor = this.spec.frameColor;
     this.init();
   }
 
