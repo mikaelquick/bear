@@ -151,12 +151,6 @@
       <button class="tab" data-tab="custom">
         <span class="tab-ico" aria-hidden="true">✏️</span>Egna banor
       </button>
-      <button class="tab" data-tab="help">
-        <span class="tab-ico" aria-hidden="true">🎮</span>Så spelar du
-      </button>
-      <button class="tab" data-tab="about">
-        <span class="tab-ico" aria-hidden="true">⚙️</span>Om fysiken
-      </button>
     </nav>
 
     <section class="tabpane" data-pane="levels">
@@ -185,49 +179,7 @@
       </div>
     </section>
 
-    <section class="tabpane hidden" data-pane="help">
-      <p><strong>Målet:</strong> plocka alla bikupor och kör sedan in i honungskrukan.</p>
-      <p><strong>Du dör</strong> om björnens huvud nuddar marken eller en vägg, eller om huvudet
-         eller ett hjul rör en getingsvärm. Kroppen får gå rakt igenom väggar — det är meningen.</p>
-      <table class="keys">
-        <tr><td><kbd>↑</kbd></td><td>Gas. Håll in för länge och du slår runt bakåt.</td></tr>
-        <tr><td><kbd>↓</kbd></td><td>Broms. Låser båda hjulen, oavsett körriktning.</td></tr>
-        <tr><td><kbd>←</kbd> <kbd>→</kbd></td><td>Volt — roterar cykeln. Alltid samma håll,
-            även när du vänt. Båda samtidigt = supervolt.</td></tr>
-        <tr><td><kbd>Space</kbd></td><td>Vänd cykeln</td></tr>
-        <tr><td><kbd>Enter</kbd> / <kbd>R</kbd></td><td>Börja om</td></tr>
-        <tr><td><kbd>P</kbd></td><td>Paus</td></tr>
-        <tr><td><kbd>G</kbd></td><td>Visa/dölj ghost (ditt bästa lopp)</td></tr>
-        <tr><td><kbd>M</kbd></td><td>Ljud av/på</td></tr>
-        <tr><td><kbd>F</kbd></td><td>Fullskärm av/på</td></tr>
-        <tr><td><kbd>Esc</kbd></td><td>Tillbaka till menyn</td></tr>
-      </table>
-      <p class="fine">Tiden mäts i hundradelar. Banan är inte klar förrän alla kupor är tagna —
-         krukan gör ingenting innan dess.</p>
-      <p class="fine">Ditt bästa lopp spelas in och visas som en genomskinlig ghost nästa gång du
-         kör banan. Klicka på ▶ i banlistan för att se reprisen.</p>
-      <p class="fine"><strong>På iPhone</strong> finns ingen fullskärmsknapp — Safari
-         tillåter det inte. Lägg i stället Björn på hemskärmen, så startar spelet utan
-         adressfält. <em>Ladda ner appen</em> uppe i menyn visar hur.</p>
-      <p class="fine"><strong>På mobil:</strong> knappar dyker upp på skärmen —
-         volt till vänster, vänd ovanför broms och gas till höger. Kugghjulet uppe i hörnet
-         pausar och öppnar menyn. När du dött räcker det att trycka var som helst för att
-         köra om. Spelet kräver landskapsläge.</p>
-    </section>
 
-    <section class="tabpane hidden" data-pane="about">
-      <p>Fysiken är portad rad för rad från Elasto Manias egen källkod: fjäderstyvhet
-         10000&nbsp;N/m, dämpning 1000, gravitation 10&nbsp;m/s², hjulmassa 10&nbsp;kg mot
-         ramens 200, huvudradie 0,238&nbsp;m.</p>
-      <p>Hjulen kolliderar mot upp till två ankarpunkter åt gången. Med en punkt
-         <em>rullar</em> hjulet runt punkten enligt parallellaxelteoremet; med två låser det
-         sig helt. Det är därför man kan fastna i hörn.</p>
-      <p>Volten ger 12&nbsp;rad/s gratis som tas tillbaka en tiondel senare — men bara ner till
-         farten du hade innan. Hinner du växla rotationen till fart får du behålla den.
-         Den buggen är kvar med flit; hela rekordjakten bygger på den.</p>
-      <p class="fine">Banorna är egna. Varje bana testas automatiskt av en skriptad förare
-         innan den släpps in i spelet, så alla tio går bevisligen att klara.</p>
-    </section>
 
     <footer class="menu-footer">
       <span id="demoLabel">Demo</span>
@@ -236,6 +188,8 @@
         <label class="toggle"><input type="checkbox" id="optSound"> Ljud</label>
         <label class="toggle" id="optFullscreenWrap">
           <input type="checkbox" id="optFullscreen"> Fullskärm</label>
+        <button id="btnHowto" class="link">Så spelar du</button>
+        <button id="btnPhysics" class="link">Om fysiken</button>
         <button id="btnReset" class="link">Nollställ rekord</button>
       </div>
     </footer>
@@ -344,6 +298,65 @@
     <div class="row">
       <button id="installNow" class="hidden">Installera nu</button>
       <button id="installClose" class="secondary">Stäng</button>
+    </div>
+  </div>
+</div>
+
+<!-- How to play. Shown once at the start, then only from the footer: a
+     child should not have to go looking for it, and a parent reading it
+     over their shoulder is the point. -->
+<div id="howto" class="overlay hidden">
+  <div class="panel">
+    <h2>🎮 Så spelar du</h2>
+      <p><strong>Målet:</strong> plocka alla bikupor och kör sedan in i honungskrukan.</p>
+      <p><strong>Du dör</strong> om björnens huvud nuddar marken eller en vägg, eller om huvudet
+         eller ett hjul rör en getingsvärm. Kroppen får gå rakt igenom väggar — det är meningen.</p>
+      <table class="keys">
+        <tr><td><kbd>↑</kbd></td><td>Gas. Håll in för länge och du slår runt bakåt.</td></tr>
+        <tr><td><kbd>↓</kbd></td><td>Broms. Låser båda hjulen, oavsett körriktning.</td></tr>
+        <tr><td><kbd>←</kbd> <kbd>→</kbd></td><td>Volt — roterar cykeln. Alltid samma håll,
+            även när du vänt. Båda samtidigt = supervolt.</td></tr>
+        <tr><td><kbd>Space</kbd></td><td>Vänd cykeln</td></tr>
+        <tr><td><kbd>Enter</kbd> / <kbd>R</kbd></td><td>Börja om</td></tr>
+        <tr><td><kbd>P</kbd></td><td>Paus</td></tr>
+        <tr><td><kbd>G</kbd></td><td>Visa/dölj ghost (ditt bästa lopp)</td></tr>
+        <tr><td><kbd>M</kbd></td><td>Ljud av/på</td></tr>
+        <tr><td><kbd>F</kbd></td><td>Fullskärm av/på</td></tr>
+        <tr><td><kbd>Esc</kbd></td><td>Tillbaka till menyn</td></tr>
+      </table>
+      <p class="fine">Tiden mäts i hundradelar. Banan är inte klar förrän alla kupor är tagna —
+         krukan gör ingenting innan dess.</p>
+      <p class="fine">Ditt bästa lopp spelas in och visas som en genomskinlig ghost nästa gång du
+         kör banan. Klicka på ▶ i banlistan för att se reprisen.</p>
+      <p class="fine"><strong>På iPhone</strong> finns ingen fullskärmsknapp — Safari
+         tillåter det inte. Lägg i stället Björn på hemskärmen, så startar spelet utan
+         adressfält. <em>Ladda ner appen</em> uppe i menyn visar hur.</p>
+      <p class="fine"><strong>På mobil:</strong> knappar dyker upp på skärmen —
+         volt till vänster, vänd ovanför broms och gas till höger. Kugghjulet uppe i hörnet
+         pausar och öppnar menyn. När du dött räcker det att trycka var som helst för att
+         köra om. Spelet kräver landskapsläge.</p>
+    <div class="row">
+      <button id="howtoClose">Nu kör vi</button>
+    </div>
+  </div>
+</div>
+
+<div id="physics" class="overlay hidden">
+  <div class="panel">
+    <h2>⚙️ Om fysiken</h2>
+      <p>Fysiken är portad rad för rad från Elasto Manias egen källkod: fjäderstyvhet
+         10000&nbsp;N/m, dämpning 1000, gravitation 10&nbsp;m/s², hjulmassa 10&nbsp;kg mot
+         ramens 200, huvudradie 0,238&nbsp;m.</p>
+      <p>Hjulen kolliderar mot upp till två ankarpunkter åt gången. Med en punkt
+         <em>rullar</em> hjulet runt punkten enligt parallellaxelteoremet; med två låser det
+         sig helt. Det är därför man kan fastna i hörn.</p>
+      <p>Volten ger 12&nbsp;rad/s gratis som tas tillbaka en tiondel senare — men bara ner till
+         farten du hade innan. Hinner du växla rotationen till fart får du behålla den.
+         Den buggen är kvar med flit; hela rekordjakten bygger på den.</p>
+      <p class="fine">Banorna är egna. Varje bana testas automatiskt av en skriptad förare
+         innan den släpps in i spelet, så alla tjugo går bevisligen att klara.</p>
+    <div class="row">
+      <button id="physicsClose" class="secondary">Stäng</button>
     </div>
   </div>
 </div>

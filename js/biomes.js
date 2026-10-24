@@ -6,24 +6,17 @@
 // worlds existed need no edit at all.
 //
 // A locked world is shown but cannot be entered. That is deliberate: an
-// empty shelf with a date on it tells a player more than no shelf does.
+// empty shelf tells a player more than no shelf does.
+//
+// A world is an emoji, a name, and how far through it you are — nothing
+// else. Flavour text is a sentence a child has to get past before they can
+// press anything, and the picture already says what the sentence would.
 
 export const DEFAULT_BIOME = 'forest';
 
 export const BIOMES = [
-  {
-    id: 'forest',
-    name: 'Skogen',
-    emoji: '🌲',
-    blurb: 'Gräs, klippa och stjärnhimmel.',
-  },
-  {
-    id: 'snow',
-    name: 'Snön',
-    emoji: '❄️',
-    blurb: 'Kommer snart. Branta backar och dålig fäste.',
-    locked: true,
-  },
+  { id: 'forest', name: 'Skogen', emoji: '🌲' },
+  { id: 'snow', name: 'Snön', emoji: '❄️', locked: true },
 ];
 
 export const biomeOf = (data) => data.biome || DEFAULT_BIOME;

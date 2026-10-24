@@ -171,9 +171,21 @@ bakom `M` och växeln i menyn.
 
 ## Banväljaren
 
+Menyn har två flikar, **🗺️ Banor** och **✏️ Egna banor**, som stora mjuka knappar med
+emojin ovanför texten — den som inte läser orden ska ändå hitta rätt. *Så spelar du* och
+*Om fysiken* låg förut som två flikar till; de ligger nu som små länkar i menyfoten, där
+en förälder tittar och ett barn inte gör det. Hjälpen visas i stället **en gång, i
+början**, och väntar artigt på sin tur: frågan om app eller webbläsare och
+installationsrutan går båda före.
+
 Först väljer man **värld**, sedan bana. Världarna står i `js/biomes.js`: i dag
 **Skogen 🌲** med alla tjugo banor och **Snön ❄️**, som visas men är låst. En låst värld
 ritas ändå — en tom hylla med ett datum på säger mer än ingen hylla alls.
+
+Ett världskort är emoji, namn och hur långt man kommit — inget annat. En rad
+stämningstext är en mening ett barn måste ta sig förbi innan det får trycka, och bilden
+säger redan det meningen skulle sagt. En låst värld visar ett hänglås i stället för
+ordet för ett, av samma skäl.
 
 En bana talar om vilken värld den hör till med ett `biome`-fält. Utelämnas det blir det
 den första, vilket är varför de tjugo banor som skrevs innan världar fanns inte behövde

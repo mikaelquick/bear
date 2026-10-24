@@ -215,6 +215,11 @@ body.short .next-step { margin-bottom: 15px; }
 }
 .steps li { margin-bottom: 6px; }
 
+/* Reference, not a decision: these two can be as long as they need and
+   scroll inside the panel. */
+#howto h2, #physics h2 { text-align: center; }
+#howto .row, #physics .row { margin-top: 16px; }
+
 /* The question the sheet used to leave unanswered: and then what? */
 .next-step {
   text-align: left;
@@ -356,7 +361,8 @@ h2 { margin: 0 0 14px; font-size: 24px; }
   transition: background 0.12s, border-color 0.12s, transform 0.12s, color 0.12s;
 }
 
-.tab-ico { font-size: 26px; line-height: 1; }
+.tab-ico { font-size: 30px; line-height: 1; }
+.tab { font-size: 15px; padding: 14px 10px 12px; }
 
 .tab:hover {
   color: var(--text);
@@ -413,11 +419,12 @@ h2 { margin: 0 0 14px; font-size: 24px; }
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.38);
 }
 
-.biome-emoji { font-size: 40px; line-height: 1.1; }
-.biome-name { font-size: 17px; font-weight: 700; }
-.biome-blurb { font-size: 12px; color: var(--muted); }
-.biome-count { font-size: 12px; color: var(--accent); margin-top: 5px; }
-.biome .progress-bar { width: 100%; margin-top: 3px; }
+/* Bigger now that nothing competes with it: the picture is the label for
+   anyone who cannot read the one underneath. */
+.biome-emoji { font-size: 52px; line-height: 1.1; }
+.biome-name { font-size: 19px; font-weight: 700; }
+.biome-count { font-size: 13px; color: var(--accent); margin-top: 6px; }
+.biome .progress-bar { width: 100%; margin-top: 4px; }
 
 /* A locked world is still shown. An empty shelf with a date on it says
    more than no shelf at all. */
@@ -427,13 +434,7 @@ h2 { margin: 0 0 14px; font-size: 24px; }
   border-style: dashed;
 }
 .biome.locked:hover { transform: none; box-shadow: none; border-color: var(--border); }
-.biome-lock {
-  margin-top: 5px;
-  font-size: 11px;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--muted);
-}
+.biome-lock { margin-top: 7px; font-size: 20px; line-height: 1; }
 
 /* The way back out, and a reminder of where you are. */
 .biome-bar {
@@ -755,13 +756,13 @@ body.short .tagline { display: none; }
 body.short .progress { margin-bottom: 10px; }
 body.short .progress-text { margin-top: 5px; }
 body.short .tabs { margin-bottom: 9px; gap: 6px; }
-body.short .tab { padding: 7px 6px 6px; font-size: 11.5px; border-radius: 14px; gap: 3px; }
-body.short .tab-ico { font-size: 19px; }
+body.short .tab { padding: 8px 6px 7px; font-size: 13px; border-radius: 14px; gap: 3px; }
+body.short .tab-ico { font-size: 22px; }
 body.short .level-list { grid-template-columns: repeat(auto-fill, minmax(132px, 1fr)); gap: 9px; }
 body.short .biome-list { grid-template-columns: repeat(auto-fit, minmax(158px, 1fr)); gap: 9px; }
 body.short .biome { padding: 12px 12px 11px; gap: 3px; }
-body.short .biome-emoji { font-size: 31px; }
-body.short .biome-name { font-size: 15px; }
+body.short .biome-emoji { font-size: 40px; }
+body.short .biome-name { font-size: 17px; }
 body.short .pick-lead { margin-bottom: 8px; }
 body.short .biome-bar { margin-bottom: 8px; }
 body.short .level-list .num { min-width: 20px; height: 20px; border-radius: 6px; font-size: 11px; }
@@ -792,7 +793,7 @@ body.short h2 { font-size: 19px; margin-bottom: 9px; }
 #hudGhost.ahead { color: var(--ok); }
 #hudGhost.behind { color: var(--danger); }
 
-.options { display: flex; align-items: center; gap: 14px; }
+.options { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; justify-content: flex-end; }
 
 .toggle {
   display: inline-flex;

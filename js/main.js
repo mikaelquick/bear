@@ -206,11 +206,14 @@ function biomeCard(biome, entries, times) {
   const share = mine.length ? (cleared / mine.length) * 100 : 0;
   const li = document.createElement('li');
   li.className = 'biome' + (biome.locked ? ' locked' : '');
+  // Emoji, name, and how far through it you are. Nothing else: a sentence
+  // of flavour text is a sentence a child has to get past, and the picture
+  // and the number already say everything they need. A locked world shows
+  // a padlock rather than the word for one, for the same reason.
   li.innerHTML = `
     <span class="biome-emoji" aria-hidden="true">${biome.emoji}</span>
     <span class="biome-name">${escapeHtml(biome.name)}</span>
-    <span class="biome-blurb">${escapeHtml(biome.blurb)}</span>
-    ${biome.locked ? '<span class="biome-lock">Låst</span>' : `
+    ${biome.locked ? '<span class="biome-lock" title="Låst" aria-label="Låst">🔒</span>' : `
       <span class="biome-count">${cleared} av ${mine.length} klarade</span>
       <span class="progress-bar"><span style="width: ${share}%"></span></span>`}
   `;
@@ -582,6 +585,7 @@ function chooseLaunch(which) {
   settings.launch = which;
   saveSettings();
   hideAll('welcome');
+  maybeShowHowto();
 }
 
 // Chrome can open the real install dialog, and then a list of steps would
@@ -600,6 +604,23 @@ function openInstall() {
 
 const installOpen = () => !$('install').classList.contains('hidden');
 const welcomeOpen = () => !$('welcome').classList.contains('hidden');
+const howtoOpen = () => !$('howto').classList.contains('hidden');
+const physicsOpen = () => !$('physics').classList.contains('hidden');
+
+// Shown once, at the start. A child should not have to go hunting through
+// a menu for how to play, and a parent reading it over their shoulder is
+// exactly the moment it is useful. Afterwards it lives in the footer,
+// where a grown-up will look and a child will not.
+//
+// It waits its turn: the app-or-browser question and the install sheet are
+// both more urgent, so this appears once whichever of those is done.
+function maybeShowHowto() {
+  if (settings.howtoSeen) return;
+  if (welcomeOpen() || installOpen()) return;
+  settings.howtoSeen = true;
+  saveSettings();
+  show('howto');
+}
 
 // Launched from the home screen: the route worked. Nothing else in the game
 // ever says so, and after following a list of steps in another app entirely
@@ -680,6 +701,14 @@ window.addEventListener('keydown', (e) => {
   }
   if (installOpen()) {
     if (e.code === 'Escape') hideAll('install');
+    return;
+  }
+  if (howtoOpen()) {
+    if (e.code === 'Escape' || e.code === 'Enter') hideAll('howto');
+    return;
+  }
+  if (physicsOpen()) {
+    if (e.code === 'Escape') hideAll('physics');
     return;
   }
   if (e.code === 'KeyF' && !e.repeat) { toggleFullscreen(); return; }
@@ -873,11 +902,16 @@ $('optFullscreen').addEventListener('change', toggleFullscreen);
 $('wantApp').addEventListener('click', () => { chooseLaunch('app'); openInstall(); });
 $('wantWeb').addEventListener('click', () => chooseLaunch('web'));
 $('btnInstall').addEventListener('click', openInstall);
-$('installClose').addEventListener('click', () => hideAll('install'));
+$('installClose').addEventListener('click', () => { hideAll('install'); maybeShowHowto(); });
+$('btnHowto').addEventListener('click', () => show('howto'));
+$('btnPhysics').addEventListener('click', () => show('physics'));
+$('howtoClose').addEventListener('click', () => hideAll('howto'));
+$('physicsClose').addEventListener('click', () => hideAll('physics'));
 $('installNow').addEventListener('click', async () => {
   const accepted = await homescreen.prompt();
   hideAll('install');
   syncInstallUi();
+  maybeShowHowto();
   if (!accepted) toast('Ingen fara — knappen finns kvar uppe i menyn.', 3500);
 });
 $('fsYes').addEventListener('click', () => answerFullscreen(true));
@@ -1101,4 +1135,5 @@ syncInstallUi();
 showMenu();
 confirmStandalone();
 maybeShowWelcome();
+maybeShowHowto();
 requestAnimationFrame(frame);
