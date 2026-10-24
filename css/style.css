@@ -29,6 +29,43 @@
   --btn-top-hi: #6d7fae;
   --btn-bot-hi: #4b5a85;
   --btn-lip: #222a40;
+
+  /* The safe area — notch, camera, home indicator — is reported against
+     the *viewport*, but our stage is often turned a quarter or a half, so
+     it meets those edges somewhere else entirely. These four say how far
+     in from each of the STAGE's own edges is safe, and every rule that
+     needs to keep clear uses them instead of env() directly.
+
+     Derivation, for turn-90 (rotate 90deg about the top left, placed at
+     left:100vw): a stage point (x, y) lands on screen at (100vw - y, x).
+     So the stage's left edge is the viewport's top, its top edge is the
+     viewport's right, and so on round. Get this wrong and a button hides
+     under the camera, which is exactly what happened. */
+  --sa-top: env(safe-area-inset-top);
+  --sa-right: env(safe-area-inset-right);
+  --sa-bottom: env(safe-area-inset-bottom);
+  --sa-left: env(safe-area-inset-left);
+}
+
+body.turn-90 {
+  --sa-top: env(safe-area-inset-right);
+  --sa-right: env(safe-area-inset-bottom);
+  --sa-bottom: env(safe-area-inset-left);
+  --sa-left: env(safe-area-inset-top);
+}
+
+body.turn-180 {
+  --sa-top: env(safe-area-inset-bottom);
+  --sa-right: env(safe-area-inset-left);
+  --sa-bottom: env(safe-area-inset-top);
+  --sa-left: env(safe-area-inset-right);
+}
+
+body.turn-270 {
+  --sa-top: env(safe-area-inset-left);
+  --sa-right: env(safe-area-inset-top);
+  --sa-bottom: env(safe-area-inset-right);
+  --sa-left: env(safe-area-inset-bottom);
 }
 
 * { box-sizing: border-box; }
@@ -974,8 +1011,8 @@ body.touch #touchTop:not(.hidden) { display: flex; }
 #touch {
   position: fixed;
   left: 0; right: 0; bottom: 0;
-  padding: 0 max(12px, env(safe-area-inset-right)) max(12px, env(safe-area-inset-bottom))
-           max(12px, env(safe-area-inset-left));
+  padding: 0 max(12px, var(--sa-right)) max(12px, var(--sa-bottom))
+           max(12px, var(--sa-left));
   justify-content: space-between;
   align-items: flex-end;
   gap: 12px;
@@ -988,8 +1025,8 @@ body.touch #touchTop:not(.hidden) { display: flex; }
    the panel with resume, restart and back-to-menu. */
 #touchTop {
   position: fixed;
-  top: max(10px, env(safe-area-inset-top));
-  right: max(10px, env(safe-area-inset-right));
+  top: max(10px, var(--sa-top));
+  right: max(10px, var(--sa-right));
   gap: 8px;
   z-index: 4;
 }
@@ -1002,16 +1039,9 @@ body.standalone .tbtn[data-action="fullscreen"] { display: none; }
 body.touch #hud .hud-right { padding-right: 96px; }
 body.standalone.touch #hud .hud-right { padding-right: 52px; }
 
-/* Turned a quarter clockwise, the stage's bottom edge runs along the
-   device's right, its left edge along the device's top, and so on round. */
-body.sideways #touch {
-  padding: 0 max(12px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-right))
-           max(12px, env(safe-area-inset-top));
-}
-body.sideways #touchTop {
-  top: max(10px, env(safe-area-inset-left));
-  right: max(10px, env(safe-area-inset-bottom));
-}
+/* The per-turn mapping lives in :root now, so these need no override of
+   their own — and the pair they used to set had two of the four edges the
+   wrong way round. */
 
 .touch-cluster { display: flex; gap: 10px; align-items: flex-end; pointer-events: auto; }
 
@@ -1275,6 +1305,10 @@ body.standalone #menu .panel {
   border-radius: 0;
   border: none;
   box-shadow: none;
+  /* Filling the screen means meeting the camera, so everything inside
+     keeps clear of it. "← Världar" was sitting under it. */
+  padding: max(14px, var(--sa-top)) max(18px, var(--sa-right))
+           max(10px, var(--sa-bottom)) max(18px, var(--sa-left));
 }
 
 /* ---------- Turned stage: the last word ---------- */

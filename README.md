@@ -86,8 +86,12 @@ Tre fällor som följer med ett vridet `#stage`, alla lagade:
   spelar roll byts för hand sist i stilmallen, där de vinner på ordning.
 - Mediefrågor på `max-height` frågar också fel axel, så reglerna för låga skärmar
   hänger numera på klassen `body.short` som JS sätter utifrån scenens verkliga höjd.
-- `env(safe-area-inset-*)` tillhör enheten, inte scenen. Ett kvarts varv medurs lägger
-  scenens underkant längs enhetens högerkant, och så vidare runt.
+- `env(safe-area-inset-*)` rapporteras mot **vyn**, inte mot scenen, så en vriden scen
+  möter hålslaget på en helt annan kant. Fyra variabler i `:root` säger hur långt in
+  från *scenens* egna kanter som är säkert, och allt som måste hålla sig undan använder
+  dem i stället för `env()` direkt. Härledningen står i stilmallen. Får man den om
+  bakfoten hamnar en knapp under kameran — vilket den gjorde: "← Världar" låg bakom
+  hålslaget, och pekknapparnas egen regel hade två av fyra kanter förväxlade.
 
 Baneditorn är undantaget: den mappar pekarkoordinater rakt på en ovriden canvas, så där
 står porträttspärren kvar.
