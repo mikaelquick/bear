@@ -623,6 +623,12 @@ body.touch #hud .hud-right { padding-right: 96px; }
 .tbtn.gas:hover { background: linear-gradient(180deg, rgba(240,168,48,0.2), rgba(28,35,50,0.55)); }
 .tbtn.brake:hover { background: linear-gradient(180deg, rgba(224,69,58,0.18), rgba(28,35,50,0.55)); }
 
+/* Fullscreen is a mode, not a press: mark it as on without the pressed look. */
+.tbtn.on {
+  border-color: rgba(240, 168, 48, 0.75);
+  color: var(--accent-soft);
+}
+
 .tbtn.pressed {
   background: rgba(240, 168, 48, 0.8);
   border-color: var(--accent);

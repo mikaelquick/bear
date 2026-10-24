@@ -5,6 +5,17 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
 <title>Björn</title>
 <link rel="stylesheet" href="css/style.css">
+
+<!-- Add to Home Screen. This is the only way an iPhone gets a chrome-free
+     game: Safari on iPhone does not expose the Fullscreen API for ordinary
+     elements, so the manifest, not a button, is the route there. -->
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#11151f">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Björn">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 </head>
 <body>
 
@@ -32,6 +43,13 @@
 
 <!-- Touch controls. Hidden unless the device has a coarse pointer. -->
 <div id="touchTop" class="hidden">
+  <button class="tbtn small" data-action="fullscreen" aria-label="Fullskärm">
+    <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+      <path d="M3 9V4.5A1.5 1.5 0 0 1 4.5 3H9M15 3h4.5A1.5 1.5 0 0 1 21 4.5V9M21 15v4.5a1.5 1.5 0 0 1-1.5 1.5H15M9 21H4.5A1.5 1.5 0 0 1 3 19.5V15"
+            fill="none" stroke="currentColor" stroke-width="2.2"
+            stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+  </button>
   <button class="tbtn small" data-action="restart" aria-label="Börja om">
     <svg viewBox="0 0 24 24" width="19" height="19" aria-hidden="true">
       <path d="M20 12a8 8 0 1 1-2.6-5.9" fill="none" stroke="currentColor"
@@ -143,12 +161,16 @@
         <tr><td><kbd>P</kbd></td><td>Paus</td></tr>
         <tr><td><kbd>G</kbd></td><td>Visa/dölj ghost (ditt bästa lopp)</td></tr>
         <tr><td><kbd>M</kbd></td><td>Ljud av/på</td></tr>
+        <tr><td><kbd>F</kbd></td><td>Fullskärm av/på</td></tr>
         <tr><td><kbd>Esc</kbd></td><td>Tillbaka till menyn</td></tr>
       </table>
       <p class="fine">Tiden mäts i hundradelar. Banan är inte klar förrän alla kupor är tagna —
          krukan gör ingenting innan dess.</p>
       <p class="fine">Ditt bästa lopp spelas in och visas som en genomskinlig ghost nästa gång du
          kör banan. Klicka på ▶ i banlistan för att se reprisen.</p>
+      <p class="fine"><strong>På iPhone</strong> finns ingen fullskärmsknapp — Safari
+         tillåter det inte. Använd Dela → <em>Lägg till på hemskärmen</em>, så startar
+         spelet utan adressfält.</p>
       <p class="fine"><strong>På mobil:</strong> knappar dyker upp på skärmen —
          volt och vänd till vänster, broms och gas till höger. Kugghjulet uppe i hörnet
          pausar och öppnar menyn. När du dött räcker det att trycka var som helst för att
@@ -174,6 +196,8 @@
       <div class="options">
         <label class="toggle"><input type="checkbox" id="optGhost" checked> Ghost</label>
         <label class="toggle"><input type="checkbox" id="optSound"> Ljud</label>
+        <label class="toggle" id="optFullscreenWrap">
+          <input type="checkbox" id="optFullscreen"> Fullskärm</label>
         <button id="btnReset" class="link">Nollställ rekord</button>
       </div>
     </footer>
@@ -188,6 +212,19 @@
       <button id="btnResume">Fortsätt</button>
       <button id="btnPauseRestart" class="secondary">Börja om</button>
       <button id="btnPauseMenu" class="secondary">Till menyn</button>
+    </div>
+  </div>
+</div>
+
+<!-- Asked once, the first time a level starts -->
+<div id="fsPrompt" class="overlay hidden">
+  <div class="panel narrow">
+    <h2>Spela i fullskärm?</h2>
+    <p class="fine">Mer yta till banan, och på mobil låses skärmen i landskapsläge.
+       Du kan ändra när som helst med ⛶ uppe i hörnet.</p>
+    <div class="row">
+      <button id="fsYes">Ja, fullskärm</button>
+      <button id="fsNo" class="secondary">Nej tack</button>
     </div>
   </div>
 </div>

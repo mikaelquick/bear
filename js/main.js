@@ -7,6 +7,7 @@ import { Demo } from './demo.js';
 import { Game, STATE, formatTime } from './game.js';
 import { Editor, TOOLS, emptyLevel } from './editor.js';
 import { Touchpad } from './touchpad.js';
+import * as fullscreen from './fullscreen.js';
 import { OBJ, MS_TO_PHYS_TIME, TIME_TO_CENTISECONDS } from './constants.js';
 import { loadGhost, levelFingerprint, REPLAY_VERSION } from './replay.js';
 
@@ -55,6 +56,8 @@ function loadReplays() { return readJson(REPLAYS_KEY, {}); }
 function saveCustom() { return writeJson(LEVELS_KEY, customLevels); }
 
 function loadSettings() {
+  // `fullscreen` stays undefined until the player is asked, which is how we
+  // know to ask exactly once.
   return { ghost: true, sound: false, ...readJson(SETTINGS_KEY, {}) };
 }
 function saveSettings() {
@@ -216,6 +219,7 @@ function startLevel(index) {
   $('hudBest').textContent = best === undefined ? 'inget rekord än' : 'bäst ' + formatTime(best);
   $('hudGhost').textContent = '';
   hideToast();
+  applyFullscreenPreference();
 }
 
 // Plays back the stored record. Nothing is simulated live: the recording is
@@ -377,6 +381,58 @@ function applySettings() {
   $('optSound').checked = settings.sound;
   game.showGhost = settings.ghost;
   sfx.setEnabled(settings.sound);
+  syncFullscreenUi();
+  // Nothing to offer when the API is missing, or when the game was launched
+  // from the home screen and is already chrome-free.
+  $('optFullscreenWrap').classList.toggle(
+    'hidden', !fullscreen.isSupported() || fullscreen.isStandalone()
+  );
+}
+
+function syncFullscreenUi() {
+  const active = fullscreen.isActive();
+  $('optFullscreen').checked = active;
+  const btn = document.querySelector('.tbtn[data-action="fullscreen"]');
+  if (btn) btn.classList.toggle('on', active);
+}
+fullscreen.onChange(syncFullscreenUi);
+
+const fsPromptOpen = () => !$('fsPrompt').classList.contains('hidden');
+
+function shouldAskFullscreen() {
+  return settings.fullscreen === undefined
+    && fullscreen.isSupported()
+    && !fullscreen.isStandalone();
+}
+
+// The click that answered the prompt is itself the user gesture the browser
+// requires, so the request has to happen straight out of the handler.
+function answerFullscreen(yes) {
+  settings.fullscreen = yes;
+  saveSettings();
+  $('fsPrompt').classList.add('hidden');
+  if (yes) fullscreen.request();
+}
+
+// Called from level starts, which always run inside a click or key handler.
+function applyFullscreenPreference() {
+  if (shouldAskFullscreen()) {
+    $('fsPrompt').classList.remove('hidden');
+    return;
+  }
+  if (settings.fullscreen && !fullscreen.isActive()) fullscreen.request();
+  maybeSuggestHomeScreen();
+}
+
+// iPhone has no fullscreen button to offer, so point at the one route that
+// does work there. Shown once, then never again.
+function maybeSuggestHomeScreen() {
+  if (settings.homeScreenTipSeen) return;
+  if (fullscreen.isSupported() || fullscreen.isStandalone()) return;
+  if (!document.body.classList.contains('touch')) return;
+  settings.homeScreenTipSeen = true;
+  saveSettings();
+  toast('Tips: Dela → Lägg till på hemskärmen ger fullskärm.', 5000);
 }
 
 function setGhostEnabled(on) {
@@ -387,6 +443,13 @@ function setGhostEnabled(on) {
   if (on && mode === 'play' && !game.ghost && game.level) {
     game.setGhost(loadGhost(game.level, loadReplays()[game.level.name]));
   }
+}
+
+async function toggleFullscreen() {
+  const active = await fullscreen.toggle();
+  settings.fullscreen = active;
+  saveSettings();
+  syncFullscreenUi();
 }
 
 function setSoundEnabled(on) {
@@ -406,6 +469,13 @@ const BLOCKED = new Set([
 window.addEventListener('keydown', (e) => {
   if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
   if (BLOCKED.has(e.code)) e.preventDefault();
+
+  // The prompt is modal: do not let the bear set off behind it.
+  if (fsPromptOpen()) {
+    if (e.code === 'Escape') answerFullscreen(false);
+    return;
+  }
+  if (e.code === 'KeyF' && !e.repeat) { toggleFullscreen(); return; }
 
   if (mode === 'menu') return;
 
@@ -480,6 +550,7 @@ const touchpad = new Touchpad({
   },
   onRelease: (code) => game.keyUp(code),
   onAction: (action) => {
+    if (action === 'fullscreen') { toggleFullscreen(); return; }
     if (mode === 'replay') { showMenu(); return; }
     if (action === 'restart') restartRun();
     else setPaused(game.togglePause());
@@ -487,6 +558,7 @@ const touchpad = new Touchpad({
   // Dead is the state you spend most of your time in. One tap anywhere
   // retries, rather than aiming for a small button at the top of the screen.
   onTapAway: () => {
+    if (fsPromptOpen()) return;
     if (mode === 'play' && game.state === STATE.DEAD) restartRun();
   },
   isActive: () => document.body.classList.contains('touch')
@@ -569,6 +641,9 @@ $('btnResume').addEventListener('click', () => { game.togglePause(); setPaused(f
 $('btnPauseRestart').addEventListener('click', restartRun);
 $('btnPauseMenu').addEventListener('click', () => { game.paused = false; leavePlay(); });
 $('optGhost').addEventListener('change', (e) => setGhostEnabled(e.target.checked));
+$('optFullscreen').addEventListener('change', toggleFullscreen);
+$('fsYes').addEventListener('click', () => answerFullscreen(true));
+$('fsNo').addEventListener('click', () => answerFullscreen(false));
 $('optSound').addEventListener('change', (e) => setSoundEnabled(e.target.checked));
 
 $('btnReset').addEventListener('click', () => {

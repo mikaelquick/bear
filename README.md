@@ -57,6 +57,7 @@ igenom väggar — det är så originalet fungerar och det är det banorna är b
 | `P` | Paus |
 | `G` | Visa/dölj ghost |
 | `M` | Ljud av/på |
+| `F` | Fullskärm av/på |
 | `Esc` | Meny |
 
 Tiden mäts i hundradelar och sparas per bana i `localStorage`.
@@ -72,6 +73,26 @@ och hålla två knappar samtidigt.
 
 `tools/mobile-preview.html` visar spelet i en telefonstor iframe med riktiga
 viewport-mått, för att slippa gissa hur det ser ut.
+
+### Fullskärm
+
+Första gången du startar en bana kommer frågan en gång. Svaret sparas, och kan ändras
+med ⛶ uppe i hörnet, växeln i menyn eller `F`.
+
+Det är medvetet frivilligt. **Safari på iPhone stödjer inte Fullscreen API för vanliga
+element** (iPad gör det sedan iPadOS 16.4), så ett krav hade låst ute en stor del av
+mobilanvändarna. Varje anrop i `js/fullscreen.js` är därför best effort: be om det, och
+fortsätt oavsett svar.
+
+Där det fungerar följer `screen.orientation.lock('landscape')` med — det går bara i
+fullskärm, och där det lyckas behöver porträttspärren aldrig visas.
+
+För iPhone är rätt väg **Lägg till på hemskärmen**: `manifest.webmanifest` plus
+`apple-mobile-web-app-capable` gör att spelet startar utan adressfält. Spelet tipsar om
+det en gång på enheter som saknar fullskärmsstöd.
+
+Ikonerna genereras av `tools/make-icons.py`, som skriver PNG-bytes direkt med `zlib`
+så att det inte behövs något bildbibliotek och ingen binär behöver handredigeras.
 
 **Ljudet är avstängt som standard** tills vi har riktiga ljud. Syntkoden finns kvar
 bakom `M` och växeln i menyn.
@@ -138,6 +159,9 @@ index.html
 css/style.css
 tools/dev-server.py      statisk server utan cachning
 tools/mobile-preview.html  spelet i en telefonstor iframe
+tools/make-icons.py        genererar app-ikonerna utan bildbibliotek
+manifest.webmanifest       Lägg till på hemskärmen
+icons/                     genererade app-ikoner
 js/
   constants.js   fysikkonstanter, portade oförändrade
   vec2.js        vektorhjälp
@@ -154,6 +178,7 @@ js/
   driver.js      skriptad förare (demo i menyn + tester)
   demo.js        attract-läget bakom menyn
   touchpad.js    styrkorset: global fingerspårning för skärmknapparna
+  fullscreen.js  fullskärm och orienteringslås, med plattformsreservationerna
   editor.js      baneditor
   game.js        speltillstånd
   main.js        meny, lägen, inmatning, touch, huvudloop
