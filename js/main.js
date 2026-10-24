@@ -872,11 +872,12 @@ const touchpad = new Touchpad({
     if (game.state === STATE.PLAYING) $('startHint').classList.add('hidden');
   },
   onRelease: (code) => game.keyUp(code),
+  // The corner has two buttons left: fullscreen, and the gear. Restarting
+  // moved into the gear's own menu, where it was already offered.
   onAction: (action) => {
     if (action === 'fullscreen') { toggleFullscreen(); return; }
     if (mode === 'replay') { showMenu(); return; }
-    if (action === 'restart') restartRun();
-    else setPaused(game.togglePause());
+    setPaused(game.togglePause());
   },
   // Dead is the state you spend most of your time in. One tap anywhere
   // retries, rather than aiming for a small button at the top of the screen.

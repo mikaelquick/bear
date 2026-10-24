@@ -272,22 +272,26 @@ body.turn-180 #stage {
    Deliberately large: this is the screen a child meets after every single
    run, and it should be workable without a grown-up leaning in. Big
    target, big emoji to aim at, two or three words. */
-#dialogButtons {
+#dialogButtons,
+.big-choices {
   flex-direction: column;
   align-items: stretch;
   gap: 10px;
   margin-top: 6px;
 }
-#dialogButtons .choice { padding: 16px 20px; gap: 16px; border-radius: 18px; }
-#dialogButtons .choice-ico { font-size: 30px; }
-#dialogButtons .choice-text strong { font-size: 19px; }
+#dialogButtons .choice, .big-choices .choice { padding: 16px 20px; gap: 16px; border-radius: 18px; }
+#dialogButtons .choice-ico, .big-choices .choice-ico { font-size: 30px; }
+#dialogButtons .choice-text strong, .big-choices .choice-text strong { font-size: 19px; }
 
 /* On a landscape phone the panel is short, so they tighten rather than
    scroll — but they stay the biggest thing on the screen. */
-body.short #dialogButtons { gap: 7px; }
-body.short #dialogButtons .choice { padding: 10px 16px; gap: 12px; border-radius: 15px; }
-body.short #dialogButtons .choice-ico { font-size: 23px; }
-body.short #dialogButtons .choice-text strong { font-size: 16px; }
+body.short #dialogButtons, body.short .big-choices { gap: 7px; }
+body.short #dialogButtons .choice,
+body.short .big-choices .choice { padding: 10px 16px; gap: 12px; border-radius: 15px; }
+body.short #dialogButtons .choice-ico,
+body.short .big-choices .choice-ico { font-size: 23px; }
+body.short #dialogButtons .choice-text strong,
+body.short .big-choices .choice-text strong { font-size: 16px; }
 .choice-text { display: flex; flex-direction: column; gap: 2px; }
 .choice-text strong { font-size: 15px; }
 .choice-text small { font-size: 12px; opacity: 0.78; font-weight: 400; }

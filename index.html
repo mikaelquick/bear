@@ -106,14 +106,6 @@
             stroke-linecap="round" stroke-linejoin="round"/>
     </svg>
   </button>
-  <button class="tbtn small" data-action="restart" aria-label="Börja om">
-    <svg viewBox="0 0 24 24" width="19" height="19" aria-hidden="true">
-      <path d="M20 12a8 8 0 1 1-2.6-5.9" fill="none" stroke="currentColor"
-            stroke-width="2.2" stroke-linecap="round"/>
-      <path d="M20 3v5h-5" fill="none" stroke="currentColor"
-            stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
-    </svg>
-  </button>
   <button class="tbtn small" data-action="pause" aria-label="Paus och meny">
     <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
       <circle cx="12" cy="12" r="3.2" fill="none" stroke="currentColor" stroke-width="2"/>
@@ -233,10 +225,19 @@
 <div id="pause" class="overlay hidden">
   <div class="panel narrow">
     <h2>Pausad</h2>
-    <div class="row">
-      <button id="btnResume">Fortsätt</button>
-      <button id="btnPauseRestart" class="secondary">Börja om</button>
-      <button id="btnPauseMenu" class="secondary">Till menyn</button>
+    <div class="row big-choices">
+      <button id="btnResume" class="choice">
+        <span class="choice-ico" aria-hidden="true">▶️</span>
+        <span class="choice-text"><strong>Fortsätt</strong></span>
+      </button>
+      <button id="btnPauseRestart" class="choice secondary">
+        <span class="choice-ico" aria-hidden="true">🔄</span>
+        <span class="choice-text"><strong>Börja om</strong></span>
+      </button>
+      <button id="btnPauseMenu" class="choice secondary">
+        <span class="choice-ico" aria-hidden="true">🏠</span>
+        <span class="choice-text"><strong>Meny</strong></span>
+      </button>
     </div>
   </div>
 </div>
