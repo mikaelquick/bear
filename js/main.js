@@ -227,6 +227,7 @@ const show = (...ids) => ids.forEach((id) => $(id).classList.remove('hidden'));
 
 function showMenu() {
   mode = 'menu';
+  layoutStage();
   returnToEditor = false;
   replay = null;
   document.body.classList.remove('playing');
@@ -299,6 +300,7 @@ function startReplay(index) {
 
 function openEditor(level) {
   mode = 'editor';
+  layoutStage();
   replay = null;
   document.body.classList.remove('playing');
   sfx.silenceEngine();
@@ -648,7 +650,10 @@ function enableTouchUI() {
 const forceTouch = new URLSearchParams(location.search).get('touch') === '1';
 if (forceTouch) enableTouchUI();
 if (window.matchMedia && matchMedia('(pointer: coarse)').matches) enableTouchUI();
-window.addEventListener('touchstart', enableTouchUI, { once: true, passive: true });
+// A first touch from a device that never advertised a coarse pointer. The
+// controls appear, which changes whether the stage should be turned.
+window.addEventListener('touchstart', () => { enableTouchUI(); relayout(); },
+  { once: true, passive: true });
 
 const touchpad = new Touchpad({
   onPress: (code) => {
@@ -674,14 +679,31 @@ const touchpad = new Touchpad({
 });
 touchpad.attach();
 
-// Portrait is blocked outright on touch devices. Pause rather than just
-// covering the screen, or the bear keeps riding behind the overlay.
+// The game is landscape, always. On a phone held upright we turn the stage
+// a quarter turn rather than asking the player to turn the phone — see the
+// CSS. Their rotation lock is usually on, which makes "vrid telefonen" an
+// instruction they cannot follow.
 const portrait = window.matchMedia
   ? matchMedia('(orientation: portrait)')
   : { matches: false, addEventListener() {} };
 
-const orientationBlocked = () =>
-  document.body.classList.contains('touch') && portrait.matches;
+// The editor is the one holdout: it maps pointer coordinates straight onto
+// an untransformed canvas, and a quarter turn would put every click in the
+// wrong place. There the old gate still stands.
+function layoutStage() {
+  const touch = document.body.classList.contains('touch');
+  const sideways = touch && portrait.matches && mode !== 'editor';
+  document.body.classList.toggle('sideways', sideways);
+  // Once turned, the stage is as tall as the viewport is wide. No media
+  // query can see that, which is why the short-screen rules hang off a
+  // class rather than off `max-height`.
+  const stageHeight = sideways ? window.innerWidth : window.innerHeight;
+  document.body.classList.toggle('short', stageHeight <= 470);
+}
+
+const orientationBlocked = () => document.body.classList.contains('touch')
+  && portrait.matches
+  && !document.body.classList.contains('sideways');
 
 function handleOrientation() {
   if (!orientationBlocked()) return;
@@ -689,7 +711,7 @@ function handleOrientation() {
   game.keys.clear();
   if (mode === 'play' && !game.paused) setPaused(game.togglePause());
 }
-portrait.addEventListener('change', handleOrientation);
+portrait.addEventListener('change', relayout);
 
 // Switching away mid-press would otherwise leave the throttle open.
 document.addEventListener('visibilitychange', () => {
@@ -929,6 +951,7 @@ window.bjorn = {
 };
 
 function relayout() {
+  layoutStage();
   renderer.resize();
   // The editor has its own zoom, set by the user scrolling.
   if (mode !== 'editor') renderer.fitScale();
@@ -938,8 +961,7 @@ function relayout() {
 window.addEventListener('resize', relayout);
 window.addEventListener('orientationchange', relayout);
 if (window.visualViewport) window.visualViewport.addEventListener('resize', relayout);
-renderer.resize();
-renderer.fitScale();
+relayout();
 applySettings();
 syncInstallUi();
 showMenu();

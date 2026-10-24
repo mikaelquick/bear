@@ -34,6 +34,13 @@
   </defs>
 </svg>
 
+<!-- Everything the player sees lives in the stage, because the stage is
+     what gets turned a quarter turn when the device insists on portrait.
+     A transformed element becomes the containing block for its fixed
+     descendants, so every `position: fixed` in here lands against the
+     stage rather than the real viewport, which is exactly what we want. -->
+<div id="stage">
+
 <canvas id="view"></canvas>
 
 <!-- In-game HUD -->
@@ -111,13 +118,6 @@
         <span class="cap">gas</span>
       </button>
     </div>
-  </div>
-</div>
-<div id="rotateGate">
-  <div class="rotate-card">
-    <div class="rotate-phone" aria-hidden="true"></div>
-    <h2>Vrid telefonen</h2>
-    <p>Björn spelas på längden.</p>
   </div>
 </div>
 
@@ -364,6 +364,17 @@
   Klicka för att sätta hörn · <kbd>Enter</kbd> stäng polygon · <kbd>Esc</kbd> avbryt ·
   <kbd>Shift</kbd>+dra panorera · scroll zoom · <kbd>Delete</kbd> ta bort ·
   <kbd>Alt</kbd>+klick på bikupa = gravitation · <kbd>1</kbd>–<kbd>6</kbd> verktyg
+</div>
+
+</div><!-- #stage -->
+
+<!-- Only the editor still asks for this. The game turns itself. -->
+<div id="rotateGate">
+  <div class="rotate-card">
+    <div class="rotate-phone" aria-hidden="true"></div>
+    <h2>Vrid telefonen</h2>
+    <p>Baneditorn behöver skärmen på längden.</p>
+  </div>
 </div>
 
 <script type="module" src="js/main.js"></script>

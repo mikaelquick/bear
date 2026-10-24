@@ -72,10 +72,32 @@ Tiden mäts i hundradelar och sparas per bana i `localStorage`.
 Volt till vänster; vänd, broms och gas som en stapel till höger, med vänd tvärs över
 de två pedalerna. Kugghjul uppe i hörnet för paus och meny. När du dött räcker ett tryck var som helst för att köra om.
 
-Spelet kräver landskapsläge — i porträtt pausas det och en spärr ber dig vrida
-telefonen. Kameran zoomar efter skärmen så en telefon ser ungefär lika mycket bana som
-en dator, och styrkorset spårar fingrarna globalt så att man kan glida mellan pedalerna
-och hålla två knappar samtidigt.
+Spelet körs **alltid liggande**, alltid åt samma håll. Rapporterar enheten porträtt
+vänder vi spelet i stället för att be spelaren vända telefonen: allt ligger i `#stage`,
+som får ett kvarts varv medurs. Det är det enda som fungerar när rotationslåset är
+påslaget, och är det avslaget blir vyn liggande av sig själv när telefonen vänds,
+klassen faller bort och scenen rätar upp sig. Båda vägarna slutar med spelet rättvänt.
+
+Tre fällor som följer med ett vridet `#stage`, alla lagade:
+
+- `vw` och `vh` betyder fortfarande den riktiga vyn inne i en vriden scen, så de som
+  spelar roll byts för hand sist i stilmallen, där de vinner på ordning.
+- Mediefrågor på `max-height` frågar också fel axel, så reglerna för låga skärmar
+  hänger numera på klassen `body.short` som JS sätter utifrån scenens verkliga höjd.
+- `env(safe-area-inset-*)` tillhör enheten, inte scenen. Ett kvarts varv medurs lägger
+  scenens underkant längs enhetens högerkant, och så vidare runt.
+
+Baneditorn är undantaget: den mappar pekarkoordinater rakt på en ovriden canvas, så där
+står porträttspärren kvar.
+
+`#stage` är transformerat även upprätt, med flit. Det gör scenen till containing block
+för varje `position: fixed` inuti, så de mäter mot scenen i stället för mot layoutvyn —
+och scenens höjd är `100svh`, vyn minus webbläsarens egna fält. Utan det hamnade
+pedalerna under Safaris nedre list och gick inte att nå.
+
+Kameran zoomar efter skärmen så en telefon ser ungefär lika mycket bana som en dator,
+och styrkorset spårar fingrarna globalt så att man kan glida mellan pedalerna och hålla
+två knappar samtidigt.
 
 `tools/mobile-preview.html` visar spelet i en telefonstor iframe med riktiga
 viewport-mått, för att slippa gissa hur det ser ut.

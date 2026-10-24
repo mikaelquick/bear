@@ -31,6 +31,38 @@ html, body {
   -webkit-touch-callout: none;
 }
 
+/* The game is landscape, always, and always the same way up.
+   When the device reports portrait we turn the game instead of asking the
+   player to turn the phone. That is the only thing that works when their
+   rotation lock is on — and when it is off, turning the phone makes the
+   viewport landscape, the class drops and the stage straightens out by
+   itself. Both roads end with the game the right way up.
+   A quarter turn clockwise, so the phone is turned to the left.
+
+   The transform is here even when upright, on purpose: it makes the stage
+   the containing block for every `position: fixed` inside it, so they
+   measure against the stage rather than the layout viewport. That is what
+   keeps the pedals off the bottom of a browser that has its own toolbar
+   down there — svh is the viewport minus those bars. */
+#stage {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100vh;
+  height: 100svh;
+  transform: translateZ(0);
+}
+
+body.sideways #stage {
+  left: 100vw;
+  width: 100vh;
+  width: 100svh;
+  height: 100vw;
+  transform: rotate(90deg);
+  transform-origin: top left;
+}
+
 #view {
   position: fixed;
   inset: 0;
@@ -155,24 +187,22 @@ html, body {
 /* A phone held sideways is short, and the box must fit without scrolling —
    a choice you have to scroll to find is not much of a choice. The bear and
    the tagline are the ornament, so they are what gives way. */
-@media (max-height: 470px) {
-  #welcome .panel { padding: 18px 22px; }
-  .welcome .brand-mark { width: 42px; height: 42px; margin-bottom: 8px; }
-  .welcome .brand-mark svg { width: 34px; height: 34px; }
-  .welcome h2 { font-size: 21px; }
-  .welcome .tagline { display: none; }
-  .welcome .fine { margin-top: 12px; }
+body.short #welcome .panel { padding: 18px 22px; }
+body.short .welcome .brand-mark { width: 42px; height: 42px; margin-bottom: 8px; }
+body.short .welcome .brand-mark svg { width: 34px; height: 34px; }
+body.short .welcome h2 { font-size: 21px; }
+body.short .welcome .tagline { display: none; }
+body.short .welcome .fine { margin-top: 12px; }
 
-  /* The install sheet has the same problem and the same answer: the steps
-     are the point, the spacing around them is not. */
-  #install .panel { padding: 18px 22px; }
-  #install h2 { font-size: 20px; margin-bottom: 10px; }
-  /* The steps and what to do afterwards are the sheet. The sales pitch above
-     them is not, so on a short screen it is what goes. */
-  #install .intro { display: none; }
-  .steps { margin: 0 0 14px; line-height: 1.55; }
-  .next-step { margin-bottom: 15px; }
-}
+/* The install sheet has the same problem and the same answer: the steps are
+   the point, the spacing around them is not. */
+body.short #install .panel { padding: 18px 22px; }
+body.short #install h2 { font-size: 20px; margin-bottom: 10px; }
+/* The steps and what to do afterwards are the sheet. The pitch above them is
+   not, so on a short screen it is what goes. */
+body.short #install .intro { display: none; }
+body.short .steps { margin: 0 0 14px; line-height: 1.55; }
+body.short .next-step { margin-bottom: 15px; }
 
 /* ---------- Install instructions ---------- */
 
@@ -532,26 +562,24 @@ p { line-height: 1.6; font-size: 14px; }
 
 /* Landscape phone: the desktop header ate the whole panel, leaving room for
    two level rows. Strip it down so the list is the page. */
-@media (max-height: 470px) {
-  .panel { max-height: 94vh; padding: 14px 18px 10px; border-radius: 16px; }
-  .brand { gap: 11px; margin-bottom: 10px; }
-  .brand-mark { width: 40px; height: 40px; border-radius: 12px; }
-  .brand-mark svg { width: 32px; height: 32px; }
-  h1 { font-size: 24px; }
-  .tagline { display: none; }
-  .progress { margin-bottom: 10px; }
-  .progress-text { margin-top: 5px; }
-  .tabs { margin-bottom: 8px; }
-  .tab { padding: 6px 10px; font-size: 13px; }
-  .level-list li { padding: 7px 11px; gap: 10px; }
-  .level-list .num { width: 24px; height: 24px; border-radius: 7px; }
-  .level-list .name { font-size: 14px; }
-  .level-list .meta { font-size: 11px; }
-  .menu-footer { margin-top: 10px; padding-top: 9px; }
-  .panel.narrow { padding: 16px 18px; }
-  .result-time { font-size: 30px; }
-  h2 { font-size: 19px; margin-bottom: 9px; }
-}
+body.short .panel { max-height: 94vh; padding: 14px 18px 10px; border-radius: 16px; }
+body.short .brand { gap: 11px; margin-bottom: 10px; }
+body.short .brand-mark { width: 40px; height: 40px; border-radius: 12px; }
+body.short .brand-mark svg { width: 32px; height: 32px; }
+body.short h1 { font-size: 24px; }
+body.short .tagline { display: none; }
+body.short .progress { margin-bottom: 10px; }
+body.short .progress-text { margin-top: 5px; }
+body.short .tabs { margin-bottom: 8px; }
+body.short .tab { padding: 6px 10px; font-size: 13px; }
+body.short .level-list li { padding: 7px 11px; gap: 10px; }
+body.short .level-list .num { width: 24px; height: 24px; border-radius: 7px; }
+body.short .level-list .name { font-size: 14px; }
+body.short .level-list .meta { font-size: 11px; }
+body.short .menu-footer { margin-top: 10px; padding-top: 9px; }
+body.short .panel.narrow { padding: 16px 18px; }
+body.short .result-time { font-size: 30px; }
+body.short h2 { font-size: 19px; margin-bottom: 9px; }
 
 /* ---------- Badges, options, ghost readout ---------- */
 
@@ -627,6 +655,17 @@ body.touch #touchTop:not(.hidden) { display: flex; }
 
 /* Keep the hive counter clear of those buttons. */
 body.touch #hud .hud-right { padding-right: 96px; }
+
+/* Turned a quarter clockwise, the stage's bottom edge runs along the
+   device's right, its left edge along the device's top, and so on round. */
+body.sideways #touch {
+  padding: 0 max(12px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-right))
+           max(12px, env(safe-area-inset-top));
+}
+body.sideways #touchTop {
+  top: max(10px, env(safe-area-inset-left));
+  right: max(10px, env(safe-area-inset-bottom));
+}
 
 .touch-cluster { display: flex; gap: 10px; align-items: flex-end; pointer-events: auto; }
 
@@ -781,8 +820,10 @@ body.touch #hud .hud-right { padding-right: 96px; }
   text-align: center;
 }
 
+/* Only when we have decided not to turn, which now means the editor: its
+   pointer maths is tied to an untransformed canvas. */
 @media (orientation: portrait) {
-  body.touch #rotateGate { display: flex; }
+  body.touch:not(.sideways) #rotateGate { display: flex; }
 }
 
 .rotate-card { padding: 24px; }
@@ -804,24 +845,32 @@ body.touch #hud .hud-right { padding-right: 96px; }
 
 /* Short landscape screens: shrink the controls and the HUD so the playfield
    keeps as much room as possible. */
-@media (max-height: 470px) {
-  .tbtn.volt { width: 54px; height: 54px; }
-  .tbtn.turn { height: 36px; border-radius: 18px; }
-  .tbtn.small { width: 36px; height: 36px; }
-  body.touch #hud .hud-right { padding-right: 84px; }
-  .tbtn.pedal { width: 64px; height: 88px; }
-  .tbtn.brake { height: 74px; }
-  .tbtn .glyph { font-size: 19px; }
-
-  body.touch .hud-time { font-size: 24px; }
-  body.touch .hud-hives { font-size: 21px; }
-  body.touch .hive-dot { width: 15px; height: 15px; }
-  body.touch .hud-sub { font-size: 11px; margin-top: 3px; }
-  body.touch #hud { padding: 10px 14px; }
-}
+body.short .tbtn.volt { width: 54px; height: 54px; }
+body.short .tbtn.turn { height: 36px; border-radius: 16px / 12px; }
+body.short .tbtn.small { width: 36px; height: 36px; }
+body.short.touch #hud .hud-right { padding-right: 84px; }
+body.short .tbtn.pedal { width: 64px; height: 88px; }
+body.short .tbtn.brake { height: 74px; }
+body.short .tbtn .glyph { font-size: 19px; }
+body.short.touch .hud-time { font-size: 24px; }
+body.short.touch .hud-hives { font-size: 21px; }
+body.short.touch .hive-dot { width: 15px; height: 15px; }
+body.short.touch .hud-sub { font-size: 11px; margin-top: 3px; }
+body.short.touch #hud { padding: 10px 14px; }
 
 /* Clear of the on-screen controls. */
 body.touch.playing #toast { bottom: 118px; }
 /* The keyboard hint is meaningless with the pedals on screen, and the
    buttons carry their own labels. */
 body.touch .hint { display: none; }
+
+/* ---------- Turned stage: the last word ---------- */
+
+/* vw and vh still mean the real viewport inside a turned stage, so the ones
+   that matter have to be swapped by hand — missing one is how a panel ends
+   up taller than the screen it is drawn on. These live at the end of the
+   file on purpose: body.short sets the same properties at the same
+   specificity above, and whichever comes last wins. */
+body.sideways .panel { width: min(660px, 94vh); max-height: 90vw; }
+body.sideways.short .panel { max-height: 94vw; }
+body.sideways .panel.narrow { width: min(430px, 94vh); }
