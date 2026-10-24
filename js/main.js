@@ -903,6 +903,39 @@ function renderReplay(dtSeconds, wallClock) {
 
 let lastFrame = performance.now();
 
+// ------------------------------------------------------------ pedal feel
+
+// The pedals carry the bike's own speed: the tread rolls at the rear
+// wheel's pace and the throttle glows harder the faster it turns. Driven
+// from the simulation rather than from a canned animation, so what the
+// thumb sees is what the bike is doing — the tread even locks solid when
+// the brake locks the wheels.
+// Measured rather than guessed: the rear wheel sits around 6 rad/s rolling
+// along the flat and reaches the mid thirties running downhill or spinning
+// free in the air. So the tread is capped short of that to stop it
+// strobing, and the glow is square-rooted so ordinary riding uses the
+// middle of the range instead of the bottom inch of it.
+const TREAD_PERIOD = 9;    // px; the gradient period in the stylesheet
+const TREAD_PER_RAD = 3.5; // px of travel per radian of wheel rotation
+const TREAD_CAP = 24;      // rad/s past which the tread stops speeding up
+const REV_FULL = 25;       // rad/s that lights the throttle fully
+
+let tread = 0;
+
+function updatePedalFeel(dtSeconds) {
+  if (!document.body.classList.contains('touch')) return;
+  const motor = game.run && game.run.motor;
+  // Forward is a negative angular velocity, and the tread should roll down
+  // towards the rider as the bike pulls away.
+  const spin = motor ? -motor.rightWheel.angularVelocity : 0;
+  const capped = Math.max(-TREAD_CAP, Math.min(TREAD_CAP, spin));
+  tread = (tread + capped * TREAD_PER_RAD * dtSeconds) % TREAD_PERIOD;
+  const el = $('touch');
+  el.style.setProperty('--tread', tread.toFixed(2) + 'px');
+  el.style.setProperty('--rev',
+    Math.min(1, Math.sqrt(Math.abs(spin) / REV_FULL)).toFixed(3));
+}
+
 function frame(now) {
   // Rounded to float32 so the value a replay stores is exactly the one the
   // simulation consumed.
@@ -916,6 +949,7 @@ function frame(now) {
     if (orientationBlocked() && !game.paused) handleOrientation();
     game.step(dtMs);
     game.render(dtMs / 1000, wallClock);
+    updatePedalFeel(dtMs / 1000);
     $('hudTime').textContent = formatTime(game.displayTime);
     $('hudHives').textContent = game.applesLeft;
     updateGhostReadout();

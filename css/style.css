@@ -759,16 +759,21 @@ body.sideways #touchTop {
   overflow: hidden;
 }
 
+/* The tread is not decoration: --tread is driven from the rear wheel's
+   actual spin, so it rolls when the bike rolls, slows as it slows and locks
+   when the brake locks. The 9px period is shared with the offset maths in
+   main.js — change one and change the other. */
 .tbtn.pedal::before {
   content: '';
   position: absolute;
   inset: 9px 12px 26px;
   border-radius: 7px;
-  background: repeating-linear-gradient(
+  background-image: repeating-linear-gradient(
     180deg,
     rgba(232, 236, 244, 0.22) 0 3px,
     transparent 3px 9px
   );
+  background-position: 0 var(--tread, 0px);
 }
 
 .tbtn.pedal .cap { font-size: 10px; opacity: 0.85; font-weight: 700; }
@@ -803,10 +808,20 @@ body.sideways #touchTop {
   transform: none;
 }
 .tbtn.pressed .cap { color: #241704; opacity: 1; }
-.tbtn.pressed::before { background: repeating-linear-gradient(
+.tbtn.pressed::before { background-image: repeating-linear-gradient(
   180deg, rgba(36, 23, 4, 0.3) 0 3px, transparent 3px 9px); }
 .tbtn.brake.pressed { background: rgba(224, 69, 58, 0.85); color: #fff; }
 .tbtn.brake.pressed .cap { color: #fff; }
+
+/* Pushed in, not merely lit up. */
+.tbtn.pedal.pressed { box-shadow: inset 0 3px 11px rgba(0, 0, 0, 0.42); }
+
+/* And the throttle burns brighter the harder the wheel is turning. --rev
+   runs 0 to 1 and comes from the same place as the tread. */
+.tbtn.gas.pressed {
+  box-shadow: inset 0 3px 11px rgba(0, 0, 0, 0.42),
+              0 0 calc(5px + var(--rev, 0) * 17px) rgba(240, 168, 48, 0.6);
+}
 
 /* Portrait is a hard stop, not a suggestion: the controls and the view both
    need the width. */

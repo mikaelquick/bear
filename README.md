@@ -99,6 +99,15 @@ Kameran zoomar efter skärmen så en telefon ser ungefär lika mycket bana som e
 och styrkorset spårar fingrarna globalt så att man kan glida mellan pedalerna och hålla
 två knappar samtidigt.
 
+Pedalerna rör sig med cykeln. `updatePedalFeel` i `js/main.js` läser bakhjulets
+`angularVelocity` varje bildruta och sätter två CSS-variabler på `#touch`: `--tread`
+flyttar mönstret på pedalerna i hjulets takt, `--rev` lyser upp gasen hårdare ju
+fortare hjulet snurrar. Inget är en förinspelad animation — rullar hjulet rullar
+mönstret, låser bromsen hjulet står mönstret stilla. Siffrorna är mätta, inte gissade:
+bakhjulet ligger kring 6 rad/s på plant underlag och når trettiotalet utför eller fritt
+i luften, så mönstret kapas före det för att inte stroboskopera och glöden
+kvadratrotas så vanlig körning hamnar mitt i skalan.
+
 `tools/mobile-preview.html` visar spelet i en telefonstor iframe med riktiga
 viewport-mått, för att slippa gissa hur det ser ut.
 
