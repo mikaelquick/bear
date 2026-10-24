@@ -205,26 +205,11 @@ function levelRow(entry, index, times) {
       ${escapeHtml(name)}
       <span class="meta">${hiveCount(entry.data)} kupor${difficultyDots(entry.data.difficulty)}</span>
     </span>
-    <span class="rides"></span>
     <span class="foot">
       <span class="time ${best === undefined ? 'none' : ''}">${best === undefined ? '' : formatTime(best)}</span>
     </span>
   `;
-
-  // One button per machine. Tapping one is both the choice and the start,
-  // which keeps it to a single press — a child should not have to pick a
-  // vehicle and then separately press go.
-  const rides = li.querySelector('.rides');
-  for (const vehicle of VEHICLES) {
-    const btn = document.createElement('button');
-    btn.className = 'ride' + (vehicle.id === currentVehicle ? ' on' : '');
-    btn.innerHTML = `<span aria-hidden="true">${vehicle.emoji}</span>`;
-    btn.title = `Kör ${vehicle.name.toLowerCase()}`;
-    btn.setAttribute('aria-label', `${escapeHtml(name)} med ${vehicle.name.toLowerCase()}`);
-    btn.addEventListener('click', (e) => { e.stopPropagation(); startLevel(index, vehicle.id); });
-    rides.appendChild(btn);
-  }
-  li.addEventListener('click', () => startLevel(index));
+  li.addEventListener('click', () => openRideChoice(index));
 
   if (hasReplay(name, currentVehicle)) {
     const play = document.createElement('button');
@@ -307,6 +292,50 @@ function renderLevelList() {
   $('progressText').textContent = `${cleared} av ${LEVELS.length} banor klarade`;
 }
 
+// ------------------------------------------------------------ vehicles
+
+const rideChoiceOpen = () => !$('rideChoice').classList.contains('hidden');
+
+// Which level the chooser is about. Null when it is closed.
+let pendingLevel = null;
+
+// Each machine as a full-width row with its own record on this level, so
+// the choice is made with the thing that matters in front of you: how you
+// have done on each.
+function openRideChoice(index) {
+  const entries = allLevels();
+  const entry = entries[index];
+  if (!entry) return;
+  pendingLevel = index;
+  const times = loadTimes();
+  $('rideLevel').textContent = entry.data.name;
+  const list = $('rideList');
+  list.innerHTML = '';
+  for (const vehicle of VEHICLES) {
+    const best = times[recordKey(entry.data.name, vehicle.id)];
+    const btn = document.createElement('button');
+    btn.className = 'choice' + (vehicle.id === currentVehicle ? '' : ' secondary');
+    btn.innerHTML = `
+      <span class="choice-ico" aria-hidden="true">${vehicle.emoji}</span>
+      <span class="choice-text">
+        <strong>${escapeHtml(vehicle.name)}</strong>
+        <small>${best === undefined ? 'inte klarad än' : 'bäst ' + formatTime(best)}</small>
+      </span>`;
+    btn.addEventListener('click', () => {
+      hideAll('rideChoice');
+      pendingLevel = null;
+      startLevel(index, vehicle.id);
+    });
+    list.appendChild(btn);
+  }
+  show('rideChoice');
+}
+
+function closeRideChoice() {
+  pendingLevel = null;
+  hideAll('rideChoice');
+}
+
 // ------------------------------------------------------------- worlds
 
 // Which world's levels are on screen, or null for the chooser itself.
@@ -375,7 +404,7 @@ function showMenu() {
   if (!demo) demo = new Demo(renderer, effects);
   show('menu');
   hideAll('hud', 'dialog', 'pause', 'editorBar', 'editorHint', 'startHint',
-          'touch', 'touchTop', 'replayBadge');
+          'touch', 'touchTop', 'replayBadge', 'rideChoice');
   hideToast();
 }
 
@@ -740,6 +769,10 @@ window.addEventListener('keydown', (e) => {
     if (e.code === 'Escape') hideAll('install');
     return;
   }
+  if (rideChoiceOpen()) {
+    if (e.code === 'Escape') closeRideChoice();
+    return;
+  }
   if (howtoOpen()) {
     if (e.code === 'Escape' || e.code === 'Enter') hideAll('howto');
     return;
@@ -928,6 +961,7 @@ $('edExport').addEventListener('click', () => {
   URL.revokeObjectURL(a.href);
 });
 
+$('rideCancel').addEventListener('click', closeRideChoice);
 $('btnBiomeBack').addEventListener('click', closeBiome);
 $('btnEditor').addEventListener('click', () => openEditor(emptyLevel()));
 $('btnImport').addEventListener('click', () => $('fileInput').click());

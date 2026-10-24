@@ -174,9 +174,11 @@ bakom `M` och växeln i menyn.
 
 ## Fordon
 
-Man väljer fordon på bankortet: en knapp per fordon, och ett tryck är både valet och
-starten — att välja ska inte kosta ett extra tryck. Valet följer med till nästa bana och
-överlever omstart, så `R` sätter en aldrig tyst på en annan maskin.
+Man trycker på banan och får då en egen ruta: ett fordon per rad, var och en med sitt
+eget rekord på just den banan, så valet görs med det som spelar roll framför sig. Det
+satt ett tag som små knappar direkt på bankortet och var för pilligt att träffa. Valet
+följer med till nästa bana och överlever omstart, så `R` sätter en aldrig tyst på en
+annan maskin.
 
 `js/vehicles.js` beskriver maskinerna. Motorn bär en **spec** — den handfull siffror som
 skiljer fordon åt — i stället för att läsa dem som modulkonstanter. Motorcykelns spec
@@ -197,6 +199,11 @@ långsammare är aldrig rätt svar på någon bana, så varje fordon byter bort 
 
 Cykeln ger alltså upp fart och drag mot lätthet, kort hjulbas och snabbare volt — den
 att ta in i ett trångt schakt, och fel val på en lång öppen sträcka.
+
+Björnen **trampar** på cykeln. Vevens vinkel kommer från det hjul som faktiskt driver,
+nedväxlat (en vev snurrar långt långsammare än hjulet den driver, och i hjulfart hade
+benen bara varit en suddighet), så han trampar i den takt han kör och frihjular när han
+slutar. På motorcykeln vilar benet på en fotpinne som förut.
 
 **`test/levels.test.js` bevisar varje bana på varje fordon**, fyrtio körningar på knappt
 fem sekunder. Den provar tre frön och tar en målgång som bevis. Det sista är inte

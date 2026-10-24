@@ -35,6 +35,7 @@ export class Motor {
     // Carried on the motor rather than looked up, so a ghost's pose — which
     // is motor-shaped but has no spec — can be drawn the same way.
     this.frameColor = this.spec.frameColor;
+    this.pedals = this.spec.pedals;
     this.init();
   }
 

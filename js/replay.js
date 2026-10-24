@@ -229,6 +229,7 @@ function blankMotor(vehicleId) {
     headR: { x: 0, y: 0 },
     flipped: true,
     frameColor: spec.frameColor,
+    pedals: spec.pedals,
   };
 }
 

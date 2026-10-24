@@ -30,7 +30,8 @@ const WHEEL_DROP = DEFAULT_BIKE.r.y - DEFAULT_LEFT_WHEEL.r.y; // 0.6
  * absolute spawn coordinates.
  */
 function build({ wheelbase, mass, inertia, wheelRadius, wheelMass, wheelInertia,
-                 gasTorque, maxAngularVelocity, voltAngularVelocity, frameColor }) {
+                 gasTorque, maxAngularVelocity, voltAngularVelocity, frameColor,
+                 pedals = false }) {
   const half = wheelbase / 2;
   const anchor = DEFAULT_BIKE.r;
   const wheelY = anchor.y - WHEEL_DROP;
@@ -53,6 +54,9 @@ function build({ wheelbase, mass, inertia, wheelRadius, wheelMass, wheelInertia,
     // silhouette already differs — shorter, smaller wheels — and the
     // colour finishes the job.
     frameColor,
+    // A bicycle is pedalled and a motorbike is not, so the rider's legs
+    // either turn a crank or rest on a peg.
+    pedals,
   };
 }
 
@@ -104,6 +108,7 @@ export const VEHICLES = [
       maxAngularVelocity: 98,
       voltAngularVelocity: 15,
       frameColor: '#2f9fb8',
+      pedals: true,
     }),
   },
 ];

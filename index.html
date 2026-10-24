@@ -360,6 +360,20 @@
   </div>
 </div>
 
+<!-- Picked a level, now pick what to ride it on. Its own screen rather
+     than buttons on the card: on a card they are small, crowded and easy
+     to hit by mistake, and this is a choice worth a moment. -->
+<div id="rideChoice" class="overlay hidden">
+  <div class="panel narrow">
+    <h2 id="rideLevel"></h2>
+    <p class="fine">Vad vill du köra?</p>
+    <div class="choices" id="rideList"></div>
+    <div class="row">
+      <button id="rideCancel" class="secondary">Tillbaka</button>
+    </div>
+  </div>
+</div>
+
 <!-- Result -->
 <div id="dialog" class="overlay hidden">
   <div class="panel narrow">

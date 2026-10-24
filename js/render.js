@@ -667,14 +667,52 @@ export class Renderer {
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
 
-    // Legs down to the footpeg, drawn first so the torso overlaps them.
-    const peg = toWorld(0.08, -0.16);
+    // Legs, drawn first so the torso overlaps them. On a motorbike they
+    // rest on a peg; on a bicycle they turn a crank, driven by the wheel
+    // that is actually turning, so the bear pedals at the speed it rides
+    // and freewheels when it stops.
     ctx.strokeStyle = PALETTE.furDark;
     ctx.lineWidth = 0.19 * s;
-    ctx.beginPath();
-    ctx.moveTo(bodyX, bodyY);
-    ctx.lineTo(this.sx(peg.x), this.sy(peg.y));
-    ctx.stroke();
+    if (mot.pedals) {
+      const crank = toWorld(0.08, -0.16);
+      const CRANK_R = 0.13;
+      // Gearing: a crank turns far slower than the wheel it drives, and at
+      // wheel speed the legs would be an unreadable blur.
+      const driven = mot.flipped ? mot.leftWheel : mot.rightWheel;
+      const angle = -driven.rotation * 0.32;
+      for (const phase of [0, Math.PI]) {
+        const a = angle + phase;
+        const foot = toWorld(0.08 + Math.cos(a) * CRANK_R, -0.16 + Math.sin(a) * CRANK_R);
+        // A knee, bent forward, so the leg reads as a leg rather than a
+        // stick that happens to reach the pedal.
+        const knee = {
+          x: (mot.bodyR.x + foot.x) / 2 + (foot.x - crank.x) * 0.5,
+          y: (mot.bodyR.y + foot.y) / 2 + 0.1,
+        };
+        ctx.beginPath();
+        ctx.moveTo(bodyX, bodyY);
+        ctx.quadraticCurveTo(this.sx(knee.x), this.sy(knee.y), this.sx(foot.x), this.sy(foot.y));
+        ctx.stroke();
+      }
+      // The crank arm itself, so the feet are clearly turning something.
+      ctx.save();
+      ctx.strokeStyle = '#8e939b';
+      ctx.lineWidth = 0.05 * s;
+      const a0 = angle;
+      const p0 = toWorld(0.08 + Math.cos(a0) * CRANK_R, -0.16 + Math.sin(a0) * CRANK_R);
+      const p1 = toWorld(0.08 - Math.cos(a0) * CRANK_R, -0.16 - Math.sin(a0) * CRANK_R);
+      ctx.beginPath();
+      ctx.moveTo(this.sx(p0.x), this.sy(p0.y));
+      ctx.lineTo(this.sx(p1.x), this.sy(p1.y));
+      ctx.stroke();
+      ctx.restore();
+    } else {
+      const peg = toWorld(0.08, -0.16);
+      ctx.beginPath();
+      ctx.moveTo(bodyX, bodyY);
+      ctx.lineTo(this.sx(peg.x), this.sy(peg.y));
+      ctx.stroke();
+    }
 
     // Torso: tapered, wider at the hips than the shoulders.
     const dx = headX - bodyX;
