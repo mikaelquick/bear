@@ -6,6 +6,7 @@ import { Sfx } from './audio.js';
 import { Demo } from './demo.js';
 import { Game, STATE, formatTime } from './game.js';
 import { Editor, TOOLS, emptyLevel } from './editor.js';
+import { Touchpad } from './touchpad.js';
 import { OBJ, MS_TO_PHYS_TIME, TIME_TO_CENTISECONDS } from './constants.js';
 import { loadGhost, levelFingerprint, REPLAY_VERSION } from './replay.js';
 
@@ -186,7 +187,7 @@ function showMenu() {
   document.body.classList.remove('playing');
   sfx.silenceEngine();
   renderLevelList();
-  renderer.scale = 52;
+  renderer.fitScale();
   if (!demo) demo = new Demo(renderer, effects);
   show('menu');
   hideAll('hud', 'dialog', 'pause', 'editorBar', 'editorHint', 'startHint',
@@ -200,7 +201,7 @@ function startLevel(index) {
   currentIndex = index;
   replay = null;
   sfx.ensure();
-  renderer.scale = 52;
+  renderer.fitScale();
 
   const level = new Level(entries[index].data);
   game.load(level);
@@ -232,7 +233,7 @@ function startReplay(index) {
   }
 
   currentIndex = index;
-  renderer.scale = 52;
+  renderer.fitScale();
   renderer.horizonY = level.bounds.maxY * 0.55 + level.bounds.minY * 0.45;
   renderer.lead = { x: 0, y: 0 };
   renderer.camInit = false;
@@ -280,7 +281,7 @@ function testEditorLevel() {
     return;
   }
   sfx.ensure();
-  renderer.scale = 52;
+  renderer.fitScale();
   // Play the editor's own Level object, so edits carry straight over.
   game.load(editor.level);
   game.setGhost(null);
@@ -464,40 +465,60 @@ window.addEventListener('blur', () => game.keys.clear());
 function enableTouchUI() {
   document.body.classList.add('touch');
 }
+// `?touch=1` forces the on-screen controls on a desktop browser, which is how
+// tools/mobile-preview.html can show the real thing in an iframe.
+const forceTouch = new URLSearchParams(location.search).get('touch') === '1';
+if (forceTouch) enableTouchUI();
 if (window.matchMedia && matchMedia('(pointer: coarse)').matches) enableTouchUI();
 window.addEventListener('touchstart', enableTouchUI, { once: true, passive: true });
 
-document.querySelectorAll('.tbtn[data-code]').forEach((btn) => {
-  const code = btn.dataset.code;
-  const press = (e) => {
-    e.preventDefault();
-    // Capture keeps the button held when a finger slides off it. It throws
-    // if the pointer is not active, and that must not take the button with
-    // it — a dead gas pedal is worse than a finger that slips.
-    try { btn.setPointerCapture(e.pointerId); } catch { /* not capturable */ }
-    btn.classList.add('pressed');
+const touchpad = new Touchpad({
+  onPress: (code) => {
     sfx.ensure();
     game.keyDown(code);
     if (game.state === STATE.PLAYING) $('startHint').classList.add('hidden');
-  };
-  const release = (e) => {
-    if (e.cancelable) e.preventDefault();
-    btn.classList.remove('pressed');
-    game.keyUp(code);
-  };
-  btn.addEventListener('pointerdown', press);
-  btn.addEventListener('pointerup', release);
-  btn.addEventListener('pointercancel', release);
-  btn.addEventListener('lostpointercapture', release);
-});
-
-document.querySelectorAll('.tbtn[data-action]').forEach((btn) => {
-  btn.addEventListener('pointerdown', (e) => {
-    e.preventDefault();
+  },
+  onRelease: (code) => game.keyUp(code),
+  onAction: (action) => {
     if (mode === 'replay') { showMenu(); return; }
-    if (btn.dataset.action === 'restart') restartRun();
+    if (action === 'restart') restartRun();
     else setPaused(game.togglePause());
-  });
+  },
+  // Dead is the state you spend most of your time in. One tap anywhere
+  // retries, rather than aiming for a small button at the top of the screen.
+  onTapAway: () => {
+    if (mode === 'play' && game.state === STATE.DEAD) restartRun();
+  },
+  isActive: () => document.body.classList.contains('touch')
+    && (mode === 'play' || mode === 'replay'),
+});
+touchpad.attach();
+
+// Portrait is blocked outright on touch devices. Pause rather than just
+// covering the screen, or the bear keeps riding behind the overlay.
+const portrait = window.matchMedia
+  ? matchMedia('(orientation: portrait)')
+  : { matches: false, addEventListener() {} };
+
+const orientationBlocked = () =>
+  document.body.classList.contains('touch') && portrait.matches;
+
+function handleOrientation() {
+  if (!orientationBlocked()) return;
+  touchpad.releaseAll();
+  game.keys.clear();
+  if (mode === 'play' && !game.paused) setPaused(game.togglePause());
+}
+portrait.addEventListener('change', handleOrientation);
+
+// Switching away mid-press would otherwise leave the throttle open.
+document.addEventListener('visibilitychange', () => {
+  if (!document.hidden) return;
+  touchpad.releaseAll();
+  game.keys.clear();
+  if (mode === 'play' && !game.paused && game.state === STATE.PLAYING) {
+    setPaused(game.togglePause());
+  }
 });
 
 // ---------------------------------------------------------------- editor UI
@@ -675,6 +696,9 @@ function frame(now) {
   const wallClock = now / 1000;
 
   if (mode === 'play') {
+    // Checked per frame rather than only on the orientation event, so a
+    // level started while already in portrait does not run behind the gate.
+    if (orientationBlocked() && !game.paused) handleOrientation();
     game.step(dtMs);
     game.render(dtMs / 1000, wallClock);
     $('hudTime').textContent = formatTime(game.displayTime);
@@ -684,7 +708,7 @@ function frame(now) {
     if (game.state === STATE.DEAD && $('toast').classList.contains('hidden')) {
       $('startHint').classList.add('hidden');
       toast(document.body.classList.contains('touch')
-        ? 'Aj! Huvudet tog i. Tryck ⟳ för att börja om.'
+        ? 'Aj! Huvudet tog i. Tryck var som helst för att börja om.'
         : 'Aj! Huvudet tog i. Tryck Enter för att börja om.', 0);
     }
     if (game.canShowResult && $('dialog').classList.contains('hidden')) showResult();
@@ -711,8 +735,18 @@ window.bjorn = {
   levels: LEVELS,
 };
 
-window.addEventListener('resize', () => renderer.resize());
+function relayout() {
+  renderer.resize();
+  // The editor has its own zoom, set by the user scrolling.
+  if (mode !== 'editor') renderer.fitScale();
+  handleOrientation();
+}
+
+window.addEventListener('resize', relayout);
+window.addEventListener('orientationchange', relayout);
+if (window.visualViewport) window.visualViewport.addEventListener('resize', relayout);
 renderer.resize();
+renderer.fitScale();
 applySettings();
 showMenu();
 requestAnimationFrame(frame);

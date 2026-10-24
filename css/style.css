@@ -17,11 +17,18 @@
 html, body {
   margin: 0;
   height: 100%;
+  /* dvh tracks the mobile address bar; the fallback above covers browsers
+     without it. */
+  height: 100dvh;
   background: var(--bg);
   color: var(--text);
   font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   overflow: hidden;
+  /* No pull-to-refresh or rubber-banding while a thumb is on the throttle. */
+  overscroll-behavior: none;
   user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
 }
 
 #view {
@@ -32,6 +39,9 @@ html, body {
   display: block;
   touch-action: none;
 }
+
+/* Panels still need to scroll on a short screen, so they opt back in. */
+.panel { touch-action: pan-y; overscroll-behavior: contain; }
 
 .hidden { display: none !important; }
 
@@ -418,6 +428,29 @@ p { line-height: 1.6; font-size: 14px; }
   .tabs { overflow-x: auto; }
 }
 
+/* Landscape phone: the desktop header ate the whole panel, leaving room for
+   two level rows. Strip it down so the list is the page. */
+@media (max-height: 470px) {
+  .panel { max-height: 94vh; padding: 14px 18px 10px; border-radius: 16px; }
+  .brand { gap: 11px; margin-bottom: 10px; }
+  .brand-mark { width: 40px; height: 40px; border-radius: 12px; }
+  .brand-mark svg { width: 32px; height: 32px; }
+  h1 { font-size: 24px; }
+  .tagline { display: none; }
+  .progress { margin-bottom: 10px; }
+  .progress-text { margin-top: 5px; }
+  .tabs { margin-bottom: 8px; }
+  .tab { padding: 6px 10px; font-size: 13px; }
+  .level-list li { padding: 7px 11px; gap: 10px; }
+  .level-list .num { width: 24px; height: 24px; border-radius: 7px; }
+  .level-list .name { font-size: 14px; }
+  .level-list .meta { font-size: 11px; }
+  .menu-footer { margin-top: 10px; padding-top: 9px; }
+  .panel.narrow { padding: 16px 18px; }
+  .result-time { font-size: 30px; }
+  h2 { font-size: 19px; margin-bottom: 9px; }
+}
+
 /* ---------- Badges, options, ghost readout ---------- */
 
 .badge {
@@ -462,7 +495,7 @@ p { line-height: 1.6; font-size: 14px; }
 
 /* ---------- Touch controls ---------- */
 
-#touch, #touchTop, #rotateHint { display: none; }
+#touch, #touchTop, #rotateGate { display: none; }
 
 body.touch #touch:not(.hidden) { display: flex; }
 body.touch #touchTop:not(.hidden) { display: flex; }
@@ -470,8 +503,8 @@ body.touch #touchTop:not(.hidden) { display: flex; }
 #touch {
   position: fixed;
   left: 0; right: 0; bottom: 0;
-  padding: 0 max(14px, env(safe-area-inset-left)) max(14px, env(safe-area-inset-bottom))
-           max(14px, env(safe-area-inset-right));
+  padding: 0 max(12px, env(safe-area-inset-right)) max(12px, env(safe-area-inset-bottom))
+           max(12px, env(safe-area-inset-left));
   justify-content: space-between;
   align-items: flex-end;
   gap: 12px;
@@ -479,71 +512,182 @@ body.touch #touchTop:not(.hidden) { display: flex; }
   pointer-events: none;
 }
 
+/* Tucked into the corner, out of the eyeline and away from the play area.
+   The gear is pause and menu in one: tapping it stops the clock and opens
+   the panel with resume, restart and back-to-menu. */
 #touchTop {
   position: fixed;
-  top: max(12px, env(safe-area-inset-top));
-  left: 50%;
-  transform: translateX(-50%);
-  gap: 10px;
+  top: max(10px, env(safe-area-inset-top));
+  right: max(10px, env(safe-area-inset-right));
+  gap: 8px;
   z-index: 4;
 }
 
-.touch-cluster { display: flex; gap: 12px; align-items: flex-end; pointer-events: auto; }
-.touch-cluster.mid { flex: 1; justify-content: center; }
+/* Keep the hive counter clear of those buttons. */
+body.touch #hud .hud-right { padding-right: 96px; }
+
+.touch-cluster { display: flex; gap: 10px; align-items: flex-end; pointer-events: auto; }
+
+/* Turn sits above the volts: the thumb rests low and stretches up, so the
+   top of the stack is the easiest reach after the bottom row. */
+.touch-cluster.left { flex-direction: column; align-items: center; gap: 9px; }
+.volt-row { display: flex; gap: 10px; }
 
 .tbtn {
-  width: 68px;
-  height: 68px;
-  border-radius: 50%;
-  background: rgba(34, 42, 59, 0.6);
-  border: 1.5px solid rgba(143, 155, 179, 0.45);
+  background: rgba(28, 35, 50, 0.52);
+  border: 1.5px solid rgba(143, 155, 179, 0.4);
   color: var(--text);
-  font-size: 24px;
-  font-weight: 600;
   padding: 0;
-  display: grid;
-  place-items: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
   touch-action: none;
   -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
   backdrop-filter: blur(3px);
   transition: none;
+  font-family: inherit;
 }
 
-.tbtn.big { width: 86px; height: 86px; font-size: 30px; }
-.tbtn.wide { width: auto; height: 52px; border-radius: 26px; padding: 0 22px; font-size: 14px; letter-spacing: 0.08em; }
-.tbtn.small { width: 44px; height: 44px; font-size: 15px; }
+.tbtn .glyph { font-size: 22px; line-height: 1; }
+.tbtn .cap {
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  opacity: 0.72;
+  line-height: 1;
+}
 
-.tbtn:hover { background: rgba(34, 42, 59, 0.6); }
+/* Round buttons: rotate the bike, and flip its facing. */
+.tbtn.volt { width: 62px; height: 62px; border-radius: 50%; }
+
+/* Wide pill spanning the volt pair, so it is a big target even though it is
+   the furthest button from a resting thumb. */
+.tbtn.turn {
+  width: 100%;
+  height: 42px;
+  border-radius: 21px;
+  flex-direction: row;
+  gap: 7px;
+}
+.tbtn.turn .glyph { font-size: 17px; }
+.tbtn.turn .cap { font-size: 10px; opacity: 0.85; }
+
+.tbtn.small {
+  width: 40px; height: 40px; border-radius: 50%;
+  font-size: 13px;
+}
+
+/* Pedals. Shaped and treaded so they read as throttle and brake at a glance
+   rather than as two more arrows. */
+.tbtn.pedal {
+  width: 74px;
+  height: 104px;
+  border-radius: 16px / 20px;
+  justify-content: flex-end;
+  padding-bottom: 9px;
+  position: relative;
+  overflow: hidden;
+}
+
+.tbtn.pedal::before {
+  content: '';
+  position: absolute;
+  inset: 9px 12px 26px;
+  border-radius: 7px;
+  background: repeating-linear-gradient(
+    180deg,
+    rgba(232, 236, 244, 0.22) 0 3px,
+    transparent 3px 9px
+  );
+}
+
+.tbtn.pedal .cap { font-size: 10px; opacity: 0.85; font-weight: 700; }
+
+.tbtn.gas {
+  border-color: rgba(240, 168, 48, 0.55);
+  background: linear-gradient(180deg, rgba(240, 168, 48, 0.2), rgba(28, 35, 50, 0.55));
+}
+.tbtn.gas .cap { color: var(--accent-soft); }
+
+.tbtn.brake {
+  border-color: rgba(224, 69, 58, 0.5);
+  background: linear-gradient(180deg, rgba(224, 69, 58, 0.18), rgba(28, 35, 50, 0.55));
+  height: 86px;
+}
+.tbtn.brake .cap { color: #ff9b91; }
+
+.tbtn:hover { background: rgba(28, 35, 50, 0.52); }
+.tbtn.gas:hover { background: linear-gradient(180deg, rgba(240,168,48,0.2), rgba(28,35,50,0.55)); }
+.tbtn.brake:hover { background: linear-gradient(180deg, rgba(224,69,58,0.18), rgba(28,35,50,0.55)); }
+
 .tbtn.pressed {
-  background: rgba(240, 168, 48, 0.75);
+  background: rgba(240, 168, 48, 0.8);
   border-color: var(--accent);
   color: #241704;
   transform: none;
 }
+.tbtn.pressed .cap { color: #241704; opacity: 1; }
+.tbtn.pressed::before { background: repeating-linear-gradient(
+  180deg, rgba(36, 23, 4, 0.3) 0 3px, transparent 3px 9px); }
+.tbtn.brake.pressed { background: rgba(224, 69, 58, 0.85); color: #fff; }
+.tbtn.brake.pressed .cap { color: #fff; }
 
-#rotateHint {
+/* Portrait is a hard stop, not a suggestion: the controls and the view both
+   need the width. */
+#rotateGate {
   position: fixed;
-  top: 50%; left: 50%;
-  transform: translate(-50%, -50%);
-  background: rgba(23, 29, 42, 0.95);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 14px 20px;
-  font-size: 14px;
-  z-index: 6;
-  pointer-events: none;
+  inset: 0;
+  background: #0c0f16;
+  z-index: 40;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
 }
 
 @media (orientation: portrait) {
-  body.touch.playing #rotateHint { display: block; }
+  body.touch #rotateGate { display: flex; }
+}
+
+.rotate-card { padding: 24px; }
+.rotate-card h2 { margin: 18px 0 6px; font-size: 22px; }
+.rotate-card p { color: var(--muted); margin: 0; }
+
+.rotate-phone {
+  width: 54px; height: 92px;
+  margin: 0 auto;
+  border: 3px solid var(--muted);
+  border-radius: 10px;
+  animation: tip 2s ease-in-out infinite;
+}
+
+@keyframes tip {
+  0%, 40% { transform: rotate(0deg); }
+  70%, 100% { transform: rotate(-90deg); }
+}
+
+/* Short landscape screens: shrink the controls and the HUD so the playfield
+   keeps as much room as possible. */
+@media (max-height: 470px) {
+  .tbtn.volt { width: 54px; height: 54px; }
+  .tbtn.turn { height: 36px; border-radius: 18px; }
+  .tbtn.small { width: 36px; height: 36px; }
+  body.touch #hud .hud-right { padding-right: 84px; }
+  .tbtn.pedal { width: 64px; height: 88px; }
+  .tbtn.brake { height: 74px; }
+  .tbtn .glyph { font-size: 19px; }
+
+  body.touch .hud-time { font-size: 24px; }
+  body.touch .hud-hives { font-size: 21px; }
+  body.touch .hive-dot { width: 15px; height: 15px; }
+  body.touch .hud-sub { font-size: 11px; margin-top: 3px; }
+  body.touch #hud { padding: 10px 14px; }
 }
 
 /* Clear of the on-screen controls. */
-body.touch.playing #toast { bottom: 108px; }
-body.touch.playing .hint { bottom: 112px; }
-
-@media (max-height: 460px) {
-  .tbtn { width: 56px; height: 56px; font-size: 20px; }
-  .tbtn.big { width: 70px; height: 70px; font-size: 25px; }
-  .tbtn.wide { height: 44px; padding: 0 18px; }
-}
+body.touch.playing #toast { bottom: 118px; }
+/* The keyboard hint is meaningless with the pedals on screen, and the
+   buttons carry their own labels. */
+body.touch .hint { display: none; }

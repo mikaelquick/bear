@@ -61,8 +61,17 @@ igenom väggar — det är så originalet fungerar och det är det banorna är b
 
 Tiden mäts i hundradelar och sparas per bana i `localStorage`.
 
-**Mobil och surfplatta:** knappar dyker upp på skärmen när enheten har pekskärm —
-volt till vänster, gas och broms till höger, vänd i mitten. Ligg på längden.
+**Mobil och surfplatta:** knappar dyker upp på skärmen när enheten har pekskärm.
+Volt och vänd till vänster, broms och gas som pedaler till höger, kugghjul uppe i
+hörnet för paus och meny. När du dött räcker ett tryck var som helst för att köra om.
+
+Spelet kräver landskapsläge — i porträtt pausas det och en spärr ber dig vrida
+telefonen. Kameran zoomar efter skärmen så en telefon ser ungefär lika mycket bana som
+en dator, och styrkorset spårar fingrarna globalt så att man kan glida mellan pedalerna
+och hålla två knappar samtidigt.
+
+`tools/mobile-preview.html` visar spelet i en telefonstor iframe med riktiga
+viewport-mått, för att slippa gissa hur det ser ut.
 
 **Ljudet är avstängt som standard** tills vi har riktiga ljud. Syntkoden finns kvar
 bakom `M` och växeln i menyn.
@@ -127,7 +136,8 @@ läget (`flipped = true`) istället för att vi vänder tecken på konstanterna.
 ```
 index.html
 css/style.css
-tools/dev-server.py   statisk server utan cachning
+tools/dev-server.py      statisk server utan cachning
+tools/mobile-preview.html  spelet i en telefonstor iframe
 js/
   constants.js   fysikkonstanter, portade oförändrade
   vec2.js        vektorhjälp
@@ -143,6 +153,7 @@ js/
   audio.js       WebAudio-syntade ljud, inga filer (avstängt som standard)
   driver.js      skriptad förare (demo i menyn + tester)
   demo.js        attract-läget bakom menyn
+  touchpad.js    styrkorset: global fingerspårning för skärmknapparna
   editor.js      baneditor
   game.js        speltillstånd
   main.js        meny, lägen, inmatning, touch, huvudloop

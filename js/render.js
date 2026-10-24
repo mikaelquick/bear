@@ -53,6 +53,17 @@ export class Renderer {
     this.h = h;
   }
 
+  // Pixels per metre, chosen so the view always covers a useful slice of
+  // track. A phone at 852x393 was showing 16 m, which is not enough warning
+  // to react to anything; this gives it 24 m.
+  fitScale() {
+    const MIN_WIDTH_M = 22;
+    const MIN_HEIGHT_M = 11;
+    this.scale = clamp(
+      Math.min(this.w / MIN_WIDTH_M, this.h / MIN_HEIGHT_M), 26, 52
+    );
+  }
+
   // World -> screen. Screen shake is folded in here so everything drawn in
   // world space shakes together and the HUD (drawn in DOM) does not.
   sx(x) { return (x - this.cam.x) * this.scale + this.w / 2 + this.shakeX; }
@@ -73,8 +84,12 @@ export class Renderer {
       this.lead.x += (want.x - this.lead.x) * kl;
       this.lead.y += (want.y - this.lead.y) * kl;
     }
+    // Sit the bike slightly below centre. Centred, the lower third of a short
+    // screen is solid rock you will never touch; this trades it for sky and
+    // terrain you are about to ride into.
+    const bias = (BIKE_SCREEN_FRACTION - 0.5) * this.h / this.scale;
     const tx = target.x + this.lead.x;
-    const ty = target.y + this.lead.y;
+    const ty = target.y + this.lead.y + bias;
     if (!this.camInit || snap) {
       this.cam.x = tx;
       this.cam.y = ty;
@@ -741,6 +756,9 @@ export class Renderer {
     }
   }
 }
+
+// Where the bike sits vertically in the frame, as a fraction from the top.
+const BIKE_SCREEN_FRACTION = 0.58;
 
 const clamp = (v, lo, hi) => (v < lo ? lo : v > hi ? hi : v);
 const mod = (v, m) => ((v % m) + m) % m;

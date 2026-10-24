@@ -32,23 +32,55 @@
 
 <!-- Touch controls. Hidden unless the device has a coarse pointer. -->
 <div id="touchTop" class="hidden">
-  <button class="tbtn small" data-action="pause" aria-label="Paus">❚❚</button>
-  <button class="tbtn small" data-action="restart" aria-label="Börja om">⟳</button>
+  <button class="tbtn small" data-action="restart" aria-label="Börja om">
+    <svg viewBox="0 0 24 24" width="19" height="19" aria-hidden="true">
+      <path d="M20 12a8 8 0 1 1-2.6-5.9" fill="none" stroke="currentColor"
+            stroke-width="2.2" stroke-linecap="round"/>
+      <path d="M20 3v5h-5" fill="none" stroke="currentColor"
+            stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+  </button>
+  <button class="tbtn small" data-action="pause" aria-label="Paus och meny">
+    <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+      <circle cx="12" cy="12" r="3.2" fill="none" stroke="currentColor" stroke-width="2"/>
+      <path d="M12 2.6v3M12 18.4v3M21.4 12h-3M5.6 12h-3M18.6 5.4l-2.1 2.1M7.5 16.5l-2.1 2.1M18.6 18.6l-2.1-2.1M7.5 7.5L5.4 5.4"
+            stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+    </svg>
+  </button>
 </div>
 <div id="touch" class="hidden">
+  <!-- Left thumb: rotate the bike in the air, and flip which way it faces.
+       Both live on this side because the right thumb is busy on the pedals. -->
   <div class="touch-cluster left">
-    <button class="tbtn" data-code="ArrowLeft" aria-label="Volt vänster">↺</button>
-    <button class="tbtn" data-code="ArrowRight" aria-label="Volt höger">↻</button>
+    <button class="tbtn turn" data-code="Space" aria-label="Vänd cykeln">
+      <span class="glyph">⇄</span><span class="cap">vänd</span>
+    </button>
+    <div class="volt-row">
+      <button class="tbtn volt" data-code="ArrowLeft" aria-label="Volt bakåt">
+        <span class="glyph">↺</span><span class="cap">volt</span>
+      </button>
+      <button class="tbtn volt" data-code="ArrowRight" aria-label="Volt framåt">
+        <span class="glyph">↻</span><span class="cap">volt</span>
+      </button>
+    </div>
   </div>
-  <div class="touch-cluster mid">
-    <button class="tbtn wide" data-code="Space" aria-label="Vänd">VÄND</button>
-  </div>
+  <!-- Right thumb: brake inboard, throttle outboard where it is easiest to hold. -->
   <div class="touch-cluster right">
-    <button class="tbtn" data-code="ArrowDown" aria-label="Broms">▼</button>
-    <button class="tbtn big" data-code="ArrowUp" aria-label="Gas">▲</button>
+    <button class="tbtn pedal brake" data-code="ArrowDown" aria-label="Broms">
+      <span class="cap">broms</span>
+    </button>
+    <button class="tbtn pedal gas" data-code="ArrowUp" aria-label="Gas">
+      <span class="cap">gas</span>
+    </button>
   </div>
 </div>
-<div id="rotateHint">Vrid telefonen på längden för mer utrymme</div>
+<div id="rotateGate">
+  <div class="rotate-card">
+    <div class="rotate-phone" aria-hidden="true"></div>
+    <h2>Vrid telefonen</h2>
+    <p>Björn spelas på längden.</p>
+  </div>
+</div>
 
 <!-- Main menu -->
 <div id="menu" class="overlay">
@@ -117,7 +149,10 @@
          krukan gör ingenting innan dess.</p>
       <p class="fine">Ditt bästa lopp spelas in och visas som en genomskinlig ghost nästa gång du
          kör banan. Klicka på ▶ i banlistan för att se reprisen.</p>
-      <p class="fine">På mobil och surfplatta dyker knappar upp på skärmen. Ligg på längden.</p>
+      <p class="fine"><strong>På mobil:</strong> knappar dyker upp på skärmen —
+         volt och vänd till vänster, broms och gas till höger. Kugghjulet uppe i hörnet
+         pausar och öppnar menyn. När du dött räcker det att trycka var som helst för att
+         köra om. Spelet kräver landskapsläge.</p>
     </section>
 
     <section class="tabpane hidden" data-pane="about">
@@ -148,11 +183,11 @@
 <!-- Pause -->
 <div id="pause" class="overlay hidden">
   <div class="panel narrow">
-    <h2>Paus</h2>
+    <h2>Pausad</h2>
     <div class="row">
       <button id="btnResume">Fortsätt</button>
       <button id="btnPauseRestart" class="secondary">Börja om</button>
-      <button id="btnPauseMenu" class="secondary">Meny</button>
+      <button id="btnPauseMenu" class="secondary">Till menyn</button>
     </div>
   </div>
 </div>

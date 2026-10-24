@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="sv">
+<head>
+<meta charset="utf-8">
+<title>Björn — mobilvy</title>
+<style>
+  :root { color-scheme: dark; }
+  body {
+    margin: 0; min-height: 100vh;
+    background: #0c0f16;
+    color: #e8ecf4;
+    font-family: system-ui, sans-serif;
+    display: flex; flex-direction: column; align-items: center; gap: 18px;
+    padding: 22px 16px 40px;
+  }
+  h1 { font-size: 17px; font-weight: 600; margin: 0; color: #8f9bb3; }
+  .bar { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
+  button {
+    background: #222a3b; color: #e8ecf4; border: 1px solid #2e3850;
+    border-radius: 8px; padding: 7px 12px; font-size: 13px; cursor: pointer;
+    font-family: inherit;
+  }
+  button.on { background: #f0a830; color: #241704; border-color: #f0a830; }
+  .phone {
+    border: 12px solid #1b2130;
+    border-radius: 34px;
+    box-shadow: 0 24px 60px rgba(0,0,0,.6);
+    overflow: hidden;
+    background: #000;
+    flex: none;
+  }
+  iframe { display: block; border: 0; }
+  .meta { font-size: 12px; color: #5b6477; font-variant-numeric: tabular-nums; }
+</style>
+</head>
+<body>
+<h1>Björn — mobilvy</h1>
+<div class="bar" id="devices"></div>
+<div class="bar">
+  <button id="rotate">Rotera</button>
+  <button id="reload">Ladda om</button>
+</div>
+<div class="phone" id="phone"><iframe id="frame" src="../index.html?touch=1"></iframe></div>
+<div class="meta" id="meta"></div>
+
+<script>
+// Phone viewports in CSS pixels, portrait. The game is landscape-only, so
+// these are flipped by default.
+const DEVICES = [
+  { name: 'iPhone SE',     w: 375, h: 667 },
+  { name: 'iPhone 13 mini',w: 375, h: 812 },
+  { name: 'iPhone 15',     w: 393, h: 852 },
+  { name: 'iPhone 15 Pro Max', w: 430, h: 932 },
+  { name: 'Pixel 8',       w: 412, h: 915 },
+  { name: 'iPad mini',     w: 744, h: 1133 },
+];
+
+let current = 2;
+let landscape = true;
+
+const phone = document.getElementById('phone');
+const frame = document.getElementById('frame');
+const meta = document.getElementById('meta');
+const bar = document.getElementById('devices');
+
+DEVICES.forEach((d, i) => {
+  const b = document.createElement('button');
+  b.textContent = d.name;
+  b.addEventListener('click', () => { current = i; apply(); });
+  bar.appendChild(b);
+});
+
+function apply() {
+  const d = DEVICES[current];
+  const w = landscape ? d.h : d.w;
+  const h = landscape ? d.w : d.h;
+  frame.style.width = w + 'px';
+  frame.style.height = h + 'px';
+  phone.style.borderRadius = landscape ? '28px' : '34px';
+  meta.textContent = `${d.name} · ${w}×${h} · ${landscape ? 'landscape' : 'portrait'}`;
+  [...bar.children].forEach((b, i) => b.classList.toggle('on', i === current));
+  document.getElementById('rotate').classList.toggle('on', !landscape);
+}
+
+document.getElementById('rotate').addEventListener('click', () => { landscape = !landscape; apply(); });
+document.getElementById('reload').addEventListener('click', () => {
+  frame.src = frame.src.split('#')[0];
+});
+apply();
+</script>
+</body>
+</html>
