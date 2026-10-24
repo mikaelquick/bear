@@ -613,10 +613,7 @@ function applySettings() {
 }
 
 function syncFullscreenUi() {
-  const active = fullscreen.isActive();
-  $('optFullscreen').checked = active;
-  const btn = document.querySelector('.tbtn[data-action="fullscreen"]');
-  if (btn) btn.classList.toggle('on', active);
+  $('optFullscreen').checked = fullscreen.isActive();
 }
 fullscreen.onChange(syncFullscreenUi);
 
@@ -872,10 +869,10 @@ const touchpad = new Touchpad({
     if (game.state === STATE.PLAYING) $('startHint').classList.add('hidden');
   },
   onRelease: (code) => game.keyUp(code),
-  // The corner has two buttons left: fullscreen, and the gear. Restarting
-  // moved into the gear's own menu, where it was already offered.
-  onAction: (action) => {
-    if (action === 'fullscreen') { toggleFullscreen(); return; }
+  // The corner is the gear alone now. Restarting moved into its menu and
+  // fullscreen left the phone entirely; both are still reachable, from
+  // that menu and from the one in the main menu's footer.
+  onAction: () => {
     if (mode === 'replay') { showMenu(); return; }
     setPaused(game.togglePause());
   },

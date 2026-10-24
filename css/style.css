@@ -1037,13 +1037,15 @@ body.touch #touchTop:not(.hidden) { display: flex; }
   z-index: 4;
 }
 
-/* An installed app has no browser chrome to hide, so the button that
-   would hide it is removed rather than left there doing nothing. */
-body.standalone .tbtn[data-action="fullscreen"] { display: none; }
+/* The corner is the gear alone. There used to be a fullscreen button
+   beside it, but the corner only ever appears on a touch device: on an
+   installed app there is no browser chrome left to hide, on iPhone the
+   Fullscreen API does not exist at all, and where it does work the menu
+   still offers the switch. One button is also one less thing between a
+   child and the gear. The markup went with it rather than being hidden.
 
-/* Keep the hive counter clear of those buttons. */
-body.touch #hud .hud-right { padding-right: 96px; }
-body.standalone.touch #hud .hud-right { padding-right: 52px; }
+   Keep the hive counter clear of what is left. */
+body.touch #hud .hud-right { padding-right: 52px; }
 
 /* The per-turn mapping lives in :root now, so these need no override of
    their own — and the pair they used to set had two of the four edges the
