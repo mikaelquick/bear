@@ -669,6 +669,9 @@ function openInstall() {
     list.classList.toggle('hidden', native || list.dataset.steps !== wanted);
   });
   $('installNow').classList.toggle('hidden', !native);
+  // Only the browsers on iOS that cannot add to the home screen themselves
+  // have anywhere to be sent.
+  $('openSafari').classList.toggle('hidden', native || wanted !== 'ios-other');
   show('install');
 }
 
@@ -974,6 +977,15 @@ $('wantApp').addEventListener('click', () => { chooseLaunch('app'); openInstall(
 $('wantWeb').addEventListener('click', () => chooseLaunch('web'));
 $('btnInstall').addEventListener('click', openInstall);
 $('installClose').addEventListener('click', () => hideAll('install'));
+// Handing the page to Safari. There is no supported API for this: the
+// x-safari- prefix is a long-standing convention that Chrome and the other
+// iOS browsers honour, not something Apple documents, so it may simply do
+// nothing. That is why the written step above it stays on screen and says
+// what to do if nothing happens — the button is a shortcut, never the
+// instruction.
+$('openSafari').addEventListener('click', () => {
+  window.location.href = 'x-safari-' + window.location.href;
+});
 $('btnHowto').addEventListener('click', () => show('howto'));
 $('btnPhysics').addEventListener('click', () => show('physics'));
 $('howtoClose').addEventListener('click', () => hideAll('howto'));

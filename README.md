@@ -159,6 +159,13 @@ Safari på iPhone inte har något API alls och bara kan beskrivas i ord. Modulen
 på två frågor — går det att fråga rakt av, och om inte, vad ska spelaren få läsa.
 Instruktionerna finns som fyra färdiga listor i `index.html`, en per plattform.
 
+På iPhone i **någon annan webbläsare än Safari** går det inte alls: bara Safari kan
+lägga till på hemskärmen. Där visas en *Öppna i Safari*-knapp som skickar sidan vidare
+med `x-safari-`-prefixet. Det är ingen API:t Apple dokumenterar utan en gammal
+konvention som iOS-webbläsarna råkar hedra, så den kan helt enkelt inte göra någonting
+— därför står den skrivna instruktionen kvar ovanför och säger vad man gör om inget
+händer. Knappen är en genväg, aldrig instruktionen.
+
 **`play/`** är webbens egen adress: <https://mikaelquick.github.io/bear/play/>.
 Sidan är bara en vidarebefordran till `../?web`, och `?web` får spelet att hoppa över
 frågan. Den som aldrig tänker installera något kan bokmärka och dela den länken i
