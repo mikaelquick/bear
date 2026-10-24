@@ -81,8 +81,13 @@ med ⛶ uppe i hörnet, växeln i menyn eller `F`.
 
 Det är medvetet frivilligt. **Safari på iPhone stödjer inte Fullscreen API för vanliga
 element** (iPad gör det sedan iPadOS 16.4), så ett krav hade låst ute en stor del av
-mobilanvändarna. Varje anrop i `js/fullscreen.js` är därför best effort: be om det, och
+mobilanvändarna. Varje anrop i `js/screenmode.js` är därför best effort: be om det, och
 fortsätt oavsett svar.
+
+Modulen heter `screenmode.js` och laddas dynamiskt bakom en tom reservimplementation.
+En fil som heter `fullscreen.js` blockerades rakt av av en innehållsblockerare under
+test, och eftersom den importerades statiskt tog den ner hela spelet. Nu kostar en
+blockerad begäran funktionen, inte spelet.
 
 Där det fungerar följer `screen.orientation.lock('landscape')` med — det går bara i
 fullskärm, och där det lyckas behöver porträttspärren aldrig visas.
@@ -178,7 +183,7 @@ js/
   driver.js      skriptad förare (demo i menyn + tester)
   demo.js        attract-läget bakom menyn
   touchpad.js    styrkorset: global fingerspårning för skärmknapparna
-  fullscreen.js  fullskärm och orienteringslås, med plattformsreservationerna
+  screenmode.js  fullskärm och orienteringslås (döpt så för att inte blockeras)
   editor.js      baneditor
   game.js        speltillstånd
   main.js        meny, lägen, inmatning, touch, huvudloop

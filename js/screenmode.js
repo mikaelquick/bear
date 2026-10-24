@@ -1,4 +1,9 @@
-// Fullscreen, with the platform caveats kept in one place.
+// Fullscreen and orientation locking, with the platform caveats kept in one
+// place.
+//
+// Named screenmode rather than fullscreen on purpose: content blockers have
+// been observed blocking a script called fullscreen.js outright, which took
+// the whole game down with it when it was a static import.
 //
 // iPhone Safari does not implement the Fullscreen API for ordinary elements
 // (iPad has since iPadOS 16.4). So every call here is best effort: ask, and

@@ -7,9 +7,28 @@ import { Demo } from './demo.js';
 import { Game, STATE, formatTime } from './game.js';
 import { Editor, TOOLS, emptyLevel } from './editor.js';
 import { Touchpad } from './touchpad.js';
-import * as fullscreen from './fullscreen.js';
 import { OBJ, MS_TO_PHYS_TIME, TIME_TO_CENTISECONDS } from './constants.js';
 import { loadGhost, levelFingerprint, REPLAY_VERSION } from './replay.js';
+
+// Fullscreen is a nice-to-have, and its module is exactly the sort of file a
+// content blocker swallows. Loaded dynamically behind a no-op fallback so a
+// blocked request costs the feature rather than the entire game.
+const FULLSCREEN_UNAVAILABLE = {
+  isSupported: () => false,
+  isActive: () => false,
+  isStandalone: () => false,
+  request: async () => false,
+  exit: async () => {},
+  toggle: async () => false,
+  onChange: () => {},
+};
+
+let fullscreen = FULLSCREEN_UNAVAILABLE;
+try {
+  fullscreen = await import('./screenmode.js');
+} catch {
+  /* blocked or unreachable — carry on without it */
+}
 
 const TIMES_KEY = 'bjorn.times';
 const LEVELS_KEY = 'bjorn.levels';
