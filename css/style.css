@@ -546,9 +546,20 @@ body.touch #hud .hud-right { padding-right: 96px; }
   touch-action: none;
   -webkit-tap-highlight-color: transparent;
   -webkit-touch-callout: none;
+  user-select: none;
+  -webkit-user-select: none;
   backdrop-filter: blur(3px);
   transition: none;
   font-family: inherit;
+}
+
+/* The caption text inside a button is what a long press would otherwise
+   grab hold of, so take the labels out of hit testing entirely. The pad hit
+   tests geometrically, so it loses nothing. */
+.tbtn * {
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 .tbtn .glyph { font-size: 22px; line-height: 1; }

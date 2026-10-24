@@ -35,6 +35,20 @@ export class Touchpad {
     window.addEventListener('pointermove', (e) => this.move(e), opts);
     window.addEventListener('pointerup', (e) => this.up(e), opts);
     window.addEventListener('pointercancel', (e) => this.up(e), opts);
+    // Resting a thumb on a button makes iOS raise its text-selection loupe
+    // and Android its context menu, right under the finger. Both gestures are
+    // driven by the touch events, not the pointer ones, and WebKit ignores a
+    // preventDefault on pointerdown — so the touch itself has to be cancelled.
+    // Any visible button counts, even when input does not apply: a magnifier
+    // over a dead button is just as wrong.
+    window.addEventListener('touchstart', (e) => {
+      for (const t of e.changedTouches) {
+        if (this.hit(t.clientX, t.clientY, 0)) { e.preventDefault(); return; }
+      }
+    }, opts);
+    window.addEventListener('contextmenu', (e) => {
+      if (e.target instanceof Element && e.target.closest('.tbtn')) e.preventDefault();
+    });
     // A tab switch mid-press would otherwise leave the throttle open.
     document.addEventListener('visibilitychange', () => {
       if (document.hidden) this.releaseAll();
