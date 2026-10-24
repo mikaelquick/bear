@@ -78,13 +78,33 @@ html, body {
   transform: translateZ(0);
 }
 
-body.sideways #stage {
+/* Four ways the stage can sit. Upright is the default above; the other
+   three undo whatever the system has done, so an installed app's picture
+   never moves on the glass however the phone is held. A quarter turn
+   swaps the stage's width and height — that is the whole reason the two
+   sideways cases need their own box. */
+body.turn-90 #stage {
   left: 100vw;
   width: 100vh;
   width: 100svh;
   height: 100vw;
   transform: rotate(90deg);
   transform-origin: top left;
+}
+
+body.turn-270 #stage {
+  left: 0;
+  width: 100vh;
+  width: 100svh;
+  height: 100vw;
+  transform: translateY(100vh) rotate(-90deg);
+  transform: translateY(100svh) rotate(-90deg);
+  transform-origin: top left;
+}
+
+body.turn-180 #stage {
+  transform: rotate(180deg);
+  transform-origin: center;
 }
 
 #view {

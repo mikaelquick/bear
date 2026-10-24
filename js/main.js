@@ -700,6 +700,9 @@ function confirmStandalone() {
   if (!fullscreen.isStandalone()) return;
   document.body.classList.add('standalone');
   if (settings.launch !== 'app') { settings.launch = 'app'; saveSettings(); }
+  // The class decides how the stage is turned, so the decision has to be
+  // taken again now that it is set.
+  layoutStage();
 }
 
 // Nothing to offer once the game is already an app, or on a desktop.
@@ -889,14 +892,46 @@ const portrait = window.matchMedia
 // The editor is the one holdout: it maps pointer coordinates straight onto
 // an untransformed canvas, and a quarter turn would put every click in the
 // wrong place. There the old gate still stands.
+// How far the system has turned the viewport away from the device's
+// natural orientation. iOS rotates a home-screen web app whatever the
+// manifest asks, so this is how we find out and undo it.
+function systemAngle() {
+  const o = window.screen && window.screen.orientation;
+  if (o && typeof o.angle === 'number') return ((o.angle % 360) + 360) % 360;
+  if (typeof window.orientation === 'number') return ((window.orientation % 360) + 360) % 360;
+  return portrait.matches ? 0 : 90;
+}
+
 function layoutStage() {
   const touch = document.body.classList.contains('touch');
-  const sideways = touch && portrait.matches && mode !== 'editor';
-  document.body.classList.toggle('sideways', sideways);
-  // Once turned, the stage is as tall as the viewport is wide. No media
-  // query can see that, which is why the short-screen rules hang off a
-  // class rather than off `max-height`.
-  const stageHeight = sideways ? window.innerWidth : window.innerHeight;
+  const fixed = document.body.classList.contains('standalone');
+  let turn = 0;
+
+  if (touch && mode !== 'editor') {
+    if (fixed) {
+      // Installed, the game behaves like a landscape-locked app: the
+      // picture never moves on the glass. Turn the phone and the pixels
+      // stay exactly where they were — you are the one who turned, not
+      // the game. Undoing the system's own rotation is what achieves it,
+      // and it is why the game can never end up in portrait.
+      turn = (90 - systemAngle() + 360) % 360;
+    } else if (portrait.matches) {
+      // In a browser the chrome around us stays upright, so matching it
+      // is the lesser evil: turn only when the viewport is portrait.
+      turn = 90;
+    }
+  }
+
+  for (const t of [0, 90, 180, 270]) {
+    document.body.classList.toggle(`turn-${t}`, t === turn);
+  }
+  document.body.classList.toggle('sideways', turn === 90 || turn === 270);
+
+  // Once turned a quarter, the stage is as tall as the viewport is wide.
+  // No media query can see that, which is why the short-screen rules hang
+  // off a class rather than off `max-height`.
+  const quarter = turn === 90 || turn === 270;
+  const stageHeight = quarter ? window.innerWidth : window.innerHeight;
   document.body.classList.toggle('short', stageHeight <= 470);
 }
 
@@ -911,6 +946,9 @@ function handleOrientation() {
   if (mode === 'play' && !game.paused) setPaused(game.togglePause());
 }
 portrait.addEventListener('change', relayout);
+if (window.screen && window.screen.orientation && window.screen.orientation.addEventListener) {
+  window.screen.orientation.addEventListener('change', relayout);
+}
 
 // Switching away mid-press would otherwise leave the throttle open.
 document.addEventListener('visibilitychange', () => {
