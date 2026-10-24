@@ -69,8 +69,10 @@ igenom väggar — det är så originalet fungerar och det är det banorna är b
 Tiden mäts i hundradelar och sparas per bana i `localStorage`.
 
 **Mobil och surfplatta:** knappar dyker upp på skärmen när enheten har pekskärm.
-Volt till vänster; vänd, broms och gas som en stapel till höger, med vänd tvärs över
-de två pedalerna. Kugghjul uppe i hörnet för paus och meny. När du dött räcker ett tryck var som helst för att köra om.
+Volt till vänster; vänd, broms och gas på en rad till höger, vänd innerst som en skiva
+likt volterna. Den låg ett tag ovanpå pedalerna och tog då en remsa tvärs över synfältet
+— på rad är högerklustret 104 px i stället för 153. Kugghjul uppe i hörnet för paus och
+meny. När du dött räcker ett tryck var som helst för att köra om.
 
 Spelet körs **alltid liggande**, alltid åt samma håll. Rapporterar enheten porträtt
 vänder vi spelet i stället för att be spelaren vända telefonen: allt ligger i `#stage`,
