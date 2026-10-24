@@ -184,6 +184,10 @@ var (`--btn-top`/`--btn-bot`). Det är det som köper det tecknade intrycket. Ty
 ber om `ui-rounded` först, vilket är San Francisco Rounded på Apple-enheter och kostar
 ingenting att fråga efter; överallt annars faller det rakt igenom till systemsnittet.
 
+**Ghost är avstängd tills någon ber om den.** En genomskinlig andra björn som kör
+bredvid är förvirrande om man inte letade efter den, och den som vill ha den vet var
+knappen sitter. Bara standardvärdet ändrades; den som redan slagit på den behåller den.
+
 Pekkontrollerna får samma behandling men tvärtom: ljus kant **inuti** och en mörk ring
 **utanför**, eftersom en ensam linje försvinner mot antingen himlen eller berget,
 medan paret aldrig gör det. Volt och vänd sjunker ner på sin läpp; pedalerna behåller
@@ -193,9 +197,9 @@ och de två ska inte låtsas vara samma föremål.
 Menyn har två flikar, **🗺️ Banor** och **✏️ Egna banor**, som stora mjuka knappar med
 emojin ovanför texten — den som inte läser orden ska ändå hitta rätt. *Så spelar du* och
 *Om fysiken* låg förut som två flikar till; de ligger nu som små länkar i menyfoten, där
-en förälder tittar och ett barn inte gör det. Hjälpen visas i stället **en gång, i
-början**, och väntar artigt på sin tur: frågan om app eller webbläsare och
-installationsrutan går båda före.
+en förälder tittar och ett barn inte gör det. Hjälpen mötte ett tag varje ny spelare vid
+start — den gör den inte längre. Det här är ett spel för barn, och de listar ut det
+genom att trycka på saker, vilket är roligare än att få det berättat för sig.
 
 Först väljer man **värld**, sedan bana. Världarna står i `js/biomes.js`: i dag
 **Skogen 🌲** med alla tjugo banor och **Snön ❄️**, som visas men är låst. En låst värld

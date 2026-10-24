@@ -179,6 +179,10 @@ body.sideways #stage {
   /* Above the overlays, or a toast raised from the menu is drawn behind it
      and never seen. Still below the portrait gate, which is a hard stop. */
   z-index: 20;
+  /* And never in the way: drawn over a panel at this z-index it was
+     swallowing clicks meant for the button underneath it. A toast is
+     something you read, never something you press. */
+  pointer-events: none;
 }
 
 /* ---------- Welcome: app or browser ---------- */

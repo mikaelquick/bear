@@ -101,8 +101,11 @@ function saveCustom() { return writeJson(LEVELS_KEY, customLevels); }
 
 function loadSettings() {
   // `fullscreen` stays undefined until the player is asked, which is how we
-  // know to ask exactly once.
-  return { ghost: true, sound: false, ...readJson(SETTINGS_KEY, {}) };
+  // know to ask exactly once. Ghost starts off: a translucent second bear
+  // riding alongside is confusing unless you went looking for it, and
+  // whoever wants it knows where the switch is. Anyone who already turned
+  // it on keeps it — this only changes where a new player starts.
+  return { ghost: false, sound: false, ...readJson(SETTINGS_KEY, {}) };
 }
 function saveSettings() {
   writeJson(SETTINGS_KEY, settings);
@@ -585,7 +588,6 @@ function chooseLaunch(which) {
   settings.launch = which;
   saveSettings();
   hideAll('welcome');
-  maybeShowHowto();
 }
 
 // Chrome can open the real install dialog, and then a list of steps would
@@ -607,35 +609,26 @@ const welcomeOpen = () => !$('welcome').classList.contains('hidden');
 const howtoOpen = () => !$('howto').classList.contains('hidden');
 const physicsOpen = () => !$('physics').classList.contains('hidden');
 
-// Shown once, at the start. A child should not have to go hunting through
-// a menu for how to play, and a parent reading it over their shoulder is
-// exactly the moment it is useful. Afterwards it lives in the footer,
-// where a grown-up will look and a child will not.
-//
-// It waits its turn: the app-or-browser question and the install sheet are
-// both more urgent, so this appears once whichever of those is done.
-function maybeShowHowto() {
-  if (settings.howtoSeen) return;
-  if (welcomeOpen() || installOpen()) return;
-  settings.howtoSeen = true;
-  saveSettings();
-  show('howto');
-}
+// The how-to greeted every new player for a while and it was in the way.
+// This is a game for children: they work it out by pressing things, which
+// is more fun than being told. It stays behind the footer link for a
+// parent who wants to read it.
 
 // Launched from the home screen: the route worked. Nothing else in the game
 // ever says so, and after following a list of steps in another app entirely
 // the player deserves to be told the thing they did took.
+// Launched from the home screen there is no browser chrome left to hide,
+// so the fullscreen button is a button that does nothing. The menu toggle
+// already hides itself; this takes the one in the corner of the game.
+//
+// It used to announce itself with a toast as well. It no longer does:
+// opening without an address bar says it better than a sentence can, and
+// the one thing the toast reliably managed was to land on top of whatever
+// button was underneath it.
 function confirmStandalone() {
   if (!fullscreen.isStandalone()) return;
-  // Launched from the home screen there is no browser chrome left to hide,
-  // so the fullscreen button is a button that does nothing. The menu toggle
-  // already hides itself; this takes the one in the corner of the game.
   document.body.classList.add('standalone');
-  const first = !settings.standaloneSeen;
-  settings.standaloneSeen = true;
-  settings.launch = 'app';
-  saveSettings();
-  if (first) toast('Björn körs som app nu. Adressfältet är borta.', 4500);
+  if (settings.launch !== 'app') { settings.launch = 'app'; saveSettings(); }
 }
 
 // Nothing to offer once the game is already an app, or on a desktop.
@@ -906,7 +899,7 @@ $('optFullscreen').addEventListener('change', toggleFullscreen);
 $('wantApp').addEventListener('click', () => { chooseLaunch('app'); openInstall(); });
 $('wantWeb').addEventListener('click', () => chooseLaunch('web'));
 $('btnInstall').addEventListener('click', openInstall);
-$('installClose').addEventListener('click', () => { hideAll('install'); maybeShowHowto(); });
+$('installClose').addEventListener('click', () => hideAll('install'));
 $('btnHowto').addEventListener('click', () => show('howto'));
 $('btnPhysics').addEventListener('click', () => show('physics'));
 $('howtoClose').addEventListener('click', () => hideAll('howto'));
@@ -915,7 +908,6 @@ $('installNow').addEventListener('click', async () => {
   const accepted = await homescreen.prompt();
   hideAll('install');
   syncInstallUi();
-  maybeShowHowto();
   if (!accepted) toast('Ingen fara — knappen finns kvar uppe i menyn.', 3500);
 });
 $('fsYes').addEventListener('click', () => answerFullscreen(true));
@@ -1139,5 +1131,4 @@ syncInstallUi();
 showMenu();
 confirmStandalone();
 maybeShowWelcome();
-maybeShowHowto();
 requestAnimationFrame(frame);
