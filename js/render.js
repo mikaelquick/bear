@@ -674,38 +674,36 @@ export class Renderer {
     ctx.strokeStyle = PALETTE.furDark;
     ctx.lineWidth = 0.19 * s;
     if (mot.pedals) {
-      const crank = toWorld(0.08, -0.16);
-      const CRANK_R = 0.13;
-      // Gearing: a crank turns far slower than the wheel it drives, and at
-      // wheel speed the legs would be an unreadable blur.
+      // One leg each side, going up and down in opposition. No crank is
+      // drawn: at this size the arm read as a stray strut rather than as
+      // something the feet were turning, and two legs pumping say
+      // "pedalling" on their own.
+      //
+      // Geared down from the driving wheel, because a crank turns far
+      // slower than the wheel it drives and at wheel speed the legs would
+      // be an unreadable blur. So he pedals at the speed he rides and
+      // freewheels when he stops.
+      const SWING = 0.13; // metres a foot travels, up to down
       const driven = mot.flipped ? mot.leftWheel : mot.rightWheel;
       const angle = -driven.rotation * 0.32;
-      for (const phase of [0, Math.PI]) {
-        const a = angle + phase;
-        const foot = toWorld(0.08 + Math.cos(a) * CRANK_R, -0.16 + Math.sin(a) * CRANK_R);
+      const drawLeg = (phase, colour) => {
+        const foot = toWorld(0.08, -0.16 + Math.sin(angle + phase) * SWING);
         // A knee, bent forward, so the leg reads as a leg rather than a
-        // stick that happens to reach the pedal.
+        // straight stick rising and falling.
         const knee = {
-          x: (mot.bodyR.x + foot.x) / 2 + (foot.x - crank.x) * 0.5,
-          y: (mot.bodyR.y + foot.y) / 2 + 0.1,
+          x: (mot.bodyR.x + foot.x) / 2 + (foot.x - mot.bodyR.x) * 0.35,
+          y: (mot.bodyR.y + foot.y) / 2 + 0.08,
         };
+        ctx.strokeStyle = colour;
+        ctx.lineWidth = 0.19 * s;
         ctx.beginPath();
         ctx.moveTo(bodyX, bodyY);
         ctx.quadraticCurveTo(this.sx(knee.x), this.sy(knee.y), this.sx(foot.x), this.sy(foot.y));
         ctx.stroke();
-      }
-      // The crank arm itself, so the feet are clearly turning something.
-      ctx.save();
-      ctx.strokeStyle = '#8e939b';
-      ctx.lineWidth = 0.05 * s;
-      const a0 = angle;
-      const p0 = toWorld(0.08 + Math.cos(a0) * CRANK_R, -0.16 + Math.sin(a0) * CRANK_R);
-      const p1 = toWorld(0.08 - Math.cos(a0) * CRANK_R, -0.16 - Math.sin(a0) * CRANK_R);
-      ctx.beginPath();
-      ctx.moveTo(this.sx(p0.x), this.sy(p0.y));
-      ctx.lineTo(this.sx(p1.x), this.sy(p1.y));
-      ctx.stroke();
-      ctx.restore();
+      };
+      // Far side first and darker, or the two legs merge into one shape.
+      drawLeg(Math.PI, '#4e3019');
+      drawLeg(0, PALETTE.furDark);
     } else {
       const peg = toWorld(0.08, -0.16);
       ctx.beginPath();

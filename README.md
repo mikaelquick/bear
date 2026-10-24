@@ -200,10 +200,13 @@ långsammare är aldrig rätt svar på någon bana, så varje fordon byter bort 
 Cykeln ger alltså upp fart och drag mot lätthet, kort hjulbas och snabbare volt — den
 att ta in i ett trångt schakt, och fel val på en lång öppen sträcka.
 
-Björnen **trampar** på cykeln. Vevens vinkel kommer från det hjul som faktiskt driver,
-nedväxlat (en vev snurrar långt långsammare än hjulet den driver, och i hjulfart hade
-benen bara varit en suddighet), så han trampar i den takt han kör och frihjular när han
-slutar. På motorcykeln vilar benet på en fotpinne som förut.
+Björnen **trampar** på cykeln: ett ben på var sida, upp och ner i motfas, det bortre
+mörkare så de två inte smälter ihop till en form. Ingen vev ritas — i den här skalan
+lästes vevarmen som en lös stötta i stället för som något fötterna vred runt, och två
+pumpande ben säger "trampar" på egen hand. Takten kommer från det hjul som faktiskt
+driver, nedväxlat, för en vev snurrar långt långsammare än hjulet den driver och i
+hjulfart hade benen bara varit en suddighet. Han trampar alltså i den takt han kör och
+frihjular när han slutar. På motorcykeln vilar benet på en fotpinne som förut.
 
 **`test/levels.test.js` bevisar varje bana på varje fordon**, fyrtio körningar på knappt
 fem sekunder. Den provar tre frön och tar en målgång som bevis. Det sista är inte
