@@ -99,8 +99,25 @@ Där det fungerar följer `screen.orientation.lock('landscape')` med — det gå
 fullskärm, och där det lyckas behöver porträttspärren aldrig visas.
 
 För iPhone är rätt väg **Lägg till på hemskärmen**: `manifest.webmanifest` plus
-`apple-mobile-web-app-capable` gör att spelet startar utan adressfält. Spelet tipsar om
-det en gång på enheter som saknar fullskärmsstöd.
+`apple-mobile-web-app-capable` gör att spelet startar utan adressfält.
+
+Första gången spelet öppnas på en pekskärm får man därför välja själv, i en ruta
+framför menyn: *Lägg till på hemskärmen* eller *Spela i webbläsaren*. Valet sparas i
+`settings.launch` och frågan kommer aldrig igen. Den som valde webben hittar knappen
+igen längst ner i menyn. På dator visas ingenting av detta — där gör fullskärmsknappen
+redan samma nytta.
+
+`js/homescreen.js` håller ihop installationen och laddas dynamiskt bakom en
+reservimplementation, precis som `screenmode.js`. Det finns ingen gemensam metod:
+Chrome ger oss `beforeinstallprompt` och därmed en riktig installationsdialog, medan
+Safari på iPhone inte har något API alls och bara kan beskrivas i ord. Modulen svarar
+på två frågor — går det att fråga rakt av, och om inte, vad ska spelaren få läsa.
+Instruktionerna finns som fyra färdiga listor i `index.html`, en per plattform.
+
+**`spela/`** är webbens egen adress: <https://mikaelquick.github.io/bear/spela/>.
+Sidan är bara en vidarebefordran till `../?web`, och `?web` får spelet att hoppa över
+frågan. Den som aldrig tänker installera något kan bokmärka och dela den länken i
+stället för roten.
 
 Ikonerna genereras av `tools/make-icons.py`, som skriver PNG-bytes direkt med `zlib`
 så att det inte behövs något bildbibliotek och ingen binär behöver handredigeras.
@@ -172,6 +189,7 @@ tools/dev-server.py      statisk server utan cachning
 tools/mobile-preview.html  spelet i en telefonstor iframe
 tools/make-icons.py        genererar app-ikonerna utan bildbibliotek
 manifest.webmanifest       Lägg till på hemskärmen
+spela/index.html           webbens egen adress, vidarebefordrar till ../?web
 icons/                     genererade app-ikoner
 js/
   constants.js   fysikkonstanter, portade oförändrade
@@ -190,6 +208,7 @@ js/
   demo.js        attract-läget bakom menyn
   touchpad.js    styrkorset: global fingerspårning för skärmknapparna
   screenmode.js  fullskärm och orienteringslås (döpt så för att inte blockeras)
+  homescreen.js  installation: installationsdialog där den finns, annars ord
   editor.js      baneditor
   game.js        speltillstånd
   main.js        meny, lägen, inmatning, touch, huvudloop

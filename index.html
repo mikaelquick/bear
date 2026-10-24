@@ -19,6 +19,21 @@
 </head>
 <body>
 
+<!-- The bear mark is drawn once here and referenced wherever it is needed. -->
+<svg width="0" height="0" aria-hidden="true" style="position: absolute">
+  <defs>
+    <g id="bearGlyph">
+      <circle cx="14" cy="13" r="6" fill="#6b4425"/>
+      <circle cx="34" cy="13" r="6" fill="#6b4425"/>
+      <circle cx="24" cy="24" r="15" fill="#8a5a33"/>
+      <ellipse cx="24" cy="30" rx="8" ry="6" fill="#d9b38c"/>
+      <ellipse cx="24" cy="26" rx="3" ry="2.2" fill="#2a1a0e"/>
+      <circle cx="18" cy="20" r="2.1" fill="#1b1109"/>
+      <circle cx="30" cy="20" r="2.1" fill="#1b1109"/>
+    </g>
+  </defs>
+</svg>
+
 <canvas id="view"></canvas>
 
 <!-- In-game HUD -->
@@ -109,15 +124,7 @@
   <div class="panel">
     <header class="brand">
       <div class="brand-mark" aria-hidden="true">
-        <svg viewBox="0 0 48 48" width="52" height="52">
-          <circle cx="14" cy="13" r="6" fill="#6b4425"/>
-          <circle cx="34" cy="13" r="6" fill="#6b4425"/>
-          <circle cx="24" cy="24" r="15" fill="#8a5a33"/>
-          <ellipse cx="24" cy="30" rx="8" ry="6" fill="#d9b38c"/>
-          <ellipse cx="24" cy="26" rx="3" ry="2.2" fill="#2a1a0e"/>
-          <circle cx="18" cy="20" r="2.1" fill="#1b1109"/>
-          <circle cx="30" cy="20" r="2.1" fill="#1b1109"/>
-        </svg>
+        <svg viewBox="0 0 48 48" width="52" height="52"><use href="#bearGlyph"/></svg>
       </div>
       <div>
         <h1>Björn</h1>
@@ -173,8 +180,8 @@
       <p class="fine">Ditt bästa lopp spelas in och visas som en genomskinlig ghost nästa gång du
          kör banan. Klicka på ▶ i banlistan för att se reprisen.</p>
       <p class="fine"><strong>På iPhone</strong> finns ingen fullskärmsknapp — Safari
-         tillåter det inte. Använd Dela → <em>Lägg till på hemskärmen</em>, så startar
-         spelet utan adressfält.</p>
+         tillåter det inte. Lägg i stället Björn på hemskärmen, så startar spelet utan
+         adressfält. <em>Ladda ner appen</em> längst ner visar hur.</p>
       <p class="fine"><strong>På mobil:</strong> knappar dyker upp på skärmen —
          volt och vänd till vänster, broms och gas till höger. Kugghjulet uppe i hörnet
          pausar och öppnar menyn. När du dött räcker det att trycka var som helst för att
@@ -202,6 +209,7 @@
         <label class="toggle"><input type="checkbox" id="optSound"> Ljud</label>
         <label class="toggle" id="optFullscreenWrap">
           <input type="checkbox" id="optFullscreen"> Fullskärm</label>
+        <button id="btnInstall" class="link hidden">⬇ Ladda ner appen</button>
         <button id="btnReset" class="link">Nollställ rekord</button>
       </div>
     </footer>
@@ -229,6 +237,74 @@
     <div class="row">
       <button id="fsYes">Ja, fullskärm</button>
       <button id="fsNo" class="secondary">Nej tack</button>
+    </div>
+  </div>
+</div>
+
+<!-- First visit on a phone. The choice is put up front, once, rather than
+     nagged about with a tip afterwards. -->
+<div id="welcome" class="overlay hidden">
+  <div class="panel narrow welcome">
+    <div class="brand-mark">
+      <svg viewBox="0 0 48 48" width="46" height="46" aria-hidden="true"><use href="#bearGlyph"/></svg>
+    </div>
+    <h2>Björn</h2>
+    <p class="tagline">En björn. En motorcykel. Alldeles för mjuk fjädring.</p>
+    <div class="choices">
+      <button id="wantApp" class="choice">
+        <span class="choice-ico" aria-hidden="true">⬇</span>
+        <span class="choice-text">
+          <strong>Lägg till på hemskärmen</strong>
+          <small>Egen ikon, inget adressfält, alltid landskapsläge</small>
+        </span>
+      </button>
+      <button id="wantWeb" class="choice secondary">
+        <span class="choice-ico" aria-hidden="true">▶</span>
+        <span class="choice-text">
+          <strong>Spela i webbläsaren</strong>
+          <small>Börja direkt, inget att installera</small>
+        </span>
+      </button>
+    </div>
+    <p class="fine">Du kan byta när som helst — knappen finns kvar längst ner i menyn.</p>
+  </div>
+</div>
+
+<!-- How to install, in the words of whichever platform you are on. One list
+     is shown; the rest stay hidden. -->
+<div id="install" class="overlay hidden">
+  <div class="panel narrow">
+    <h2>Lägg Björn på hemskärmen</h2>
+    <p class="fine">Spelet får en egen ikon och startar utan adressfält, i landskapsläge.
+       Ingen butik, inget konto — det är samma sida, bara utan webbläsaren runt omkring.</p>
+
+    <ol class="steps hidden" data-steps="ios-safari">
+      <li>Tryck på <strong>Dela</strong> <span class="ico">⬆</span> i Safaris nedre kant.</li>
+      <li>Bläddra ner i listan och välj <strong>Lägg till på hemskärmen</strong>.</li>
+      <li>Tryck <strong>Lägg till</strong>. Björn hamnar bland dina appar.</li>
+    </ol>
+
+    <ol class="steps hidden" data-steps="ios-other">
+      <li>Öppna den här sidan i <strong>Safari</strong> — på iPhone är det bara Safari som
+          kan lägga till appar på hemskärmen.</li>
+      <li>Tryck på <strong>Dela</strong> <span class="ico">⬆</span> och välj
+          <strong>Lägg till på hemskärmen</strong>.</li>
+    </ol>
+
+    <ol class="steps hidden" data-steps="android">
+      <li>Öppna webbläsarens meny <span class="ico">⋮</span> uppe i hörnet.</li>
+      <li>Välj <strong>Installera app</strong> eller <strong>Lägg till på startskärmen</strong>.</li>
+      <li>Bekräfta. Björn hamnar bland dina appar.</li>
+    </ol>
+
+    <ol class="steps hidden" data-steps="other">
+      <li>Leta efter <strong>Installera</strong> eller <strong>Lägg till på hemskärmen</strong>
+          i webbläsarens meny.</li>
+    </ol>
+
+    <div class="row">
+      <button id="installNow" class="hidden">Installera nu</button>
+      <button id="installClose" class="secondary">Stäng</button>
     </div>
   </div>
 </div>

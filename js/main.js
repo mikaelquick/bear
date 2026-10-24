@@ -30,6 +30,21 @@ try {
   /* blocked or unreachable — carry on without it */
 }
 
+// Same treatment for the home screen helper: if it never arrives the player
+// still gets the generic instructions, which is most of its value anyway.
+const HOMESCREEN_UNAVAILABLE = {
+  canPrompt: () => false,
+  prompt: async () => false,
+  platform: () => 'other',
+};
+
+let homescreen = HOMESCREEN_UNAVAILABLE;
+try {
+  homescreen = await import('./homescreen.js');
+} catch {
+  /* blocked or unreachable — the written instructions still work */
+}
+
 const TIMES_KEY = 'bjorn.times';
 const LEVELS_KEY = 'bjorn.levels';
 const REPLAYS_KEY = 'bjorn.replays';
@@ -56,6 +71,14 @@ let customLevels = loadCustom();
 let replay = null;
 let toastTimer = null;
 const settings = loadSettings();
+
+// `spela/` redirects here with ?web. It is the bookmarkable way in for
+// someone who only ever wants the browser, so arriving that way answers the
+// question rather than raising it. An existing choice is left alone.
+if (new URLSearchParams(location.search).has('web')) {
+  settings.launch ??= 'web';
+  saveSettings();
+}
 
 // ---------------------------------------------------------------- storage
 
@@ -440,19 +463,64 @@ function applyFullscreenPreference() {
     return;
   }
   if (settings.fullscreen && !fullscreen.isActive()) fullscreen.request();
-  maybeSuggestHomeScreen();
 }
 
-// iPhone has no fullscreen button to offer, so point at the one route that
-// does work there. Shown once, then never again.
-function maybeSuggestHomeScreen() {
-  if (settings.homeScreenTipSeen) return;
-  if (fullscreen.isSupported() || fullscreen.isStandalone()) return;
+// ------------------------------------------------------------ home screen
+
+// `settings.launch` is 'app' or 'web', and undefined until the player has
+// been asked. Only touch devices are asked: on a desktop a home screen icon
+// buys nothing that the fullscreen button does not already give, so there is
+// no choice worth interrupting anyone for.
+function maybeShowWelcome() {
+  if (settings.launch !== undefined) return;
   if (!document.body.classList.contains('touch')) return;
-  settings.homeScreenTipSeen = true;
-  saveSettings();
-  toast('Tips: Dela → Lägg till på hemskärmen ger fullskärm.', 5000);
+  // Already launched from the home screen: the question has answered itself.
+  if (fullscreen.isStandalone()) { chooseLaunch('app'); return; }
+  show('welcome');
 }
+
+function chooseLaunch(which) {
+  settings.launch = which;
+  saveSettings();
+  hideAll('welcome');
+}
+
+// Chrome can open the real install dialog, and then a list of steps would
+// only be in the way. Safari on iPhone cannot, so there the steps are the
+// entire feature.
+function openInstall() {
+  hideAll('welcome');
+  const native = homescreen.canPrompt();
+  const wanted = homescreen.platform();
+  document.querySelectorAll('#install .steps').forEach((list) => {
+    list.classList.toggle('hidden', native || list.dataset.steps !== wanted);
+  });
+  $('installNow').classList.toggle('hidden', !native);
+  show('install');
+}
+
+const installOpen = () => !$('install').classList.contains('hidden');
+const welcomeOpen = () => !$('welcome').classList.contains('hidden');
+
+// Nothing to offer once the game is already an app, or on a desktop.
+function syncInstallUi() {
+  const offer = document.body.classList.contains('touch') && !fullscreen.isStandalone();
+  $('btnInstall').classList.toggle('hidden', !offer);
+}
+
+// Chrome decides we are installable after the page has loaded, which can
+// land while the sheet is already open showing the manual steps.
+window.addEventListener('bjorn:installable', () => {
+  syncInstallUi();
+  if (installOpen()) openInstall();
+});
+window.addEventListener('bjorn:installed', () => {
+  settings.launch = 'app';
+  saveSettings();
+  hideAll('install');
+  syncInstallUi();
+  toast('Björn ligger nu bland dina appar.', 3000);
+});
 
 function setGhostEnabled(on) {
   settings.ghost = on;
@@ -492,6 +560,15 @@ window.addEventListener('keydown', (e) => {
   // The prompt is modal: do not let the bear set off behind it.
   if (fsPromptOpen()) {
     if (e.code === 'Escape') answerFullscreen(false);
+    return;
+  }
+  // So are the welcome box and the install sheet.
+  if (welcomeOpen()) {
+    if (e.code === 'Escape') chooseLaunch('web');
+    return;
+  }
+  if (installOpen()) {
+    if (e.code === 'Escape') hideAll('install');
     return;
   }
   if (e.code === 'KeyF' && !e.repeat) { toggleFullscreen(); return; }
@@ -661,6 +738,16 @@ $('btnPauseRestart').addEventListener('click', restartRun);
 $('btnPauseMenu').addEventListener('click', () => { game.paused = false; leavePlay(); });
 $('optGhost').addEventListener('change', (e) => setGhostEnabled(e.target.checked));
 $('optFullscreen').addEventListener('change', toggleFullscreen);
+$('wantApp').addEventListener('click', () => { chooseLaunch('app'); openInstall(); });
+$('wantWeb').addEventListener('click', () => chooseLaunch('web'));
+$('btnInstall').addEventListener('click', openInstall);
+$('installClose').addEventListener('click', () => hideAll('install'));
+$('installNow').addEventListener('click', async () => {
+  const accepted = await homescreen.prompt();
+  hideAll('install');
+  syncInstallUi();
+  if (!accepted) toast('Ingen fara — knappen finns kvar längst ner i menyn.', 3500);
+});
 $('fsYes').addEventListener('click', () => answerFullscreen(true));
 $('fsNo').addEventListener('click', () => answerFullscreen(false));
 $('optSound').addEventListener('change', (e) => setSoundEnabled(e.target.checked));
@@ -842,5 +929,7 @@ if (window.visualViewport) window.visualViewport.addEventListener('resize', rela
 renderer.resize();
 renderer.fitScale();
 applySettings();
+syncInstallUi();
 showMenu();
+maybeShowWelcome();
 requestAnimationFrame(frame);

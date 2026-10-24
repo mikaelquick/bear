@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="sv">
+<head>
+<meta charset="utf-8">
+<title>Björn</title>
+
+<!-- Genvägen för den som bara vill spela i webbläsaren. Adressen finns för
+     att gå att bokmärka och dela; spelet självt bor i roten, så den här
+     sidan skickar bara vidare dit med ?web, vilket får spelet att hoppa över
+     frågan om att lägga appen på hemskärmen.
+
+     Ingen kopia av spelet alltså — en enda sida som pekar hem igen. -->
+<link rel="canonical" href="../">
+<meta name="robots" content="noindex">
+<meta http-equiv="refresh" content="0; url=../?web">
+<script>location.replace('../?web');</script>
+
+<style>
+  body {
+    margin: 0;
+    height: 100vh;
+    display: grid;
+    place-items: center;
+    background: #11151f;
+    color: #8f9bb3;
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    font-size: 14px;
+  }
+</style>
+</head>
+<body>
+<!-- Syns bara om vidarebefordran inte går igenom. -->
+<p><a href="../?web" style="color: #f0a830">Starta Björn</a></p>
+</body>
+</html>

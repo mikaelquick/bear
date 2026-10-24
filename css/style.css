@@ -122,6 +122,67 @@ html, body {
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
 }
 
+/* ---------- Welcome: app or browser ---------- */
+
+.welcome .brand-mark { margin: 0 auto 13px; width: 58px; height: 58px; }
+.welcome h2 { margin-bottom: 0; font-size: 28px; }
+.welcome .tagline { margin: 4px 0 20px; }
+.welcome .fine { margin: 16px 0 0; }
+
+.choices { display: flex; flex-direction: column; gap: 10px; }
+
+/* Full-width rows rather than a button pair: on a phone these are the first
+   thing a thumb meets, and the second line of each explains the choice
+   without a paragraph above it doing the work. */
+.choice {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  text-align: left;
+  padding: 13px 16px;
+  border-radius: 14px;
+}
+
+.choice-ico { font-size: 19px; line-height: 1; flex: none; }
+.choice-text { display: flex; flex-direction: column; gap: 2px; }
+.choice-text strong { font-size: 15px; }
+.choice-text small { font-size: 12px; opacity: 0.78; font-weight: 400; }
+
+/* A phone held sideways is short, and the box must fit without scrolling —
+   a choice you have to scroll to find is not much of a choice. The bear and
+   the tagline are the ornament, so they are what gives way. */
+@media (max-height: 470px) {
+  #welcome .panel { padding: 18px 22px; }
+  .welcome .brand-mark { width: 42px; height: 42px; margin-bottom: 8px; }
+  .welcome .brand-mark svg { width: 34px; height: 34px; }
+  .welcome h2 { font-size: 21px; }
+  .welcome .tagline { display: none; }
+  .welcome .fine { margin-top: 12px; }
+}
+
+/* ---------- Install instructions ---------- */
+
+.steps {
+  text-align: left;
+  margin: 18px 0 20px;
+  padding-left: 20px;
+  font-size: 14px;
+  line-height: 1.65;
+}
+.steps li { margin-bottom: 6px; }
+
+/* Stands in for a button or an icon the player is about to look for. */
+.steps .ico {
+  display: inline-block;
+  min-width: 21px;
+  text-align: center;
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 0 4px;
+}
+
 /* ---------- Overlays ---------- */
 
 .overlay {
