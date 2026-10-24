@@ -49,7 +49,7 @@ def main():
     port = int(sys.argv[1]) if len(sys.argv) > 1 else 8080
     handler = partial(NoCacheHandler, directory=".")
     with ThreadingHTTPServer(("0.0.0.0", port), handler) as server:
-        print(f"Björn körs på http://localhost:{port}")
+        print(f"Quick-Björn körs på http://localhost:{port}")
         lan = lan_address()
         if lan:
             print(f"  från telefonen (samma wifi): http://{lan}:{port}")

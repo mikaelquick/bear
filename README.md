@@ -1,4 +1,4 @@
-# Björn
+# Quick-Björn
 
 **▶ Spela: https://mikaelquick.github.io/bear/**
 

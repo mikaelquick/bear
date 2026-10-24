@@ -1,7 +1,7 @@
 {
   "name": "bjorn",
   "version": "0.1.0",
-  "description": "Elasto Mania-klon med bj\u00f6rn och bikupor. Fysiken \u00e4r portad fr\u00e5n elma-classic.",
+  "description": "Quick-Bj\u00f6rn: Elasto Mania-klon med bj\u00f6rn och bikupor. Fysiken \u00e4r portad fr\u00e5n elma-classic.",
   "type": "module",
   "private": true,
   "scripts": {

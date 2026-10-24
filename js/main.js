@@ -722,7 +722,7 @@ window.addEventListener('bjorn:installed', () => {
   saveSettings();
   hideAll('install');
   syncInstallUi();
-  toast('Björn ligger nu bland dina appar.', 3000);
+  toast('Quick-Björn ligger nu bland dina appar.', 3000);
 });
 
 function setGhostEnabled(on) {
