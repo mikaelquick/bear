@@ -346,6 +346,85 @@ h2 { margin: 0 0 14px; font-size: 24px; }
 .tab:hover { color: var(--text); background: none; }
 .tab.active { color: var(--text); border-bottom-color: var(--accent); }
 
+/* ---------- Worlds ---------- */
+
+.pick-lead {
+  margin: 0 0 11px;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.biome-list {
+  list-style: none;
+  margin: 0 0 14px;
+  padding: 2px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 12px;
+}
+
+/* Deliberately larger than a level card: this is the first choice, and the
+   emoji is doing the work for anyone who cannot read the name yet. */
+.biome {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 5px;
+  padding: 18px 16px 16px;
+  border-radius: 16px;
+  cursor: pointer;
+  background: #1a2130;
+  border: 1px solid var(--border);
+  transition: border-color 0.12s, transform 0.12s, box-shadow 0.12s;
+}
+.biome:hover {
+  border-color: #46557a;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.38);
+}
+
+.biome-emoji { font-size: 40px; line-height: 1.1; }
+.biome-name { font-size: 17px; font-weight: 700; }
+.biome-blurb { font-size: 12px; color: var(--muted); }
+.biome-count { font-size: 12px; color: var(--accent); margin-top: 5px; }
+.biome .progress-bar { width: 100%; margin-top: 3px; }
+
+/* A locked world is still shown. An empty shelf with a date on it says
+   more than no shelf at all. */
+.biome.locked {
+  cursor: default;
+  opacity: 0.55;
+  border-style: dashed;
+}
+.biome.locked:hover { transform: none; box-shadow: none; border-color: var(--border); }
+.biome-lock {
+  margin-top: 5px;
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+/* The way back out, and a reminder of where you are. */
+.biome-bar {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  margin-bottom: 11px;
+}
+.biome-title { font-size: 15px; font-weight: 600; }
+
+button.back {
+  background: var(--panel-2);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 6px 13px;
+  font-size: 12px;
+}
+button.back:hover { background: #2b3448; }
+
 /* Cards, not rows. A picture of the cave tells you which level this is
    before you have read anything, which matters most to whoever cannot yet
    read the names. The tiles grow to fill whatever width there is. */
@@ -637,6 +716,12 @@ body.short .progress-text { margin-top: 5px; }
 body.short .tabs { margin-bottom: 8px; }
 body.short .tab { padding: 6px 10px; font-size: 13px; }
 body.short .level-list { grid-template-columns: repeat(auto-fill, minmax(132px, 1fr)); gap: 9px; }
+body.short .biome-list { grid-template-columns: repeat(auto-fit, minmax(158px, 1fr)); gap: 9px; }
+body.short .biome { padding: 12px 12px 11px; gap: 3px; }
+body.short .biome-emoji { font-size: 31px; }
+body.short .biome-name { font-size: 15px; }
+body.short .pick-lead { margin-bottom: 8px; }
+body.short .biome-bar { margin-bottom: 8px; }
 body.short .level-list .num { min-width: 20px; height: 20px; border-radius: 6px; font-size: 11px; }
 body.short .level-list .tick { width: 20px; height: 20px; font-size: 12px; }
 body.short .level-list .name { font-size: 12.5px; }

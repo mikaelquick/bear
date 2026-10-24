@@ -150,7 +150,19 @@
     </nav>
 
     <section class="tabpane" data-pane="levels">
-      <ul id="levelList" class="level-list"></ul>
+      <!-- Which world first, then which level in it. -->
+      <div id="biomePicker">
+        <p class="pick-lead">Välj värld</p>
+        <ul id="biomeList" class="biome-list"></ul>
+      </div>
+
+      <div id="levelView" class="hidden">
+        <div class="biome-bar">
+          <button id="btnBiomeBack" class="back">← Världar</button>
+          <span class="biome-title" id="biomeTitle"></span>
+        </div>
+        <ul id="levelList" class="level-list"></ul>
+      </div>
     </section>
 
     <section class="tabpane hidden" data-pane="custom">

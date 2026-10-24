@@ -10,6 +10,7 @@ import { Touchpad } from './touchpad.js';
 import { OBJ, MS_TO_PHYS_TIME, TIME_TO_CENTISECONDS } from './constants.js';
 import { loadGhost, levelFingerprint, REPLAY_VERSION } from './replay.js';
 import { cachedThumbnail } from './thumbnail.js';
+import { BIOMES, DEFAULT_BIOME, biomeOf, findBiome } from './biomes.js';
 
 // Fullscreen is a nice-to-have, and its module is exactly the sort of file a
 // content blocker swallows. Loaded dynamically behind a no-op fallback so a
@@ -197,14 +198,47 @@ function levelRow(entry, index, times) {
   return li;
 }
 
+// A world card: emoji, name, and how far through it you are. The progress
+// is the point — it is what tells you which world you left unfinished.
+function biomeCard(biome, entries, times) {
+  const mine = entries.filter((e) => !e.custom && biomeOf(e.data) === biome.id);
+  const cleared = mine.filter((e) => times[e.data.name] !== undefined).length;
+  const share = mine.length ? (cleared / mine.length) * 100 : 0;
+  const li = document.createElement('li');
+  li.className = 'biome' + (biome.locked ? ' locked' : '');
+  li.innerHTML = `
+    <span class="biome-emoji" aria-hidden="true">${biome.emoji}</span>
+    <span class="biome-name">${escapeHtml(biome.name)}</span>
+    <span class="biome-blurb">${escapeHtml(biome.blurb)}</span>
+    ${biome.locked ? '<span class="biome-lock">Låst</span>' : `
+      <span class="biome-count">${cleared} av ${mine.length} klarade</span>
+      <span class="progress-bar"><span style="width: ${share}%"></span></span>`}
+  `;
+  if (!biome.locked) li.addEventListener('click', () => openBiome(biome.id));
+  return li;
+}
+
+function renderBiomeList() {
+  const times = loadTimes();
+  const entries = allLevels();
+  const list = $('biomeList');
+  list.innerHTML = '';
+  for (const biome of BIOMES) list.appendChild(biomeCard(biome, entries, times));
+}
+
 function renderLevelList() {
   const times = loadTimes();
   const entries = allLevels();
 
+  renderBiomeList();
+
+  // Only the open world's levels. An unopened chooser renders none, which
+  // costs nothing and keeps the two views from disagreeing.
   const builtIn = $('levelList');
   builtIn.innerHTML = '';
   entries.forEach((entry, index) => {
-    if (!entry.custom) builtIn.appendChild(levelRow(entry, index, times));
+    if (entry.custom || biomeOf(entry.data) !== openBiomeId) return;
+    builtIn.appendChild(levelRow(entry, index, times));
   });
 
   const custom = $('customList');
@@ -231,6 +265,53 @@ function renderLevelList() {
   $('progressText').textContent = `${cleared} av ${LEVELS.length} banor klarade`;
 }
 
+// ------------------------------------------------------------- worlds
+
+// Which world's levels are on screen, or null for the chooser itself.
+let openBiomeId = null;
+
+// The panel is what scrolls, not the list, so the position we remember is
+// the panel's. Kept per world: coming back to the one you are stuck on
+// should put you back at the level you are stuck on, not at the top.
+function rememberBiomeScroll() {
+  if (!openBiomeId) return;
+  const panel = document.querySelector('#menu .panel');
+  if (!panel) return;
+  settings.biomeScroll = { ...settings.biomeScroll, [openBiomeId]: panel.scrollTop };
+  saveSettings();
+}
+
+function restoreBiomeScroll() {
+  const panel = document.querySelector('#menu .panel');
+  const top = settings.biomeScroll && settings.biomeScroll[openBiomeId];
+  if (!panel || !top) return;
+  // After layout, or the panel has no scroll height to move within yet.
+  requestAnimationFrame(() => { panel.scrollTop = top; });
+}
+
+function openBiome(id, { restore = true } = {}) {
+  const biome = findBiome(id);
+  if (!biome || biome.locked) return;
+  openBiomeId = id;
+  if (settings.biome !== id) { settings.biome = id; saveSettings(); }
+  $('biomeTitle').textContent = `${biome.emoji} ${biome.name}`;
+  $('biomePicker').classList.add('hidden');
+  $('levelView').classList.remove('hidden');
+  renderLevelList();
+  if (restore) restoreBiomeScroll();
+}
+
+function closeBiome() {
+  rememberBiomeScroll();
+  openBiomeId = null;
+  if (settings.biome) { settings.biome = null; saveSettings(); }
+  $('levelView').classList.add('hidden');
+  $('biomePicker').classList.remove('hidden');
+  renderLevelList();
+  const panel = document.querySelector('#menu .panel');
+  if (panel) panel.scrollTop = 0;
+}
+
 // ---------------------------------------------------------------- modes
 
 const hideAll = (...ids) => ids.forEach((id) => $(id).classList.add('hidden'));
@@ -243,7 +324,11 @@ function showMenu() {
   replay = null;
   document.body.classList.remove('playing');
   sfx.silenceEngine();
-  renderLevelList();
+  // Back to the world they were in, at the place in it they had scrolled
+  // to. Someone stuck on level 17 should not have to find it again.
+  const remembered = findBiome(settings.biome);
+  if (remembered && !remembered.locked) openBiome(remembered.id);
+  else closeBiome();
   renderer.fitScale();
   if (!demo) demo = new Demo(renderer, effects);
   show('menu');
@@ -255,6 +340,7 @@ function showMenu() {
 function startLevel(index) {
   const entries = allLevels();
   if (!entries[index]) return;
+  rememberBiomeScroll();
   currentIndex = index;
   replay = null;
   sfx.ensure();
@@ -776,6 +862,7 @@ $('edExport').addEventListener('click', () => {
   URL.revokeObjectURL(a.href);
 });
 
+$('btnBiomeBack').addEventListener('click', closeBiome);
 $('btnEditor').addEventListener('click', () => openEditor(emptyLevel()));
 $('btnImport').addEventListener('click', () => $('fileInput').click());
 $('btnResume').addEventListener('click', () => { game.togglePause(); setPaused(false); });

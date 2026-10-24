@@ -171,6 +171,21 @@ bakom `M` och växeln i menyn.
 
 ## Banväljaren
 
+Först väljer man **värld**, sedan bana. Världarna står i `js/biomes.js`: i dag
+**Skogen 🌲** med alla tjugo banor och **Snön ❄️**, som visas men är låst. En låst värld
+ritas ändå — en tom hylla med ett datum på säger mer än ingen hylla alls.
+
+En bana talar om vilken värld den hör till med ett `biome`-fält. Utelämnas det blir det
+den första, vilket är varför de tjugo banor som skrevs innan världar fanns inte behövde
+ändras alls. Nya snöbanor är alltså bara att lägga till med `biome: 'snow'` och ta bort
+`locked` från världen.
+
+`← Världar` tar en ut igen. Och **var man var sparas per värld**: panelen är det som
+scrollar, så det är dess `scrollTop` vi minns, i `settings.biomeScroll`. Den som kört
+fast på bana 17 ska inte behöva leta rätt på den igen — varken efter ett lopp, efter en
+tur ut till världarna, eller efter att ha stängt sidan. Senast öppnade värld ligger i
+`settings.biome` och öppnas igen av sig själv.
+
 Banorna visas som kort med en ritad bild av banan, inte som en lista med namn. En bild
 av grottan säger vilken bana det är innan man läst någonting, vilket spelar störst roll
 för den som ännu inte läser namnen. Klarade banor bär det tydligt: guldgrön kant och en
@@ -264,6 +279,7 @@ js/
   sim.js         en bildrutas simulering: (tid, knappar) in, tillstånd ut
   replay.js      inspelning, kodning, ghost
   thumbnail.js   ritar banbilderna till väljaren
+  biomes.js      världarna och vilken bana som hör till vilken
   level.js       polygoner, segment, kollisionsrutnät
   levels.js      de tjugo inbyggda banorna
   render.js      Canvas 2D: terräng, parallax, björn, objekt, ghost
