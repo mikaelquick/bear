@@ -8,8 +8,27 @@ import assert from 'node:assert/strict';
 import { Level } from '../js/level.js';
 import { LEVELS } from '../js/levels.js';
 import { solve } from './autopilot.js';
+import { VEHICLES } from '../js/vehicles.js';
 
-const BUDGET = 1200;
+// One successful run is proof, so the search gets a few different starting
+// seeds before a level is called unfinishable. That matters more than it
+// sounds: the driver is crude and its luck varies, and a single unlucky
+// seed had two levels looking impossible on the bicycle when both are
+// plainly not. Fixed list, so the test stays a stable regression test.
+const SEEDS = [12345, 777, 4242];
+const BUDGET = 800;
+
+// Proof is one finish. Returns the best attempt for the failure message.
+function canFinish(level, vehicleId) {
+  let best = null;
+  for (const seed of SEEDS) {
+    level.objects.forEach((o) => { o.taken = false; });
+    const result = solve(level, BUDGET, seed, vehicleId);
+    if (result.result === 'finish') return result;
+    if (!best || result.hives > best.hives) best = result;
+  }
+  return best;
+}
 
 let failures = 0;
 function test(name, fn) {
@@ -25,14 +44,20 @@ function test(name, fn) {
 
 console.log('level completability');
 
-for (const data of LEVELS) {
-  test(`${data.name} can be finished`, () => {
-    const level = new Level(data);
-    const started = Date.now();
-    const result = solve(level, BUDGET);
-    const detail = `${result.hives}/${level.totalApples} kupor, ${result.runs} körningar, ${Date.now() - started} ms`;
-    assert.equal(result.result, 'finish', `autopiloten fastnade: ${detail}`);
-  });
+// Every level, on every vehicle. A level is only proven completable with
+// the machine it was proven with, and vehicles do not handle alike — the
+// bicycle is slower and shorter, so a gap the motorbike clears is a real
+// question for it.
+for (const vehicle of VEHICLES) {
+  for (const data of LEVELS) {
+    test(`${data.name} can be finished on ${vehicle.name.toLowerCase()}`, () => {
+      const level = new Level(data);
+      const started = Date.now();
+      const result = canFinish(level, vehicle.id);
+      const detail = `bäst ${result.hives}/${level.totalApples} kupor över ${SEEDS.length} frön, ${Date.now() - started} ms`;
+      assert.equal(result.result, 'finish', `autopiloten fastnade: ${detail}`);
+    });
+  }
 }
 
 test('no level hides a hive or the pot inside solid ground', () => {

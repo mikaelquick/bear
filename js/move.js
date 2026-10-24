@@ -12,7 +12,6 @@ import {
   SPRING_TENSION_COEFFICIENT,
   SPRING_RESISTANCE_COEFFICIENT,
   GRAVITY,
-  BODY_DY,
 } from './constants.js';
 
 // Push the wheel out of the ground so it stands on the anchor point.
@@ -204,7 +203,8 @@ function bodyBoundaries(mot, i, j) {
 export function bodyMovement(mot, gravityDir, i, j, dt) {
   bodyBoundaries(mot, i, j);
 
-  const neutral = { x: mot.bike.r.x + j.x * BODY_DY, y: mot.bike.r.y + j.y * BODY_DY };
+  const bodyDy = mot.spec.bodyDy;
+  const neutral = { x: mot.bike.r.x + j.x * bodyDy, y: mot.bike.r.y + j.y * bodyDy };
   const delta = sub(neutral, mot.bodyR);
 
   const springLength = Math.max(len(delta), 1e-7);

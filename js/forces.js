@@ -5,15 +5,13 @@ import { add, sub, neg, scale, dot, rot90, len } from './vec2.js';
 import { rigidbodyMovement, bodyMovement } from './move.js';
 import { getTwoAnchorPoints, getTouchingObject } from './collision.js';
 import {
-  DEFAULT_BIKE, DEFAULT_LEFT_WHEEL, DEFAULT_RIGHT_WHEEL, DEFAULT_BODY_R,
-  LEFT_WHEEL_DX, LEFT_WHEEL_DY, RIGHT_WHEEL_DX, RIGHT_WHEEL_DY,
   SPRING_TENSION_COEFFICIENT, SPRING_RESISTANCE_COEFFICIENT,
   GRAVITY, HEAD_RADIUS, VOLT_DELAY,
-  MAX_ANGULAR_VELOCITY, GAS_TORQUE,
   ANGULAR_SPRING_TENSION_COEFFICIENT, ANGULAR_SPRING_RESISTANCE_COEFFICIENT,
-  VOLT_ANGULAR_VELOCITY, COUNTERVOLT_ANGULAR_VELOCITY,
+  COUNTERVOLT_ANGULAR_VELOCITY,
   GRAVITY_DIR, GRAVITY_VECTORS, OBJ,
 } from './constants.js';
+import { specOf, DEFAULT_VEHICLE } from './vehicles.js';
 
 const makeBody = (def) => ({
   rotation: 0,
@@ -27,7 +25,13 @@ const makeBody = (def) => ({
 });
 
 export class Motor {
-  constructor() {
+  /**
+   * @param {string} [vehicleId] which machine this is. Defaults to the
+   *   motorbike, whose spec is the ported constants unchanged.
+   */
+  constructor(vehicleId = DEFAULT_VEHICLE) {
+    this.vehicleId = vehicleId;
+    this.spec = specOf(vehicleId);
     this.init();
   }
 
@@ -41,11 +45,11 @@ export class Motor {
     this.gravityDirection = GRAVITY_DIR.DOWN;
     this.prevBrake = false;
 
-    this.bike = makeBody(DEFAULT_BIKE);
-    this.leftWheel = makeBody(DEFAULT_LEFT_WHEEL);
-    this.rightWheel = makeBody(DEFAULT_RIGHT_WHEEL);
+    this.bike = makeBody(this.spec.bike);
+    this.leftWheel = makeBody(this.spec.leftWheel);
+    this.rightWheel = makeBody(this.spec.rightWheel);
 
-    this.bodyR = { ...DEFAULT_BODY_R };
+    this.bodyR = { ...this.spec.bodyR };
     this.bodyV = { x: 0, y: 0 };
 
     this.appleCount = 0;
@@ -64,7 +68,7 @@ export class Motor {
 
   // Offset everything so the bike centre lands on the start marker.
   spawn(startPosition) {
-    const off = sub(startPosition, DEFAULT_BIKE.r);
+    const off = sub(startPosition, this.spec.bike.r);
     this.bike.r = add(this.bike.r, off);
     this.leftWheel.r = add(this.leftWheel.r, off);
     this.rightWheel.r = add(this.rightWheel.r, off);
@@ -185,11 +189,13 @@ export function simulateBikePhysics(level, mot, time, dt, gas, brake, rightVolt,
   let torqueRightWheel = 0;
 
   if (gas) {
-    // Only the trailing wheel drives, and it caps out at MAX_ANGULAR_VELOCITY.
+    // Only the trailing wheel drives, and it caps out at the vehicle's own
+    // maximum: that cap times the wheel radius is its top speed.
+    const { maxAngularVelocity, gasTorque } = mot.spec;
     if (mot.flipped) {
-      if (mot.leftWheel.angularVelocity > -MAX_ANGULAR_VELOCITY) torqueLeftWheel = -GAS_TORQUE;
+      if (mot.leftWheel.angularVelocity > -maxAngularVelocity) torqueLeftWheel = -gasTorque;
     } else {
-      if (mot.rightWheel.angularVelocity < MAX_ANGULAR_VELOCITY) torqueRightWheel = GAS_TORQUE;
+      if (mot.rightWheel.angularVelocity < maxAngularVelocity) torqueRightWheel = gasTorque;
     }
   }
 
@@ -212,8 +218,10 @@ export function simulateBikePhysics(level, mot, time, dt, gas, brake, rightVolt,
     clampWheelRotation(mot.rightWheel);
   }
 
-  calculateWheelForces(mot, mot.leftWheel, i1, j1, LEFT_WHEEL_DX, LEFT_WHEEL_DY, torqueLeftWheel, leftOut);
-  calculateWheelForces(mot, mot.rightWheel, i1, j1, RIGHT_WHEEL_DX, RIGHT_WHEEL_DY, torqueRightWheel, rightOut);
+  calculateWheelForces(mot, mot.leftWheel, i1, j1,
+    mot.spec.leftWheelDx, mot.spec.leftWheelDy, torqueLeftWheel, leftOut);
+  calculateWheelForces(mot, mot.rightWheel, i1, j1,
+    mot.spec.rightWheelDx, mot.spec.rightWheelDy, torqueRightWheel, rightOut);
 
   let prevoltAngularVelocity = 0;
   if (rightVolt || leftVolt) prevoltAngularVelocity = mot.bike.angularVelocity;
@@ -224,7 +232,7 @@ export function simulateBikePhysics(level, mot, time, dt, gas, brake, rightVolt,
   // motion in the meantime, you keep the gain. This is the alovolt/supervolt
   // exploit the whole speedrunning scene is built on; it is deliberate.
   if (mot.voltingRight && (rightVolt || leftVolt || time > mot.rightVoltTime + VOLT_DELAY * 0.25)) {
-    mot.bike.angularVelocity += VOLT_ANGULAR_VELOCITY;
+    mot.bike.angularVelocity += mot.spec.voltAngularVelocity;
     mot.bike.angularVelocity = Math.min(mot.bike.angularVelocity, mot.angularVelocityPreRightVolt);
     if (mot.bike.angularVelocity > 0) {
       mot.bike.angularVelocity = Math.max(mot.bike.angularVelocity - COUNTERVOLT_ANGULAR_VELOCITY, 0);
@@ -234,7 +242,7 @@ export function simulateBikePhysics(level, mot, time, dt, gas, brake, rightVolt,
     mot.rightVoltTime = -1;
   }
   if (mot.voltingLeft && (rightVolt || leftVolt || time > mot.leftVoltTime + VOLT_DELAY * 0.25)) {
-    mot.bike.angularVelocity -= VOLT_ANGULAR_VELOCITY;
+    mot.bike.angularVelocity -= mot.spec.voltAngularVelocity;
     mot.bike.angularVelocity = Math.max(mot.bike.angularVelocity, mot.angularVelocityPreLeftVolt);
     if (mot.bike.angularVelocity < 0) {
       mot.bike.angularVelocity = Math.min(mot.bike.angularVelocity + COUNTERVOLT_ANGULAR_VELOCITY, 0);
@@ -248,13 +256,13 @@ export function simulateBikePhysics(level, mot, time, dt, gas, brake, rightVolt,
     mot.voltingRight = true;
     mot.angularVelocityPreRightVolt = mot.bike.angularVelocity;
     mot.rightVoltTime = time;
-    mot.bike.angularVelocity -= VOLT_ANGULAR_VELOCITY;
+    mot.bike.angularVelocity -= mot.spec.voltAngularVelocity;
   }
   if (leftVolt) {
     mot.voltingLeft = true;
     mot.angularVelocityPreLeftVolt = mot.bike.angularVelocity;
     mot.leftVoltTime = time;
-    mot.bike.angularVelocity += VOLT_ANGULAR_VELOCITY;
+    mot.bike.angularVelocity += mot.spec.voltAngularVelocity;
   }
 
   // Lean the rider into the volt instead of letting them flop backwards.

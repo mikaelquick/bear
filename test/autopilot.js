@@ -13,15 +13,17 @@ function snapshot(m, level) {
 }
 
 function restore(snap, level) {
-  const m = new Motor();
+  // The snapshot carries vehicleId, and Object.assign below restores the
+  // spec with it, so the machine cannot change mid-search.
+  const m = new Motor(snap.motor.vehicleId);
   Object.assign(m, JSON.parse(JSON.stringify(snap.motor)));
   level.objects.forEach((o, i) => { o.taken = snap.taken[i]; });
   return m;
 }
 
-function spawnFresh(level) {
+function spawnFresh(level, vehicleId) {
   level.objects.forEach((o) => { o.taken = false; });
-  const m = new Motor();
+  const m = new Motor(vehicleId);
   m.spawn(level.start);
   return m;
 }
@@ -63,7 +65,7 @@ export function drive(level, motor, startTime, opts = {}) {
 }
 
 export function attempt(level, opts = {}) {
-  return drive(level, spawnFresh(level), 0, opts);
+  return drive(level, spawnFresh(level, opts.vehicleId), 0, opts);
 }
 
 // Segment-wise search with backtracking.
@@ -73,7 +75,7 @@ export function attempt(level, opts = {}) {
 // alternative states per hive count: a checkpoint taken mid-crash is
 // unrecoverable, and without backtracking one unlucky run would condemn an
 // otherwise fine level.
-export function solve(level, budget = 600, baseSeed = 12345) {
+export function solve(level, budget = 600, baseSeed = 12345, vehicleId = undefined) {
   const states = new Map(); // hive count -> up to MAX_PER_COUNT snapshots
   const MAX_PER_COUNT = 4;
   const TRIES_PER_STATE = 8;
@@ -84,7 +86,7 @@ export function solve(level, budget = 600, baseSeed = 12345) {
     states.set(hives, pool);
   };
 
-  push(0, { ...snapshot(spawnFresh(level), level), time: 0 });
+  push(0, { ...snapshot(spawnFresh(level, vehicleId), level), time: 0 });
 
   let runs = 0;
   let seed = baseSeed;
