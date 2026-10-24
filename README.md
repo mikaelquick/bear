@@ -71,8 +71,14 @@ Tiden mäts i hundradelar och sparas per bana i `localStorage`.
 **Mobil och surfplatta:** knappar dyker upp på skärmen när enheten har pekskärm.
 Volt till vänster; vänd, broms och gas på en rad till höger, vänd innerst som en skiva
 likt volterna. Den låg ett tag ovanpå pedalerna och tog då en remsa tvärs över synfältet
-— på rad är högerklustret 104 px i stället för 153. Kugghjul uppe i hörnet för paus och
-meny. När du dött räcker ett tryck var som helst för att köra om.
+— på rad är högerklustret 104 px i stället för 153. När du dött räcker ett tryck var
+som helst för att köra om.
+
+Uppe i högra hörnet sitter **kugghjulet**, och det sitter ensamt: paus och meny i en
+knapp. Omstart flyttade in i den menyn, där den redan erbjöds, och fullskärmsknappen som
+satt bredvid är borttagen — hörnet visas bara på pekskärmar, och där hade den inget att
+göra. Installerad finns ingen webbläsarram kvar att gömma; på iPhone finns inte
+Fullscreen API alls; och där det fungerar finns växeln kvar i menyfoten.
 
 Spelet körs **alltid liggande**, alltid åt samma håll. Rapporterar enheten porträtt
 vänder vi spelet i stället för att be spelaren vända telefonen: allt ligger i `#stage`,
