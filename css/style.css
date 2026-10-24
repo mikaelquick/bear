@@ -1257,6 +1257,26 @@ body.touch.playing #toast { bottom: 118px; }
    buttons carry their own labels. */
 body.touch .hint { display: none; }
 
+/* ---------- Installed: the menu is the app ---------- */
+
+/* A 660px cap is a desktop idea. On a phone it left the menu covering 77%
+   of the width with the game showing through in bands down both sides,
+   which reads as unfinished when there is no browser chrome around to
+   explain why it is a card at all. Installed, the menu fills the screen.
+   The id in the selector is what lets this win over the turned-stage
+   overrides below without depending on order.
+   Only the menu: the pause, result and vehicle panels are genuinely
+   dialogs over the game and should stay cards. */
+body.standalone #menu .panel {
+  width: 100%;
+  max-width: none;
+  height: 100%;
+  max-height: 100%;
+  border-radius: 0;
+  border: none;
+  box-shadow: none;
+}
+
 /* ---------- Turned stage: the last word ---------- */
 
 /* vw and vh still mean the real viewport inside a turned stage, so the ones
