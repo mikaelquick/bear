@@ -10,6 +10,25 @@
   --ok: #5fcf7e;
   --border: #2e3850;
   --radius: 14px;
+
+  /* A cartoon button is three things: an inked outline, a corner radius
+     far larger than a document would use, and a solid lip underneath that
+     it sinks onto when pressed. None of that is any one studio's idea —
+     it is how a drawn button has looked since drawn buttons existed.
+     Everything below is built from these three. */
+  --ink: #0d121d;
+  --lip: 4px;
+  --lip-soft: 3px;
+
+  /* An inked outline only reads against a face lighter than the panel it
+     sits on. These are deliberately brighter than the old flat tiles —
+     that is what buys the drawn look, and it is what a child's eye goes
+     to first. */
+  --btn-top: #5d6d99;
+  --btn-bot: #404d73;
+  --btn-top-hi: #6d7fae;
+  --btn-bot-hi: #4b5a85;
+  --btn-lip: #222a40;
 }
 
 * { box-sizing: border-box; }
@@ -22,7 +41,12 @@ html, body {
   height: 100dvh;
   background: var(--bg);
   color: var(--text);
-  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  /* ui-rounded is San Francisco Rounded on Apple devices and costs nothing
+     to ask for; everywhere else this falls straight through to the plain
+     system face. Rounder letters do as much for the friendly feel as the
+     buttons do. */
+  font-family: ui-rounded, "SF Pro Rounded", system-ui, -apple-system,
+               "Segoe UI", Roboto, sans-serif;
   overflow: hidden;
   /* No pull-to-refresh or rubber-banding while a thumb is on the throttle. */
   overscroll-behavior: none;
@@ -279,16 +303,16 @@ body.short .next-step { margin-bottom: 15px; }
 .install-pill {
   margin-left: auto;
   flex: none;
-  background: var(--panel-2);
+  background: linear-gradient(180deg, var(--btn-top), var(--btn-bot) 58%);
   color: var(--text);
-  border: 1px solid var(--border);
-  border-radius: 999px;
-  padding: 8px 14px;
+  border-color: var(--ink);
+  padding: 8px 15px;
   font-size: 12px;
-  font-weight: 600;
   white-space: nowrap;
+  box-shadow: 0 var(--lip-soft) 0 var(--btn-lip), inset 0 2px 0 rgba(255, 255, 255, 0.18);
 }
-.install-pill:hover { background: #2b3448; }
+.install-pill:hover { background: linear-gradient(180deg, var(--btn-top-hi), var(--btn-bot-hi) 58%); }
+.install-pill:active { transform: translateY(var(--lip-soft)); box-shadow: 0 0 0 var(--btn-lip); }
 .brand-mark {
   flex: none;
   width: 62px; height: 62px;
@@ -348,38 +372,38 @@ h2 { margin: 0 0 14px; font-size: 24px; }
   align-items: center;
   justify-content: flex-start;
   gap: 5px;
-  background: #1a2130;
-  border: 1.5px solid var(--border);
-  border-radius: 18px;
+  background: linear-gradient(180deg, var(--btn-top), var(--btn-bot) 58%);
+  border: 2.5px solid var(--ink);
+  border-radius: 22px;
   color: var(--muted);
   padding: 12px 8px 11px;
   font-size: 13px;
-  font-weight: 600;
+  font-weight: 700;
   line-height: 1.25;
   text-align: center;
   cursor: pointer;
-  transition: background 0.12s, border-color 0.12s, transform 0.12s, color 0.12s;
+  box-shadow: 0 var(--lip) 0 var(--btn-lip), inset 0 2px 0 rgba(255, 255, 255, 0.18);
+  transition: background 0.12s, color 0.12s, transform 0.06s, box-shadow 0.06s;
 }
+.tab:active { transform: translateY(var(--lip)); box-shadow: 0 0 0 var(--btn-lip); }
 
 .tab-ico { font-size: 30px; line-height: 1; }
 .tab { font-size: 15px; padding: 14px 10px 12px; }
 
-.tab:hover {
-  color: var(--text);
-  background: #202940;
-  border-color: #46557a;
-  transform: translateY(-2px);
-}
+.tab { color: #dbe3f2; }
+.tab:hover { color: #fff; background: linear-gradient(180deg, var(--btn-top-hi), var(--btn-bot-hi) 58%); }
 
 /* The open one is lit rather than underlined: at this size a one-pixel
    line under a button is easy to miss. */
+/* The open one is painted, not underlined: at this size a one-pixel line
+   under a button is easy to miss, and a child is looking for a colour. */
 .tab.active {
-  color: var(--text);
-  background: rgba(240, 168, 48, 0.15);
-  border-color: var(--accent);
-  box-shadow: 0 5px 16px rgba(240, 168, 48, 0.13);
+  color: #3a2402;
+  background: linear-gradient(180deg, #ffd27a, var(--accent) 58%);
+  box-shadow: 0 var(--lip) 0 #a9680d, inset 0 2px 0 rgba(255, 255, 255, 0.45);
 }
-.tab.active:hover { background: rgba(240, 168, 48, 0.19); border-color: var(--accent); }
+.tab.active:hover { background: linear-gradient(180deg, #ffdf99, #ffb948 58%); }
+.tab.active:active { box-shadow: 0 0 0 #a9680d; }
 
 /* ---------- Worlds ---------- */
 
@@ -407,17 +431,15 @@ h2 { margin: 0 0 14px; font-size: 24px; }
   text-align: center;
   gap: 5px;
   padding: 18px 16px 16px;
-  border-radius: 16px;
+  border-radius: 24px;
   cursor: pointer;
-  background: #1a2130;
-  border: 1px solid var(--border);
-  transition: border-color 0.12s, transform 0.12s, box-shadow 0.12s;
+  background: linear-gradient(180deg, var(--btn-top), var(--btn-bot) 58%);
+  border: 2.5px solid var(--ink);
+  box-shadow: 0 5px 0 var(--btn-lip), inset 0 2px 0 rgba(255, 255, 255, 0.18);
+  transition: background 0.12s, transform 0.06s, box-shadow 0.06s;
 }
-.biome:hover {
-  border-color: #46557a;
-  transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.38);
-}
+.biome:hover { background: linear-gradient(180deg, var(--btn-top-hi), var(--btn-bot-hi) 58%); }
+.biome:active { transform: translateY(5px); box-shadow: 0 0 0 var(--btn-lip); }
 
 /* Bigger now that nothing competes with it: the picture is the label for
    anyone who cannot read the one underneath. */
@@ -426,14 +448,17 @@ h2 { margin: 0 0 14px; font-size: 24px; }
 .biome-count { font-size: 13px; color: var(--accent); margin-top: 6px; }
 .biome .progress-bar { width: 100%; margin-top: 4px; }
 
-/* A locked world is still shown. An empty shelf with a date on it says
-   more than no shelf at all. */
+/* A locked world is still shown. An empty shelf says more than no shelf.
+   Greyed and flattened rather than dashed: a dashed 2.5px outline at this
+   size reads as a mistake. */
 .biome.locked {
   cursor: default;
-  opacity: 0.55;
-  border-style: dashed;
+  background: linear-gradient(180deg, #3a4257, #2b3141 58%);
+  box-shadow: 0 5px 0 #191e2a, inset 0 2px 0 rgba(255, 255, 255, 0.08);
+  color: #99a3b8;
 }
-.biome.locked:hover { transform: none; box-shadow: none; border-color: var(--border); }
+.biome.locked:hover { background: linear-gradient(180deg, #3a4257, #2b3141 58%); }
+.biome.locked:active { transform: none; box-shadow: 0 5px 0 #191e2a; }
 .biome-lock { margin-top: 7px; font-size: 20px; line-height: 1; }
 
 /* The way back out, and a reminder of where you are. */
@@ -446,15 +471,15 @@ h2 { margin: 0 0 14px; font-size: 24px; }
 .biome-title { font-size: 15px; font-weight: 600; }
 
 button.back {
-  background: var(--panel-2);
+  background: linear-gradient(180deg, var(--btn-top), var(--btn-bot) 58%);
   color: var(--text);
-  border: 1px solid var(--border);
-  border-radius: 999px;
-  padding: 9px 17px;
+  border-color: var(--ink);
+  padding: 9px 18px;
   font-size: 14px;
-  font-weight: 600;
+  box-shadow: 0 var(--lip) 0 var(--btn-lip), inset 0 2px 0 rgba(255, 255, 255, 0.18);
 }
-button.back:hover { background: #2b3448; }
+button.back:hover { background: linear-gradient(180deg, var(--btn-top-hi), var(--btn-bot-hi) 58%); }
+button.back:active { box-shadow: 0 0 0 var(--btn-lip); }
 
 /* On a phone this is a thumb, not a cursor, so it gets a real target —
    and it is the exception to the short-screen shrinking, because the way
@@ -485,26 +510,34 @@ body.touch .biome-title { font-size: 17px; }
   flex-direction: column;
   gap: 7px;
   padding: 7px 7px 9px;
-  border-radius: 14px;
+  border-radius: 18px;
   cursor: pointer;
-  background: #1a2130;
-  border: 1px solid var(--border);
-  transition: border-color 0.12s, transform 0.12s, box-shadow 0.12s;
+  background: linear-gradient(180deg, var(--btn-top), var(--btn-bot) 58%);
+  border: 2.5px solid var(--ink);
+  box-shadow: 0 var(--lip) 0 var(--btn-lip), inset 0 2px 0 rgba(255, 255, 255, 0.18);
+  transition: background 0.12s, transform 0.06s, box-shadow 0.06s;
 }
 
-.level-list li:hover {
-  border-color: #46557a;
-  transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.38);
-}
+.level-list li:hover { background: linear-gradient(180deg, var(--btn-top-hi), var(--btn-bot-hi) 58%); }
+.level-list li:active { transform: translateY(var(--lip)); box-shadow: 0 0 0 var(--btn-lip); }
 
 /* Finished levels wear it plainly: a gold edge and a tick, both readable
    from across a room. */
 .level-list li.done {
-  border-color: rgba(95, 207, 126, 0.55);
-  background: rgba(95, 207, 126, 0.07);
+  background: linear-gradient(180deg, #58b37c, #38865a 58%);
+  box-shadow: 0 var(--lip) 0 #1e4a31, inset 0 2px 0 rgba(255, 255, 255, 0.28);
 }
-.level-list li.done:hover { border-color: var(--ok); }
+.level-list li.done:hover { background: linear-gradient(180deg, #68c78e, #419a68 58%); }
+.level-list li.done:active { box-shadow: 0 0 0 #1e4a31; }
+/* Near-black on the green, because anything greenish on green is a word
+   you have to work at. */
+.level-list li.done .name { color: #0c2516; }
+.level-list li.done .meta { color: #14381f; }
+.level-list li.done .time { color: #0c2516; }
+.level-list li.done .dots i { background: rgba(10, 40, 22, 0.38); }
+.level-list li.done .dots i.on { background: #0c2516; }
+.level-list li.done .play { background: #1d4a30; border-color: #0c2516; color: #cdf3dc; }
+.level-list li.done .play:hover { background: #245c3b; color: #fff; }
 
 .level-list .shot {
   position: relative;
@@ -586,45 +619,68 @@ body.touch .biome-title { font-size: 17px; }
 
 .level-list .del {
   flex: none;
-  background: none;
-  border: 1px solid var(--border);
-  border-radius: 7px;
-  color: #5b6477;
-  cursor: pointer; font-size: 11px; padding: 2px 7px; line-height: 1.3;
+  background: #151b28;
+  border: 2px solid var(--ink);
+  border-radius: 999px;
+  box-shadow: none;
+  color: #7d8aa3;
+  cursor: pointer; font-size: 11px; padding: 2px 8px; line-height: 1.3;
 }
-.level-list .del:hover { color: var(--danger); border-color: var(--danger); background: none; }
+.level-list .del:hover { color: var(--danger); background: #1d2430; }
+.level-list .del:active { transform: none; }
 
+/* Chunky, inked and sprung: the face sits on a solid lip and drops onto
+   it when pressed, so pushing the button looks like pushing a button
+   rather than recolouring a rectangle. The gradient is light at the top
+   because that is where the light is. */
 button {
-  background: var(--accent);
-  color: #241704;
-  border: none;
-  border-radius: 10px;
-  padding: 10px 18px;
+  background: linear-gradient(180deg, #ffd27a, var(--accent) 58%);
+  color: #3a2402;
+  border: 2.5px solid var(--ink);
+  border-radius: 999px;
+  padding: 11px 21px;
   font-size: 14px;
-  font-weight: 600;
+  font-weight: 800;
   cursor: pointer;
   font-family: inherit;
-  transition: background 0.12s, transform 0.08s;
+  box-shadow: 0 var(--lip) 0 #a9680d,
+              inset 0 2px 0 rgba(255, 255, 255, 0.45);
+  transition: filter 0.1s, transform 0.06s, box-shadow 0.06s;
 }
 
-button:hover { background: #ffbe4d; }
-button:active { transform: translateY(1px); }
+button:hover { background: linear-gradient(180deg, #ffdf99, #ffb948 58%); filter: none; }
+
+/* Down onto the lip. The shadow collapses by exactly the distance the
+   button travels, so the pair reads as one solid thing moving. */
+button:active {
+  transform: translateY(var(--lip));
+  box-shadow: 0 0 0 #a9680d, inset 0 2px 0 rgba(255, 255, 255, 0.3);
+}
 
 button.secondary {
-  background: var(--panel-2);
+  background: linear-gradient(180deg, var(--btn-top), var(--btn-bot) 58%);
   color: var(--text);
-  border: 1px solid var(--border);
+  border-color: var(--ink);
+  box-shadow: 0 var(--lip) 0 var(--btn-lip),
+              inset 0 2px 0 rgba(255, 255, 255, 0.18);
 }
-button.secondary:hover { background: #2b3448; }
+button.secondary:hover { background: linear-gradient(180deg, var(--btn-top-hi), var(--btn-bot-hi) 58%); }
+button.secondary:active { box-shadow: 0 0 0 var(--btn-lip), inset 0 2px 0 rgba(255, 255, 255, 0.12); }
 
+/* The footer links stay flat text. They are the grown-up corner of the
+   menu, and a chunky button there would pull the eye away from the two
+   that matter. */
 button.link {
   background: none;
+  border: none;
+  box-shadow: none;
   color: var(--muted);
   padding: 4px 0;
   font-weight: 400;
   font-size: 12px;
 }
 button.link:hover { background: none; color: var(--text); text-decoration: underline; }
+button.link:active { transform: none; box-shadow: none; }
 
 .row { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
 
@@ -807,15 +863,17 @@ body.short h2 { font-size: 19px; margin-bottom: 9px; }
 
 .level-list .play {
   flex: none;
-  background: none;
-  border: 1px solid var(--border);
-  color: var(--muted);
-  border-radius: 7px;
-  padding: 2px 8px;
+  background: #151b28;
+  border: 2px solid var(--ink);
+  color: var(--accent-soft);
+  border-radius: 999px;
+  box-shadow: none;
+  padding: 2px 9px;
   font-size: 11px;
   line-height: 1.3;
 }
-.level-list .play:hover { color: var(--accent); border-color: var(--accent); background: none; }
+.level-list .play:hover { color: var(--accent); background: #1d2430; }
+.level-list .play:active { transform: none; }
 
 /* ---------- Touch controls ---------- */
 
@@ -872,7 +930,7 @@ body.sideways #touchTop {
 
 .tbtn {
   background: rgba(28, 35, 50, 0.52);
-  border: 1.5px solid rgba(143, 155, 179, 0.4);
+  border: 2px solid rgba(190, 203, 224, 0.5);
   color: var(--text);
   padding: 0;
   display: flex;
@@ -888,6 +946,10 @@ body.sideways #touchTop {
   backdrop-filter: blur(3px);
   transition: none;
   font-family: inherit;
+  /* Inked on the outside as well as rimmed on the inside. One line alone
+     disappears against whichever of sky or rock it happens to be over;
+     the pair never does. */
+  box-shadow: 0 0 0 2.5px rgba(10, 14, 23, 0.72);
 }
 
 /* The caption text inside a button is what a long press would otherwise
@@ -908,8 +970,21 @@ body.sideways #touchTop {
   line-height: 1;
 }
 
-/* Round buttons: rotate the bike, and flip its facing. */
+/* Round buttons: rotate the bike, and flip its facing. These sit on a lip
+   and drop onto it, which the pedals do not — a pedal hinges, a knob is
+   pushed in, and the two should not pretend to be the same object. */
 .tbtn.volt { width: 62px; height: 62px; border-radius: 50%; }
+
+.tbtn.volt, .tbtn.turn, .tbtn.small {
+  box-shadow: 0 0 0 2.5px rgba(10, 14, 23, 0.72),
+              0 var(--lip) 0 rgba(10, 14, 23, 0.55);
+  transition: transform 0.05s, box-shadow 0.05s;
+}
+.tbtn.volt.pressed, .tbtn.turn.pressed, .tbtn.small.pressed,
+.tbtn.volt:active, .tbtn.turn:active, .tbtn.small:active {
+  transform: translateY(var(--lip));
+  box-shadow: 0 0 0 2.5px rgba(10, 14, 23, 0.72);
+}
 
 /* Volt is a bare arrow in a disc: the direction is the whole message, and
    the word under it was noise. Stroked as well as filled so the corners come
