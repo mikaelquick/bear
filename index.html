@@ -19,6 +19,40 @@
 </head>
 <body>
 
+<!-- Decide which way up before anything is painted.
+
+     js/main.js is a module and waits on two dynamic imports before it can
+     lay anything out, which was long enough for the installed app to show
+     a frame of portrait and then snap to landscape. A classic inline
+     script is the only thing that reliably runs before the first paint,
+     so it makes the same call here.
+
+     layoutStage() in main.js remains the authority and recomputes all of
+     this a moment later; if the two ever disagree the cost is one frame,
+     which is exactly the bug this exists to prevent. -->
+<script>
+(function () {
+  try {
+    if (!window.matchMedia || !matchMedia('(pointer: coarse)').matches) return;
+    var standalone = matchMedia('(display-mode: standalone)').matches
+      || window.navigator.standalone === true;
+    var o = window.screen && window.screen.orientation;
+    var angle = o && typeof o.angle === 'number' ? o.angle
+      : (typeof window.orientation === 'number' ? window.orientation : 0);
+    angle = ((angle % 360) + 360) % 360;
+    var turn = standalone
+      ? (90 - angle + 360) % 360
+      : (matchMedia('(orientation: portrait)').matches ? 90 : 0);
+    var names = ['touch', 'turn-' + turn];
+    if (turn === 90 || turn === 270) names.push('sideways');
+    if (standalone) names.push('standalone');
+    document.body.classList.add.apply(document.body.classList, names);
+  } catch (e) {
+    /* the module sorts it out a moment later */
+  }
+})();
+</script>
+
 <!-- The bear mark is drawn once here and referenced wherever it is needed. -->
 <svg width="0" height="0" aria-hidden="true" style="position: absolute">
   <defs>

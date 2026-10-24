@@ -1291,10 +1291,12 @@ function relayout() {
 window.addEventListener('resize', relayout);
 window.addEventListener('orientationchange', relayout);
 if (window.visualViewport) window.visualViewport.addEventListener('resize', relayout);
+// Before the first layout, so an installed app is laid out as one from
+// the very first call rather than being corrected a moment later.
+confirmStandalone();
 relayout();
 applySettings();
 syncInstallUi();
 showMenu();
-confirmStandalone();
 maybeShowWelcome();
 requestAnimationFrame(frame);
