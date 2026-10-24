@@ -562,7 +562,7 @@ function showResult() {
     if (replaySaved || hasReplay(name, currentVehicle)) {
       addButton(buttons, '🎬', 'Se reprisen', () => startReplay(currentIndex, currentVehicle), true);
     }
-    addButton(buttons, '🏠', 'Meny', showMenu, true);
+    addButton(buttons, '🗺️', 'Banor', showMenu, true);
   }
   $('dialog').classList.remove('hidden');
 }
