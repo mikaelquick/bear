@@ -1,2 +1,6 @@
 .DS_Store
 node_modules/
+
+# Finder-arkiv och liknande skräp
+*.zip
+__MACOSX/
