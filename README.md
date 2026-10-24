@@ -160,11 +160,18 @@ på två frågor — går det att fråga rakt av, och om inte, vad ska spelaren 
 Instruktionerna finns som fyra färdiga listor i `index.html`, en per plattform.
 
 På iPhone i **någon annan webbläsare än Safari** går det inte alls: bara Safari kan
-lägga till på hemskärmen. Där visas en *Öppna i Safari*-knapp som skickar sidan vidare
-med `x-safari-`-prefixet. Det är ingen API:t Apple dokumenterar utan en gammal
-konvention som iOS-webbläsarna råkar hedra, så den kan helt enkelt inte göra någonting
-— därför står den skrivna instruktionen kvar ovanför och säger vad man gör om inget
-händer. Knappen är en genväg, aldrig instruktionen.
+lägga till på hemskärmen. Där visas en *Kopiera adressen*-knapp, så man kan klistra in
+den i Safari.
+
+Det satt en *Öppna i Safari*-knapp där ett tag som skickade sidan vidare med
+`x-safari-`-prefixet. **Den fungerar inte** — Chrome på iPhone svarar med "något gick
+fel, det gick inte att öppna appen", vilket är sämre än ingen knapp alls. Det finns
+inget sätt för en sida att öppna en annan webbläsare, så det ärligaste är att lägga
+adressen på urklipp och säga var den ska klistras in. Försök inte igen.
+
+`navigator.clipboard` kräver en säker kontext, vilket LAN-dev-servern inte är, så det
+finns en textarea-reserv under. Misslyckas båda säger toasten i stället var adressen
+står att kopiera för hand.
 
 **`play/`** är webbens egen adress: <https://mikaelquick.github.io/bear/play/>.
 Sidan är bara en vidarebefordran till `../?web`, och `?web` får spelet att hoppa över

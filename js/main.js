@@ -670,8 +670,8 @@ function openInstall() {
   });
   $('installNow').classList.toggle('hidden', !native);
   // Only the browsers on iOS that cannot add to the home screen themselves
-  // have anywhere to be sent.
-  $('openSafari').classList.toggle('hidden', native || wanted !== 'ios-other');
+  // need help getting the address into one that can.
+  $('copyLink').classList.toggle('hidden', native || wanted !== 'ios-other');
   show('install');
 }
 
@@ -977,14 +977,48 @@ $('wantApp').addEventListener('click', () => { chooseLaunch('app'); openInstall(
 $('wantWeb').addEventListener('click', () => chooseLaunch('web'));
 $('btnInstall').addEventListener('click', openInstall);
 $('installClose').addEventListener('click', () => hideAll('install'));
-// Handing the page to Safari. There is no supported API for this: the
-// x-safari- prefix is a long-standing convention that Chrome and the other
-// iOS browsers honour, not something Apple documents, so it may simply do
-// nothing. That is why the written step above it stays on screen and says
-// what to do if nothing happens — the button is a shortcut, never the
-// instruction.
-$('openSafari').addEventListener('click', () => {
-  window.location.href = 'x-safari-' + window.location.href;
+// Getting the address into Safari, which is the one browser on an iPhone
+// that can add to the home screen.
+//
+// This used to try to hand the page over directly with an `x-safari-`
+// prefix. It does not work: Chrome on iOS answers it with "något gick fel,
+// det gick inte att öppna appen", which is worse than no button at all.
+// There is no supported way for a page to open another browser, so the
+// best honest help is to put the address on the clipboard and say where to
+// paste it.
+//
+// navigator.clipboard needs a secure context, which the LAN dev server is
+// not, so fall back to the old textarea trick rather than failing there.
+async function copyAddress() {
+  const url = window.location.href;
+  try {
+    if (navigator.clipboard && window.isSecureContext) {
+      await navigator.clipboard.writeText(url);
+      return true;
+    }
+  } catch { /* fall through */ }
+  try {
+    const box = document.createElement('textarea');
+    box.value = url;
+    box.setAttribute('readonly', '');
+    box.style.position = 'fixed';
+    box.style.opacity = '0';
+    document.body.appendChild(box);
+    box.select();
+    box.setSelectionRange(0, url.length);
+    const ok = document.execCommand('copy');
+    box.remove();
+    return ok;
+  } catch {
+    return false;
+  }
+}
+
+$('copyLink').addEventListener('click', async () => {
+  const ok = await copyAddress();
+  toast(ok
+    ? 'Adressen är kopierad. Öppna Safari och klistra in den.'
+    : 'Kopiera adressen högst upp i webbläsaren och klistra in den i Safari.', 5000);
 });
 $('btnHowto').addEventListener('click', () => show('howto'));
 $('btnPhysics').addEventListener('click', () => show('physics'));
