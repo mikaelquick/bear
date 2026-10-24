@@ -547,19 +547,22 @@ function showResult() {
         ? '<span class="record-badge">personbästa</span>'
         : `<span class="fine">Ditt rekord: ${formatTime(best)}</span>`);
 
+  // One per row, stacked. Four buttons wrapped across two lines put them
+  // in an order nobody reads, and on a phone they were small targets in
+  // the middle of the screen.
   const buttons = $('dialogButtons');
   buttons.innerHTML = '';
   if (returnToEditor) {
-    addButton(buttons, 'Tillbaka till editorn', () => openEditor(editor.level));
-    addButton(buttons, 'Kör igen', restartRun, true);
+    addButton(buttons, '✏️', 'Till editorn', () => openEditor(editor.level));
+    addButton(buttons, '🔄', 'Kör igen', restartRun, true);
   } else {
     const hasNext = currentIndex + 1 < entries.length;
-    if (hasNext) addButton(buttons, 'Nästa bana →', () => startLevel(currentIndex + 1));
-    addButton(buttons, 'Kör igen', restartRun, hasNext);
+    if (hasNext) addButton(buttons, '➡️', 'Nästa bana', () => startLevel(currentIndex + 1));
+    addButton(buttons, '🔄', 'Kör igen', restartRun, hasNext);
     if (replaySaved || hasReplay(name, currentVehicle)) {
-      addButton(buttons, 'Se reprisen', () => startReplay(currentIndex, currentVehicle), true);
+      addButton(buttons, '🎬', 'Se reprisen', () => startReplay(currentIndex, currentVehicle), true);
     }
-    addButton(buttons, 'Meny', showMenu, true);
+    addButton(buttons, '🏠', 'Meny', showMenu, true);
   }
   $('dialog').classList.remove('hidden');
 }
@@ -571,10 +574,15 @@ function restartRun() {
   show('startHint');
 }
 
-function addButton(parent, label, onClick, secondary = false) {
+// A row in the result list: an emoji, then two or three words. The emoji
+// is the part a child remembers and aims at — "the green arrow one" — so
+// every choice gets one, and the wording stays short enough to be read at
+// a glance rather than puzzled over.
+function addButton(parent, emoji, label, onClick, secondary = false) {
   const b = document.createElement('button');
-  b.textContent = label;
-  if (secondary) b.className = 'secondary';
+  b.className = 'choice' + (secondary ? ' secondary' : '');
+  b.innerHTML = `<span class="choice-ico" aria-hidden="true">${emoji}</span>` +
+                `<span class="choice-text"><strong>${escapeHtml(label)}</strong></span>`;
   b.addEventListener('click', onClick);
   parent.appendChild(b);
 }
