@@ -1,6 +1,8 @@
 // Particles and screen shake. Everything here is cosmetic — it reads the
 // simulation but never writes to it, so the physics stays deterministic.
 
+import { themeFor } from './render.js';
+
 const MAX_PARTICLES = 420;
 
 export class Effects {
@@ -11,6 +13,15 @@ export class Effects {
     this.shakeY = 0;
     this.flash = 0;
     this.flashColor = '255,255,255';
+    // What the wheels throw up. Comes from the world being played: brown
+    // grit in the forest was being kicked up on the snow, which read as
+    // sand. Honey, wasps and the gravity flip look the same everywhere —
+    // they are objects, not ground.
+    this.spray = themeFor(null).spray;
+  }
+
+  setBiome(biome) {
+    this.spray = themeFor(biome).spray;
   }
 
   clear() {
@@ -24,9 +35,11 @@ export class Effects {
     this.particles.push(p);
   }
 
-  // Dust kicked up where a wheel slams into the ground.
+  // Dust kicked up where a wheel slams into the ground. What it is made of
+  // depends on what the ground is made of — see setBiome.
   dust(x, y, strength) {
     const count = Math.min(14, 3 + Math.round(strength * 10));
+    const spray = this.spray;
     for (let i = 0; i < count; i++) {
       const a = Math.PI * (0.15 + Math.random() * 0.7);
       const speed = 0.6 + Math.random() * 2.4 * strength;
@@ -34,10 +47,10 @@ export class Effects {
         x, y,
         vx: Math.cos(a) * speed * (Math.random() < 0.5 ? -1 : 1),
         vy: Math.sin(a) * speed,
-        life: 0, maxLife: 0.35 + Math.random() * 0.4,
+        life: 0, maxLife: (0.35 + Math.random() * 0.4) * spray.life,
         size: 0.05 + Math.random() * 0.1,
-        drag: 2.2, gravity: -3,
-        color: '150,128,104',
+        drag: 2.2, gravity: spray.gravity,
+        color: spray.color,
       });
     }
     this.addShake(Math.min(strength * 5, 7));

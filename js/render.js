@@ -27,6 +27,9 @@ const PALETTE = {
   ridgeFar: '#24314a',
   ridgeNear: '#1b2838',
   star: '#cfe0ff',
+  // What a wheel throws up when it lands. Dry earth is heavy and drops
+  // straight back; see the snow theme for the other kind.
+  spray: { color: '150,128,104', gravity: -3, life: 1 },
 };
 
 // Each world paints the same shapes in its own colours. Only the scenery
@@ -52,6 +55,10 @@ const THEMES = {
     ridgeFar: '#2c4570',
     ridgeNear: '#1d3050',
     star: '#ffffff',
+    // Powder, not sand. Lighter colour is half of it; the other half is
+    // that snow hangs — a third of the weight and half again the life, so
+    // it drifts behind the wheel instead of dropping like grit.
+    spray: { color: '226,238,252', gravity: -1.1, life: 1.6 },
     // Drawn as a drift rather than as blades of grass.
     snowy: true,
   },

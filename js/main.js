@@ -470,6 +470,7 @@ function startReplay(index, vehicleId = currentVehicle) {
   currentIndex = index;
   renderer.fitScale();
   renderer.setBiome(level.biome);
+  effects.setBiome(level.biome);
   renderer.horizonY = level.bounds.maxY * 0.55 + level.bounds.minY * 0.45;
   renderer.lead = { x: 0, y: 0 };
   renderer.camInit = false;
@@ -737,7 +738,10 @@ function confirmStandalone() {
 // it — see quitApp.
 function syncQuitUi() {
   const offer = fullscreen.isStandalone() && settings.canQuit !== false;
+  // Both of them: the menu footer, and the pause panel in the middle of a
+  // run. They are the same button in two places a player might look.
   $('btnQuit').classList.toggle('hidden', !offer);
+  $('btnPauseQuit').classList.toggle('hidden', !offer);
 }
 
 // Ask the app to close. Where that is allowed — an installed app in Chrome
@@ -1110,6 +1114,7 @@ $('fsNo').addEventListener('click', () => answerFullscreen(false));
 $('optSound').addEventListener('change', (e) => setSoundEnabled(e.target.checked));
 
 $('btnQuit').addEventListener('click', quitApp);
+$('btnPauseQuit').addEventListener('click', quitApp);
 
 $('btnReset').addEventListener('click', () => {
   try {

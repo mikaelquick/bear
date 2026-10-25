@@ -20,6 +20,7 @@ export class Demo {
     if (nextLevel) this.levelIndex = (this.levelIndex + 1) % LEVELS.length;
     this.level = new Level(LEVELS[this.levelIndex]);
     this.renderer.setBiome(this.level.biome);
+    this.effects.setBiome(this.level.biome);
     this.renderer.horizonY =
       this.level.bounds.maxY * 0.55 + this.level.bounds.minY * 0.45;
     this.run = createRun(this.level);

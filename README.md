@@ -80,8 +80,12 @@ satt bredvid är borttagen — hörnet visas bara på pekskärmar, och där hade
 göra. Installerad finns ingen webbläsarram kvar att gömma; på iPhone finns inte
 Fullscreen API alls; och där det fungerar finns växeln kvar i menyfoten.
 
-**Avsluta** står i menyfoten, men bara i en installerad app: i en webbläsarflik sitter
-stängknappen redan tre centimeter upp. Om sidan får stänga sig själv är den andra
+**Avsluta** står på två ställen — i menyfoten och som sista raden i pausrutan, så man
+inte behöver ta sig ut ur ett lopp först för att komma åt den — men bara i en
+installerad app: i en webbläsarflik sitter stängknappen redan tre centimeter upp. I
+pausrutan heter den *Avsluta appen* och ligger längst ned, längst från *Fortsätt*:
+raden ovanför lämnar redan banan, så ordet ensamt hade varit två olika utgångar bredvid
+varandra, och det är den enda raden där som inte går att ångra. Om sidan får stänga sig själv är den andra
 halvan, och den går inte att känna av i förväg — `window.close()` finns överallt och
 gör tyst ingenting där den inte är tillåten. Så knappen erbjuds en gång, och första
 trycket avgör saken: går vi inte sönder i samma bildruta var svaret nej, och då
@@ -357,6 +361,20 @@ och grässtrået på marken blir en driva: fet, vit linje utan grästuvor, efter
 grässtrån är precis vad snö inte får se ut som. Banbilderna i väljaren läser samma
 palett, så man ser vilken värld en ruta hör till innan man läst namnet.
 
+**Och marken måste stämma med vad som yr upp ur den.** Snön såg ut som snö men hjulen
+kastade fortfarande upp brun grus, så att gasa på snö gav sand. Partiklarna bestäms i
+`effects.js` och färgerna i `render.js`, och ingenting band ihop de två — att lägga till
+en värld betydde att komma ihåg båda. Nu står sprutet i paletten (`spray`: färg,
+tyngd och livslängd) och `effects.setBiome` hämtar det där renderaren hämtar sitt. Snö
+är inte bara ljusare utan också lättare: en tredjedel av tyngden och halvannan gång
+livslängden, så pudret driver efter hjulet i stället för att falla som grus. Kupor,
+getingar och gravitationsvändningen ser likadana ut överallt — de är föremål, inte mark.
+
+`test/worlds.test.js` ser till att regeln hålls i stället för att behöva kommas ihåg:
+varje värld i `BIOMES` måste lösa ut till en palett med varenda nyckel renderaren och
+partiklarna slår upp, en öppen värld måste ha banor i sig, och snön får inte dela sprut
+med skogen.
+
 `← Världar` tar en ut igen. Och **var man var sparas per värld**: panelen är det som
 scrollar, så det är dess `scrollTop` vi minns, i `settings.biomeScroll`. Den som kört
 fast på bana 17 ska inte behöva leta rätt på den igen — varken efter ett lopp, efter en
@@ -537,6 +555,7 @@ js/
 test/
   physics.test.js   fysikporten
   stage.test.js     scenen hamnar liggande hur avläsningarna än ljuger
+  worlds.test.js    varje värld är helt målad, ned till vad hjulen yr upp
   replay.test.js    inspelning, kodning, ghost
   autopilot.js      sökning med checkpoints och backtracking
   levels.test.js    varje bana måste gå att klara
@@ -594,7 +613,7 @@ Alla kommer från banor som testföraren avslöjade som orättvisa eller omöjli
 
 ## Tester
 
-`npm test` kör fyra sviter:
+`npm test` kör fem sviter:
 
 **`physics.test.js`** — att cykeln vilar stilla på marken, att gasen driver åt rätt håll,
 att volten ger och tar tillbaka rotation, att kupor/getingar/mål utlöser rätt, och att
@@ -606,6 +625,10 @@ iOS rapporterar en vinkel som inte stämmer med vyn den redan ändrat. Så beslu
 utbrutet ur DOM:en till `js/stage.js`, och testet går igenom aritmetiken uttömmande —
 båda vägarna in, alla fyra vinklar, och varje sätt de två avläsningarna kan säga emot
 varandra.
+
+**`worlds.test.js`** — att varje värld är helt målad: hela paletten, ett eget sprut
+under hjulen, inga öppna men tomma världar, och en okänd värld som faller tillbaka i
+stället för att krascha. Den finns för att snön en gång yrde upp sand.
 
 **`replay.test.js`** — att kodningen är förlustfri, att samma inmatning ger exakt samma
 lopp, att ghosten interpolerar rätt och slutar i tid, och att en inspelning avvisas när
