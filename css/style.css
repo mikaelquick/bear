@@ -1029,10 +1029,27 @@ body.touch #touchTop:not(.hidden) { display: flex; }
    the panel with resume, restart and back-to-menu. */
 #touchTop {
   position: fixed;
-  /* Right into the corner. The safe area still wins where there is one —
-     this only decides how close it sits when there is nothing in the way. */
-  top: max(5px, var(--sa-top));
-  right: max(5px, var(--sa-right));
+  /* Into the corner, and the safe area is capped rather than obeyed whole.
+     That needs justifying, because obeying it whole is the usual rule and
+     ignoring it is how a button ended up under the camera once already.
+     The difference is that this one sits in a *corner*.
+
+     `safe-area-inset-*` is a full-edge inset: it reserves the whole strip
+     along an edge even though the thing in the way — the island, the home
+     indicator — only occupies the middle of it. Turned, the stage's right
+     edge is the phone's top or bottom edge (see the mapping in :root), and
+     the gear sits at the far end of it, beside the obstruction rather than
+     under it. Obeying the full inset was pushing it up to 59 px inward for
+     an island it was never going to touch.
+
+     What a corner really has to clear is the rounded display corner. For a
+     box inset by d on both axes against a corner of radius R, the geometry
+     wants d >= R(1 - 1/sqrt2), about 0.29R — so 18 px covers a 61 px
+     radius, which is more than any iPhone has. Capped there, and floored
+     at 6 px for the screens with no safe area and no rounded corner
+     either. */
+  top: clamp(6px, var(--sa-top), 18px);
+  right: clamp(6px, var(--sa-right), 18px);
   gap: 8px;
   z-index: 4;
 }
@@ -1044,8 +1061,11 @@ body.touch #touchTop:not(.hidden) { display: flex; }
    still offers the switch. One button is also one less thing between a
    child and the gear. The markup went with it rather than being hidden.
 
-   Keep the hive counter clear of what is left. */
-body.touch #hud .hud-right { padding-right: 52px; }
+   Keep the hive counter clear of what is left. This number is derived, not
+   chosen: the gear's inset plus its width plus a gap, less the HUD's own
+   22 px of padding. It came down with the gear — left at the old value the
+   counter would sit staring across an empty strip at nothing. */
+body.touch #hud .hud-right { padding-right: 44px; }
 
 /* The per-turn mapping lives in :root now, so these need no override of
    their own — and the pair they used to set had two of the four edges the
@@ -1279,7 +1299,8 @@ body.touch #hud .hud-right { padding-right: 52px; }
 body.short .tbtn.volt { width: 54px; height: 54px; }
 body.short .tbtn.turn { width: 54px; height: 54px; }
 body.short .tbtn.small { width: 36px; height: 36px; }
-body.short.touch #hud .hud-right { padding-right: 84px; }
+/* Same sum with the short screen's smaller gear: 18 + 36 + 8 - 22. */
+body.short.touch #hud .hud-right { padding-right: 40px; }
 body.short .tbtn.pedal { width: 64px; height: 88px; }
 body.short .tbtn.brake { height: 74px; }
 body.short .tbtn.turn .glyph { font-size: 21px; }

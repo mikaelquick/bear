@@ -75,10 +75,34 @@ likt volterna. Den låg ett tag ovanpå pedalerna och tog då en remsa tvärs ö
 som helst för att köra om.
 
 Uppe i högra hörnet sitter **kugghjulet**, och det sitter ensamt: paus och meny i en
-knapp. Omstart flyttade in i den menyn, där den redan erbjöds, och fullskärmsknappen som
+knapp. Det sitter numera i själva hörnet, och det krävde att skyddsytan kapas i stället
+för att lydas rakt av — vilket behöver försvaras, eftersom att lyda den är regeln och
+att strunta i den är precis så en knapp hamnade under kameran en gång. Skillnaden är att
+den här sitter i ett *hörn*. `safe-area-inset-*` reserverar hela remsan längs en kant
+fast det som är i vägen — ön, hemindikatorn — bara upptar mitten av den. Vriden är
+scenens högerkant telefonens över- eller underkant (se tabellen i `:root`), och kugghjulet
+sitter i änden av den, bredvid hindret och inte under det; att lyda hela insetet
+knuffade in det upp till 59 px för en ö det aldrig skulle röra. Det ett hörn faktiskt
+måste klara är den rundade skärmkanten: för en ruta indragen `d` på båda axlarna mot ett
+hörn med radie `R` vill geometrin ha `d ≥ R(1 − 1/√2)`, alltså ungefär `0,29R` — så 18 px
+täcker en radie på 61 px, mer än någon iPhone har. Där ligger taket, med golv på 6 px för
+skärmar som varken har skyddsyta eller rundade hörn. Kupräknarens högermarginal följde
+med ner, eftersom den siffran bara finns för att hålla räknaren fri från kugghjulet. Omstart flyttade in i den menyn, där den redan erbjöds, och fullskärmsknappen som
 satt bredvid är borttagen — hörnet visas bara på pekskärmar, och där hade den inget att
 göra. Installerad finns ingen webbläsarram kvar att gömma; på iPhone finns inte
 Fullscreen API alls; och där det fungerar finns växeln kvar i menyfoten.
+
+Pausrutan är därmed fem rader: *Fortsätt*, *Börja om*, *Byt fordon*, *Banor* och
+*Avsluta appen*. **Byt fordon** finns där för att man ibland bara råkat starta på fel
+maskin, och då ska man inte behöva ut till banlistan och tillbaka. Den öppnar samma
+väljare som bankorten gör, så varje maskin kommer med sitt eget rekord på just den
+banan, och ikonen är den maskin man *inte* sitter på — en motorcykel på raden medan man
+kör motorcykel läses som "gå till motorcykeln". Att välja startar om banan, även om man
+väljer den man redan kör: man byter inte maskin halvvägs ner för en backe, och en rad
+som ibland startar om och ibland inte är värre än en som alltid gör det. *Tillbaka* i
+väljaren går tillbaka till pausrutan och inte ut i ett tyst pausat spel utan något att
+trycka på. Raden göms när man testkör en bana från editorn: det loppet är editorns eget
+`Level`, det har ingen rad i banlistan och inget fordon valdes någonsin för det.
 
 **Avsluta** står på två ställen — i menyfoten och som sista raden i pausrutan, så man
 inte behöver ta sig ut ur ett lopp först för att komma åt den — men bara i en

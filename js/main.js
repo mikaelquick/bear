@@ -316,14 +316,24 @@ const rideChoiceOpen = () => !$('rideChoice').classList.contains('hidden');
 // Which level the chooser is about. Null when it is closed.
 let pendingLevel = null;
 
+// Where it was opened from, so Tillbaka goes back there. Opened off a tile
+// that is the level list; opened mid-run from the pause panel it is that
+// panel, and dropping the player into a silent paused game instead would
+// leave them with nothing to press.
+let rideChoiceFrom = 'menu';
+
 // Each machine as a full-width row with its own record on this level, so
 // the choice is made with the thing that matters in front of you: how you
 // have done on each.
-function openRideChoice(index) {
+function openRideChoice(index, from = 'menu') {
   const entries = allLevels();
   const entry = entries[index];
   if (!entry) return;
   pendingLevel = index;
+  rideChoiceFrom = from;
+  // One dim layer at a time: the pause panel and this one are both
+  // overlays at the same depth, and stacked they darken twice.
+  if (from === 'pause') hideAll('pause');
   const times = loadTimes();
   $('rideLevel').textContent = entry.data.name;
   const list = $('rideList');
@@ -341,6 +351,10 @@ function openRideChoice(index) {
     btn.addEventListener('click', () => {
       hideAll('rideChoice');
       pendingLevel = null;
+      // Picking the machine you are already on still restarts the level.
+      // You cannot change machine halfway down a hill, and a row that
+      // sometimes restarts and sometimes does not is worse than one that
+      // always does.
       startLevel(index, vehicle.id);
     });
     list.appendChild(btn);
@@ -351,6 +365,10 @@ function openRideChoice(index) {
 function closeRideChoice() {
   pendingLevel = null;
   hideAll('rideChoice');
+  if (rideChoiceFrom === 'pause') {
+    rideChoiceFrom = 'menu';
+    setPaused(true);
+  }
 }
 
 // ------------------------------------------------------------- worlds
@@ -608,7 +626,21 @@ function addButton(parent, emoji, label, onClick, secondary = false) {
 
 function setPaused(paused) {
   $('pause').classList.toggle('hidden', !paused);
-  if (paused) $('startHint').classList.add('hidden');
+  if (!paused) return;
+  $('startHint').classList.add('hidden');
+  // Not while testing a level out of the editor. That run is the editor's
+  // own Level object, it has no row in the level list and no machine was
+  // ever chosen for it, so the chooser would be about whichever level was
+  // played last and picking from it would start that one instead.
+  $('btnPauseRide').classList.toggle('hidden', returnToEditor);
+  // The icon is the machine you are *not* on. With two of them that says
+  // what the row does better than the word can — a motorbike on the row
+  // while you are riding the motorbike reads as "go to the motorbike".
+  // With more than two there is no single other one, so it falls back to
+  // showing what you are riding.
+  const others = VEHICLES.filter((v) => v.id !== currentVehicle);
+  $('pauseRideIco').textContent =
+    others.length === 1 ? others[0].emoji : findVehicle(currentVehicle).emoji;
 }
 
 function leavePlay() {
@@ -1049,6 +1081,7 @@ $('btnEditor').addEventListener('click', () => openEditor(emptyLevel()));
 $('btnImport').addEventListener('click', () => $('fileInput').click());
 $('btnResume').addEventListener('click', () => { game.togglePause(); setPaused(false); });
 $('btnPauseRestart').addEventListener('click', restartRun);
+$('btnPauseRide').addEventListener('click', () => openRideChoice(currentIndex, 'pause'));
 $('btnPauseMenu').addEventListener('click', () => { game.paused = false; leavePlay(); });
 $('optGhost').addEventListener('change', (e) => setGhostEnabled(e.target.checked));
 $('optFullscreen').addEventListener('change', toggleFullscreen);
