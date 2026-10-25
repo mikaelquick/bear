@@ -80,6 +80,15 @@ satt bredvid är borttagen — hörnet visas bara på pekskärmar, och där hade
 göra. Installerad finns ingen webbläsarram kvar att gömma; på iPhone finns inte
 Fullscreen API alls; och där det fungerar finns växeln kvar i menyfoten.
 
+**Avsluta** står i menyfoten, men bara i en installerad app: i en webbläsarflik sitter
+stängknappen redan tre centimeter upp. Om sidan får stänga sig själv är den andra
+halvan, och den går inte att känna av i förväg — `window.close()` finns överallt och
+gör tyst ingenting där den inte är tillåten. Så knappen erbjuds en gång, och första
+trycket avgör saken: går vi inte sönder i samma bildruta var svaret nej, och då
+sparas det (`settings.canQuit`), knappen tas bort i stället för att stå kvar och ljuga,
+och en rad säger det enda som återstår att säga — hur man stänger appen för hand.
+Det är troligen det som händer på iPhone; iOS ger en hemskärmsapp ingen väg ut.
+
 Spelet körs **alltid liggande**, alltid åt samma håll. Rapporterar enheten porträtt
 vänder vi spelet i stället för att be spelaren vända telefonen: allt ligger i `#stage`,
 som får ett kvarts varv medurs. Det är det enda som fungerar när rotationslåset är
@@ -98,6 +107,31 @@ Tre fällor som följer med ett vridet `#stage`, alla lagade:
   dem i stället för `env()` direkt. Härledningen står i stilmallen. Får man den om
   bakfoten hamnar en knapp under kameran — vilket den gjorde: "← Världar" låg bakom
   hålslaget, och pekknapparnas egen regel hade två av fyra kanter förväxlade.
+
+**Vinkeln är ett förslag, inte ett besked.** Installerad räknar spelet ut varvet genom
+att ångra systemets egen rotation (`90 − screen.orientation.angle`), och det är den
+siffran som gör att bilden står stilla på glaset. Problemet är att iOS lämnar den i
+delbetalningar: en `resize` kan komma innan vinkeln hunnit med, eller efter, och ett
+varv räknat på den inaktuella av de två lämnar spelet stående upprätt utan att någon
+ny händelse kommer och rättar det. Det var buggen "den går fortfarande i porträtt
+ibland", och att lita hårdare på vinkeln kan inte laga den, eftersom det är vinkeln
+som är fel.
+
+Så vinkeln kollas mot en regel: **scenen är liggande, alltid**. Det stämmer i varenda
+korrekt fall — i ett kvarts varv är scenen så bred som vyn är hög, annars är den vyn —
+så ett förslag som kommer ut porträtt kom från en inaktuell avläsning, och ett kvarts
+varv till är svaret. Det kostar två tal och kräver inget aktuellt utom vyn själv.
+Ovanpå det körs layouten om en gång till på nästa bildruta efter `orientationchange`
+och en gång 350 ms senare, eftersom det ibland är *vyn* som är den inaktuella; båda
+passen är idempotenta.
+
+Uträkningen bor i `js/stage.js` som en ren funktion av fyra tal, och det är med flit:
+buggen går inte att återskapa vid ett skrivbord, så `test/stage.test.js` går i stället
+igenom varje orientering på båda vägarna in och varje sätt de två avläsningarna kan
+säga emot varandra, och kräver att scenen blir liggande i allihop. Samma aritmetik står
+en gång till, för hand, i den inline-skrivna skripten överst i `index.html` — den måste
+vara ett klassiskt skript som hinner före första målningen och kan därför inte
+importera. Ändra dem tillsammans.
 
 Baneditorn är undantaget: den mappar pekarkoordinater rakt på en ovriden canvas, så där
 står porträttspärren kvar.
@@ -494,6 +528,7 @@ js/
   driver.js      skriptad förare (demo i menyn + tester)
   demo.js        attract-läget bakom menyn
   touchpad.js    styrkorset: global fingerspårning för skärmknapparna
+  stage.js       åt vilket håll scenen vrids — ren funktion, testbar utan telefon
   screenmode.js  fullskärm och orienteringslås (döpt så för att inte blockeras)
   homescreen.js  installation: installationsdialog där den finns, annars ord
   editor.js      baneditor
@@ -501,6 +536,7 @@ js/
   main.js        meny, lägen, inmatning, touch, huvudloop
 test/
   physics.test.js   fysikporten
+  stage.test.js     scenen hamnar liggande hur avläsningarna än ljuger
   replay.test.js    inspelning, kodning, ghost
   autopilot.js      sökning med checkpoints och backtracking
   levels.test.js    varje bana måste gå att klara
@@ -558,11 +594,18 @@ Alla kommer från banor som testföraren avslöjade som orättvisa eller omöjli
 
 ## Tester
 
-`npm test` kör tre sviter:
+`npm test` kör fyra sviter:
 
 **`physics.test.js`** — att cykeln vilar stilla på marken, att gasen driver åt rätt håll,
 att volten ger och tar tillbaka rotation, att kupor/getingar/mål utlöser rätt, och att
 tidsomräkningen stämmer.
+
+**`stage.test.js`** — att scenen alltid hamnar liggande. Den finns för att buggen den
+täcker inte går att återskapa här: den händer på en telefon, mitt i en vridning, när
+iOS rapporterar en vinkel som inte stämmer med vyn den redan ändrat. Så beslutet är
+utbrutet ur DOM:en till `js/stage.js`, och testet går igenom aritmetiken uttömmande —
+båda vägarna in, alla fyra vinklar, och varje sätt de två avläsningarna kan säga emot
+varandra.
 
 **`replay.test.js`** — att kodningen är förlustfri, att samma inmatning ger exakt samma
 lopp, att ghosten interpolerar rätt och slutar i tid, och att en inspelning avvisas när

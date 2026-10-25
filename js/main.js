@@ -11,6 +11,7 @@ import { OBJ, MS_TO_PHYS_TIME, TIME_TO_CENTISECONDS } from './constants.js';
 import { loadGhost, levelFingerprint, REPLAY_VERSION } from './replay.js';
 import { cachedThumbnail } from './thumbnail.js';
 import { BIOMES, DEFAULT_BIOME, biomeOf, findBiome } from './biomes.js';
+import { stageTurn, quartered, systemAngle } from './stage.js';
 import { VEHICLES, DEFAULT_VEHICLE, findVehicle } from './vehicles.js';
 
 // Fullscreen is a nice-to-have, and its module is exactly the sort of file a
@@ -722,9 +723,41 @@ function confirmStandalone() {
   if (!fullscreen.isStandalone()) return;
   document.body.classList.add('standalone');
   if (settings.launch !== 'app') { settings.launch = 'app'; saveSettings(); }
+  syncQuitUi();
   // The class decides how the stage is turned, so the decision has to be
   // taken again now that it is set.
   layoutStage();
+}
+
+// "Avsluta" only makes sense in an installed app — in a browser tab the
+// close button is already there, three centimetres up. Whether a page may
+// close itself is the other half, and that half cannot be feature-detected:
+// `window.close()` exists everywhere and silently does nothing where it is
+// not allowed. So the button is offered once, and the first press settles
+// it — see quitApp.
+function syncQuitUi() {
+  const offer = fullscreen.isStandalone() && settings.canQuit !== false;
+  $('btnQuit').classList.toggle('hidden', !offer);
+}
+
+// Ask the app to close. Where that is allowed — an installed app in Chrome
+// and friends — we are gone before the next frame and nothing below runs.
+//
+// Where it is not, we are still here, and that is the answer: remember it,
+// take the button away rather than leave one that lies, and say the one
+// useful thing left, which is how to close the app by hand. iOS is the case
+// that matters here: a home-screen web app has no quit, and Mikael plays on
+// an iPhone, so this path is the likely one for him.
+function quitApp() {
+  window.close();
+  requestAnimationFrame(() => {
+    if (settings.canQuit === false) return;
+    settings.canQuit = false;
+    saveSettings();
+    syncQuitUi();
+    toast('Den här telefonen låter inte appen stänga sig själv. '
+          + 'Svep uppåt från nederkanten för att stänga den.', 5000);
+  });
 }
 
 // Nothing to offer once the game is already an app, or on a desktop.
@@ -744,6 +777,7 @@ window.addEventListener('bjorn:installed', () => {
   saveSettings();
   hideAll('install');
   syncInstallUi();
+  syncQuitUi();
   toast('Quick-Björn ligger nu bland dina appar.', 3000);
 });
 
@@ -912,49 +946,29 @@ const portrait = window.matchMedia
   ? matchMedia('(orientation: portrait)')
   : { matches: false, addEventListener() {} };
 
-// The editor is the one holdout: it maps pointer coordinates straight onto
-// an untransformed canvas, and a quarter turn would put every click in the
-// wrong place. There the old gate still stands.
-// How far the system has turned the viewport away from the device's
-// natural orientation. iOS rotates a home-screen web app whatever the
-// manifest asks, so this is how we find out and undo it.
-function systemAngle() {
-  const o = window.screen && window.screen.orientation;
-  if (o && typeof o.angle === 'number') return ((o.angle % 360) + 360) % 360;
-  if (typeof window.orientation === 'number') return ((window.orientation % 360) + 360) % 360;
-  return portrait.matches ? 0 : 90;
-}
-
+// Which way up the stage goes lives in js/stage.js as a pure function, so
+// that it can be tested without a phone. This is the part that reads the
+// browser and writes the classes.
 function layoutStage() {
-  const touch = document.body.classList.contains('touch');
-  const fixed = document.body.classList.contains('standalone');
-  let turn = 0;
-
-  if (touch && mode !== 'editor') {
-    if (fixed) {
-      // Installed, the game behaves like a landscape-locked app: the
-      // picture never moves on the glass. Turn the phone and the pixels
-      // stay exactly where they were — you are the one who turned, not
-      // the game. Undoing the system's own rotation is what achieves it,
-      // and it is why the game can never end up in portrait.
-      turn = (90 - systemAngle() + 360) % 360;
-    } else if (portrait.matches) {
-      // In a browser the chrome around us stays upright, so matching it
-      // is the lesser evil: turn only when the viewport is portrait.
-      turn = 90;
-    }
-  }
+  const turn = stageTurn({
+    touch: document.body.classList.contains('touch'),
+    standalone: document.body.classList.contains('standalone'),
+    editor: mode === 'editor',
+    angle: systemAngle(portrait.matches),
+    portrait: portrait.matches,
+    width: window.innerWidth,
+    height: window.innerHeight,
+  });
 
   for (const t of [0, 90, 180, 270]) {
     document.body.classList.toggle(`turn-${t}`, t === turn);
   }
-  document.body.classList.toggle('sideways', turn === 90 || turn === 270);
+  document.body.classList.toggle('sideways', quartered(turn));
 
   // Once turned a quarter, the stage is as tall as the viewport is wide.
   // No media query can see that, which is why the short-screen rules hang
   // off a class rather than off `max-height`.
-  const quarter = turn === 90 || turn === 270;
-  const stageHeight = quarter ? window.innerWidth : window.innerHeight;
+  const stageHeight = quartered(turn) ? window.innerWidth : window.innerHeight;
   document.body.classList.toggle('short', stageHeight <= 470);
 }
 
@@ -1094,6 +1108,8 @@ $('installNow').addEventListener('click', async () => {
 $('fsYes').addEventListener('click', () => answerFullscreen(true));
 $('fsNo').addEventListener('click', () => answerFullscreen(false));
 $('optSound').addEventListener('change', (e) => setSoundEnabled(e.target.checked));
+
+$('btnQuit').addEventListener('click', quitApp);
 
 $('btnReset').addEventListener('click', () => {
   try {
@@ -1304,7 +1320,17 @@ function relayout() {
 }
 
 window.addEventListener('resize', relayout);
-window.addEventListener('orientationchange', relayout);
+// Turning the phone is the one event iOS reports in instalments: the
+// viewport it hands us during `orientationchange` is sometimes still the
+// old one, and the landscape rule in layoutStage can only be as right as
+// what it measures. So a rotation gets looked at again on the next frame
+// and once more after the animation has had time to finish. Both passes
+// are idempotent — if nothing moved, nothing changes.
+window.addEventListener('orientationchange', () => {
+  relayout();
+  requestAnimationFrame(relayout);
+  setTimeout(relayout, 350);
+});
 if (window.visualViewport) window.visualViewport.addEventListener('resize', relayout);
 // Before the first layout, so an installed app is laid out as one from
 // the very first call rather than being corrected a moment later.

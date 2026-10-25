@@ -43,6 +43,16 @@
     var turn = standalone
       ? (90 - angle + 360) % 360
       : (matchMedia('(orientation: portrait)').matches ? 90 : 0);
+    // Same landscape rule layoutStage applies, for the same reason: the
+    // reported angle is sometimes behind the viewport, and a turn built on
+    // a stale one stands the game upright. The stage is landscape, always,
+    // so a proposal that comes out portrait is a quarter turn short. If the
+    // two ever disagreed here the cost would be the frame of portrait this
+    // script exists to prevent.
+    var quarter = turn === 90 || turn === 270;
+    var stageW = quarter ? window.innerHeight : window.innerWidth;
+    var stageH = quarter ? window.innerWidth : window.innerHeight;
+    if (stageH > stageW) turn = (turn + 90) % 360;
     var names = ['touch', 'turn-' + turn];
     if (turn === 90 || turn === 270) names.push('sideways');
     if (standalone) names.push('standalone');
@@ -209,6 +219,11 @@
         <button id="btnHowto" class="link">Så spelar du</button>
         <button id="btnPhysics" class="link">Om fysiken</button>
         <button id="btnReset" class="link">Nollställ rekord</button>
+        <!-- Only shown once we know the game is running as an installed app
+             *and* that this platform actually lets a page close itself.
+             See syncQuitUi in main.js: the second half of that cannot be
+             feature-detected, only tried. -->
+        <button id="btnQuit" class="link hidden">Avsluta</button>
       </div>
     </footer>
   </div>
