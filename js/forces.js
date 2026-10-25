@@ -36,6 +36,7 @@ export class Motor {
     // is motor-shaped but has no spec — can be drawn the same way.
     this.frameColor = this.spec.frameColor;
     this.pedals = this.spec.pedals;
+    this.body = this.spec.body;
     this.init();
   }
 
@@ -67,6 +68,12 @@ export class Motor {
     this.angularVelocityPreLeftVolt = -1;
 
     this.frictionVolume = 0;
+    // Compressed air, in seconds of jet left. Full at the start of a run,
+    // drained while the jet is on, refilled while a wheel is on the ground.
+    // Simulation state, not presentation: it has to be in the snapshot the
+    // autopilot restores and it has to replay identically.
+    this.thrustLeft = this.spec.thrustTank;
+    this.thrusting = false;
     setHeadPosition(this);
   }
 
@@ -174,7 +181,11 @@ function calculateWheelForces(mot, rb, i1, j1, wheelDx, wheelDy, torqueWheel, ou
 const leftOut = {};
 const rightOut = {};
 
-export function simulateBikePhysics(level, mot, time, dt, gas, brake, rightVolt, leftVolt, onBump) {
+/**
+ * @param {boolean} [thrust] hold the compressed-air jet on. Vehicles with no
+ *   tank ignore it entirely.
+ */
+export function simulateBikePhysics(level, mot, time, dt, gas, brake, rightVolt, leftVolt, onBump, thrust) {
   mot.frictionVolume = 0;
 
   // i1 points to the bike's right, j1 to its top.
@@ -300,16 +311,58 @@ export function simulateBikePhysics(level, mot, time, dt, gas, brake, rightVolt,
 
   const direction = GRAVITY_VECTORS[mot.gravityDirection];
 
+  // The jet. Air is blown straight out of the floor, so the push is along
+  // the car's own up — pitch the nose and the thrust leans with it, which
+  // is the only steering there is once the wheels have left the ground.
+  // (There is pitch control without a volt: gas and brake torque the frame
+  // through the wheels, exactly as they do on a bike in the air.)
+  //
+  // It pushes the frame, not the wheels. That is deliberate and it is what
+  // makes it look right: the body rises first, the suspension stretches,
+  // and the wheels are pulled up after it.
+  mot.thrusting = false;
+  const tank = mot.spec.thrustTank;
+  if (tank > 0) {
+    const onGround = mot.leftWheel.touchingEdge || mot.rightWheel.touchingEdge;
+    if (thrust && mot.thrustLeft > 0) {
+      mot.thrusting = true;
+      mot.thrustLeft = Math.max(0, mot.thrustLeft - dt);
+    } else if (!thrust && onGround) {
+      // Only with the button *released*. Refilling while it is held looks
+      // harmless and is not: the first version refilled on the ground
+      // whatever the player was doing, and since the tank fills at exactly
+      // the rate it empties, holding the button down on the ground bought
+      // an endless half-power hover. A jump has to be something you spend.
+      mot.thrustLeft = Math.min(tank, mot.thrustLeft + dt * (tank / mot.spec.thrustRefill));
+    }
+  }
+  const jet = mot.thrusting ? mot.spec.thrust : 0;
+
+  // Fly-by-wire, for a machine that has no volt to straighten itself with.
+  // An angular spring towards upright, running only while both wheels are
+  // off the ground so it never fights the suspension on a bumpy road.
+  // Upright means "opposing gravity", so it keeps working after a flip.
+  let levelTorque = 0;
+  if (mot.spec.selfLevel > 0 && !mot.leftWheel.touchingEdge && !mot.rightWheel.touchingEdge) {
+    const upright = Math.atan2(-direction.y, -direction.x) - Math.PI / 2;
+    let err = (upright - mot.bike.rotation) % (2 * Math.PI);
+    if (err > Math.PI) err -= 2 * Math.PI;
+    if (err < -Math.PI) err += 2 * Math.PI;
+    levelTorque = mot.spec.selfLevel * err - mot.spec.selfLevelDamping * mot.bike.angularVelocity;
+  }
+
   bodyMovement(mot, direction, i1, j1, dt);
 
   rigidbodyMovement(
     level,
     mot.bike,
     {
-      x: leftOut.forceBike.x + rightOut.forceBike.x + direction.x * mot.bike.mass * GRAVITY,
-      y: leftOut.forceBike.y + rightOut.forceBike.y + direction.y * mot.bike.mass * GRAVITY,
+      x: leftOut.forceBike.x + rightOut.forceBike.x + direction.x * mot.bike.mass * GRAVITY
+         + j1.x * jet,
+      y: leftOut.forceBike.y + rightOut.forceBike.y + direction.y * mot.bike.mass * GRAVITY
+         + j1.y * jet,
     },
-    leftOut.torqueBike + rightOut.torqueBike,
+    leftOut.torqueBike + rightOut.torqueBike + levelTorque,
     dt,
     false,
     onBump

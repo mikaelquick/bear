@@ -100,9 +100,19 @@
   </div>
 </div>
 
+<!-- Two keyboard hints, because the car plays a different game: no volt,
+     and Space fires the air jet instead of turning you round. Which one is
+     shown is decided by the body.thruster class, the same switch that
+     swaps the on-screen buttons. -->
 <div id="startHint" class="hint hidden">
-  <kbd>↑</kbd> gas &nbsp;·&nbsp; <kbd>↓</kbd> broms &nbsp;·&nbsp;
-  <kbd>←</kbd><kbd>→</kbd> volt &nbsp;·&nbsp; <kbd>Space</kbd> vänd
+  <span class="hint-bike">
+    <kbd>↑</kbd> gas &nbsp;·&nbsp; <kbd>↓</kbd> broms &nbsp;·&nbsp;
+    <kbd>←</kbd><kbd>→</kbd> volt &nbsp;·&nbsp; <kbd>Space</kbd> vänd
+  </span>
+  <span class="hint-car">
+    <kbd>↑</kbd> gas &nbsp;·&nbsp; <kbd>↓</kbd> broms &nbsp;·&nbsp;
+    <kbd>Space</kbd> tryckluft
+  </span>
 </div>
 
 <div id="toast" class="hidden"></div>
@@ -118,8 +128,13 @@
   </button>
 </div>
 <div id="touch" class="hidden">
-  <!-- Left thumb: the volts, and nothing else to compete with them. -->
+  <!-- Left thumb: the volts, and nothing else to compete with them. In the
+       car there are no volts, and the whole thumb gets the air jet. -->
   <div class="touch-cluster left">
+    <button class="tbtn jet" data-code="Space" aria-label="Tryckluft">
+      <span class="glyph">⇧</span>
+      <span class="cap">luft</span>
+    </button>
     <div class="volt-row">
       <button class="tbtn volt" data-code="ArrowLeft" aria-label="Volt bakåt">
         <svg class="arrow" viewBox="0 0 24 24" width="27" height="27" aria-hidden="true">

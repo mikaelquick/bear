@@ -1162,6 +1162,31 @@ body.touch #hud .hud-right { padding-right: 44px; }
   font-size: 13px;
 }
 
+/* The air jet. Only the car has one, and when it does it takes the whole
+   left thumb: there are no volts to share the space with, and nothing to
+   turn round with either. The buttons are swapped by class rather than
+   rebuilt, so the touchpad's hit test — which skips anything with no
+   offsetParent — stops seeing the hidden ones for free. */
+.tbtn.jet { display: none; }
+body.thruster .tbtn.jet { display: flex; }
+body.thruster .volt-row { display: none; }
+body.thruster .tbtn.turn { display: none; }
+
+.tbtn.jet {
+  width: 92px; height: 62px; border-radius: 18px;
+  gap: 0;
+  border-color: rgba(159, 224, 255, 0.75);
+  background: rgba(30, 52, 74, 0.6);
+}
+.tbtn.jet .glyph { font-size: 22px; line-height: 1; color: #9fe0ff; }
+.tbtn.jet .cap { font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; }
+body.short .tbtn.jet { width: 80px; height: 54px; }
+
+/* One hint or the other, never both. */
+.hint-car { display: none; }
+body.thruster .hint-bike { display: none; }
+body.thruster .hint-car { display: inline; }
+
 /* Pedals. Shaped and treaded so they read as throttle and brake at a glance
    rather than as two more arrows. */
 .tbtn.pedal {

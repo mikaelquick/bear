@@ -48,8 +48,8 @@ export class Game {
   load(level, vehicleId) {
     this.level = level;
     this.vehicleId = vehicleId;
-    this.renderer.setBiome(level.biome);
-    this.effects.setBiome(level.biome);
+    this.renderer.setBiome(level.theme);
+    this.effects.setBiome(level.theme);
     this.renderer.horizonY = level.bounds.maxY * 0.55 + level.bounds.minY * 0.45;
     this.restart();
   }
@@ -113,7 +113,12 @@ export class Game {
     if (this.held('ArrowDown', 'KeyS')) flags |= INPUT.BRAKE;
     if (this.held('ArrowLeft', 'KeyA')) flags |= INPUT.LEFT;
     if (this.held('ArrowRight', 'KeyD')) flags |= INPUT.RIGHT;
-    if (this.keys.has('Space')) flags |= INPUT.TURN;
+    // Space is the one key whose meaning depends on the machine: a bike
+    // turns round with it, the car has nothing to turn with and fires its
+    // air jet instead.
+    if (this.keys.has('Space')) {
+      flags |= this.run.motor.spec.thrustTank > 0 ? INPUT.THRUST : INPUT.TURN;
+    }
     return flags;
   }
 
@@ -173,6 +178,7 @@ export class Game {
       (flags & INPUT.GAS) !== 0 && (flags & INPUT.BRAKE) === 0
     );
     this.sfx.squeak(mot.frictionVolume);
+    if (mot.thrusting) this.effects.jet(mot);
   }
 
   get displayTime() {

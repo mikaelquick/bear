@@ -12,7 +12,7 @@ import { loadGhost, levelFingerprint, REPLAY_VERSION } from './replay.js';
 import { cachedThumbnail } from './thumbnail.js';
 import { BIOMES, DEFAULT_BIOME, biomeOf, findBiome } from './biomes.js';
 import { stageTurn, quartered, systemAngle } from './stage.js';
-import { VEHICLES, DEFAULT_VEHICLE, findVehicle } from './vehicles.js';
+import { VEHICLES, DEFAULT_VEHICLE, findVehicle, vehiclesFor } from './vehicles.js';
 
 // Fullscreen is a nice-to-have, and its module is exactly the sort of file a
 // content blocker swallows. Loaded dynamically behind a no-op fallback so a
@@ -338,7 +338,7 @@ function openRideChoice(index, from = 'menu') {
   $('rideLevel').textContent = entry.data.name;
   const list = $('rideList');
   list.innerHTML = '';
-  for (const vehicle of VEHICLES) {
+  for (const vehicle of vehiclesFor(entry.data)) {
     const best = times[recordKey(entry.data.name, vehicle.id)];
     const btn = document.createElement('button');
     btn.className = 'choice' + (vehicle.id === currentVehicle ? '' : ' secondary');
@@ -425,6 +425,7 @@ const show = (...ids) => ids.forEach((id) => $(id).classList.remove('hidden'));
 
 function showMenu() {
   mode = 'menu';
+  syncControlsForVehicle(DEFAULT_VEHICLE);
   layoutStage();
   returnToEditor = false;
   replay = null;
@@ -448,13 +449,19 @@ function startLevel(index, vehicleId = currentVehicle) {
   if (!entries[index]) return;
   rememberBiomeScroll();
   currentIndex = index;
-  currentVehicle = findVehicle(vehicleId).id;
+  // A level may name the machines it can be ridden on. Arriving on one it
+  // does not allow — the car level reached while the motorbike is the
+  // remembered choice — puts the player on the first one it does, rather
+  // than on a machine that cannot finish it.
+  const allowed = vehiclesFor(entries[index].data);
+  currentVehicle = (allowed.find((v) => v.id === vehicleId) || allowed[0]).id;
   replay = null;
   sfx.ensure();
   renderer.fitScale();
 
   const level = new Level(entries[index].data);
   game.load(level, currentVehicle);
+  syncControlsForVehicle(currentVehicle);
   game.setGhost(settings.ghost
     ? loadGhost(level, loadReplays()[recordKey(level.name, currentVehicle)])
     : null);
@@ -487,8 +494,8 @@ function startReplay(index, vehicleId = currentVehicle) {
 
   currentIndex = index;
   renderer.fitScale();
-  renderer.setBiome(level.biome);
-  effects.setBiome(level.biome);
+  renderer.setBiome(level.theme);
+  effects.setBiome(level.theme);
   renderer.horizonY = level.bounds.maxY * 0.55 + level.bounds.minY * 0.45;
   renderer.lead = { x: 0, y: 0 };
   renderer.camInit = false;
@@ -541,6 +548,9 @@ function testEditorLevel() {
   // Play the editor's own Level object, so edits carry straight over.
   game.load(editor.level);
   game.setGhost(null);
+  // The editor's own level is always driven on the default machine, so the
+  // controls have to come back from whatever the last level left them as.
+  syncControlsForVehicle(DEFAULT_VEHICLE);
   mode = 'play';
   returnToEditor = true;
   document.body.classList.add('playing');
@@ -624,6 +634,13 @@ function addButton(parent, emoji, label, onClick, secondary = false) {
   parent.appendChild(b);
 }
 
+// Which set of on-screen controls and which keyboard hint to show. A
+// machine with an air jet has no volts and nothing to turn round with, so
+// the left thumb gets one big button instead of two.
+function syncControlsForVehicle(vehicleId) {
+  document.body.classList.toggle('thruster', findVehicle(vehicleId).spec.thrustTank > 0);
+}
+
 function setPaused(paused) {
   $('pause').classList.toggle('hidden', !paused);
   if (!paused) return;
@@ -632,7 +649,8 @@ function setPaused(paused) {
   // own Level object, it has no row in the level list and no machine was
   // ever chosen for it, so the chooser would be about whichever level was
   // played last and picking from it would start that one instead.
-  $('btnPauseRide').classList.toggle('hidden', returnToEditor);
+  const choices = game.level ? vehiclesFor({ vehicles: game.level.vehicles }).length : 0;
+  $('btnPauseRide').classList.toggle('hidden', returnToEditor || choices < 2);
   // The icon is the machine you are *not* on. With two of them that says
   // what the row does better than the word can — a motorbike on the row
   // while you are riding the motorbike reads as "go to the motorbike".

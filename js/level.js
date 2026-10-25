@@ -17,6 +17,16 @@ export class Level {
     // every level written before ice existed gets. Less than 1 is an icy
     // level: see simulateBikePhysics, which is the only place it is read.
     this.grip = data.grip === undefined ? 1 : data.grip;
+    // Which machines this level may be ridden on. Most levels say nothing
+    // and mean "any of them"; a level built around the car's air jet names
+    // the car, because it cannot be done without one and the chooser
+    // should not offer a machine that cannot finish it.
+    this.vehicles = data.vehicles || null;
+    // Which world's colours to paint it in. Defaults to the world it is
+    // filed under, and differs only while a level is parked somewhere it
+    // does not belong: a snow level sitting in Beta should already look
+    // like snow, so that moving it later changes nothing a player sees.
+    this.theme = data.theme || this.biome;
     // { grass: bool, points: [{x, y}, ...] }
     this.polygons = (data.polygons || []).map((p) => ({
       grass: !!p.grass,
@@ -118,6 +128,8 @@ export class Level {
       name: this.name,
       ...(this.biome !== DEFAULT_BIOME ? { biome: this.biome } : {}),
       ...(this.grip !== 1 ? { grip: this.grip } : {}),
+      ...(this.vehicles ? { vehicles: [...this.vehicles] } : {}),
+      ...(this.theme !== this.biome ? { theme: this.theme } : {}),
       polygons: this.polygons.map((p) => ({
         grass: p.grass,
         points: p.points.map((pt) => [round(pt.x), round(pt.y)]),

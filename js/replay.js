@@ -230,6 +230,7 @@ function blankMotor(vehicleId) {
     flipped: true,
     frameColor: spec.frameColor,
     pedals: spec.pedals,
+    body: spec.body,
   };
 }
 

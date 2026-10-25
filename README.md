@@ -275,16 +275,50 @@ ställe i stället för utspridd i `forces.js`.
 Ett fordon är bara värt att ha om det är bättre på något. En maskin som bara är
 långsammare är aldrig rätt svar på någon bana, så varje fordon byter bort något:
 
-| | Motorcykeln 🏍️ | Cykeln 🚲 |
-|---|---|---|
-| Dragkraft | 600 | 420 |
-| Topp (hjulvarv × radie) | 110 × 0,4 | 98 × 0,36 |
-| Vikt | 200 | 120 |
-| Hjulbas | 1,7 | 1,3 |
-| Volt | 12 | 15 |
+| | Motorcykeln 🏍️ | Cykeln 🚲 | Elbilen 🚙 |
+|---|---|---|---|
+| Dragkraft | 600 | 420 | 700 |
+| Topp (hjulvarv × radie) | 110 × 0,4 | 98 × 0,36 | 45 × 0,38 |
+| Vikt | 200 | 120 | 260 |
+| Hjulbas | 1,7 | 1,3 | 2,6 |
+| Volt | 12 | 15 | — |
+| Tryckluft | — | — | 4200 N, 1,5 s |
 
 Cykeln ger alltså upp fart och drag mot lätthet, kort hjulbas och snabbare volt — den
 att ta in i ett trångt schakt, och fel val på en lång öppen sträcka.
+
+**Elbilen spelar ett annat spel.** Den kan inte volta och kan inte ens vända sig om; i
+stället har den tryckluft den blåser rakt ut ur golvet. Trycket läggs på *ramen*, inte
+på hjulen, vilket är det som får det att se rätt ut: karossen stiger först, fjädringen
+sträcks, och hjulen dras upp efter den. Och eftersom luften kommer ur golvet går trycket
+längs bilens egen uppåtriktning, så nosen pekar dit kraften går.
+
+Tanken är hela spelet: 1,5 sekunders luft, och 1,5 sekunder på marken för att fylla den.
+Den fyller bara med knappen *släppt* — första versionen fyllde på marken vad spelaren än
+gjorde, och eftersom den fylls precis så fort som den töms gav intryckt knapp på marken
+en evig halvfartssväva. Ett hopp ska vara något man gör av med.
+
+Och den **rätar upp sig själv i luften** (`selfLevel`), en vinkelfjäder mot upprätt som
+bara går när båda hjulen är av marken. Det är inte bekvämlighet utan nödvändighet: en
+maskin utan volt kommer aldrig tillbaka från en dålig avfärd, och utan den låg bilen på
+taket med strålen mot himlen efter första hoppet. `test/vehicles.test.js` håller regeln:
+en maskin som inte kan volta måste kunna resa sig på något annat sätt.
+
+Bilen erbjuds inte på de tjugo cykelbanorna. Den regeln sitter på *fordonet*
+(`general: false`), inte på banorna: hälften av de tjugo är omöjliga utan volt, och att
+skriva det på bilen i stället för på tjugo banor är varför de fortfarande inte säger
+någonting om fordon alls — precis som de inte säger någonting om världar. En bana som
+vill ha ett visst fordon skriver `vehicles: ['car']`, och då är det bara det som erbjuds
+i väljaren, bara det `levels.test.js` provar, och "Byt fordon" i pausrutan göms.
+
+Hur bilen ritas står för sig: en kil, en rak linje från stötfångaren upp till takets
+topp och en längre, flackare ner till bakluckan, med hjulhusen urgröpta ur underkanten.
+Måtten är **inpassade på papper, inte med ögat i spelet**: huvudet är det som dödar en,
+så det måste synas sitta inne i kupén, och de första formerna antingen kapade björnen
+eller kom ut som ett tält. Det är också därför björnen sitter lägre i bilen än på en
+motorcykel (`bodyDy` 0,22 mot 0,44) — med huvudet på cykelhöjd krävdes ett tak så högt
+att bilen blev kvadratisk. Lägre än så går inte: kroppsfjäderns tillåtna låda i
+`move.js` bottnar kring 0,2.
 
 Och cykeln har **ekerhjul**. Motorcykelns hjul är en fylld skiva med fem grova ekrar;
 cykelns är mest luft — tunt däck, blank fälg, tolv tunna ekrar snedställda mot navet och
@@ -470,6 +504,30 @@ krukan där det enda som går under är en platt linje.
 Namnen börjar om på 1 i varje värld. Rekordnyckeln är bannamnet, och "1. Första halkan"
 är en annan sträng än "1. Första steget", så numren får upprepas utan att krocka.
 
+## Beta
+
+En tredje värld, 🧪 **Beta**, och den är verkstaden i det öppna. Där ligger bilbanorna
+tills de är bra nog att flytta in som specialbana i var sin av världarna ovanför. Att
+visa dem i stället för att gömma dem bakom en flagga är poängen: då blir de spelade,
+vilket är det enda sättet de blir bättre.
+
+Två saker gör att en bana kan ligga parkerad där utan att se parkerad ut. `theme` låter
+en bana måla sig i en annan världs färger än den är sorterad under, så snöbilbanan redan
+ser ut som snö och ingenting syns ändra sig den dagen den flyttar. Och `vehicles` låter
+den säga vilken maskin den är byggd för.
+
+**1. Provturen** är en rak väg med tre hål: sju meter, nio, elva. Ungefär fem går på
+fart allena, så det första är nästan gratis och det sista är det inte. Varje landning
+ligger en och en halv meter under kanten man for ifrån — första versionen hade dem i
+nivå och den bortre väggen tog bilen rakt i nosen på ett hopp som var nio tiondelar
+rätt. Slack i landningen är det som gör "nästan" till "precis".
+
+**2. Isbanan** är samma sak på is (`grip` 0.5): halva dragkraften, så farten måste
+hittas någonstans, och längre ansatser för att den ska hinna byggas.
+
+Båda är med flit lätta. Det är inte cyklarnas spel — ingen volt, bilen rätar upp sig
+själv, och enda frågan är när luften ska gå åt.
+
 ## Repriser och ghosts
 
 Ditt bästa lopp per bana spelas in. Nästa gång du kör banan visas det som en blek,
@@ -580,6 +638,7 @@ test/
   physics.test.js   fysikporten
   stage.test.js     scenen hamnar liggande hur avläsningarna än ljuger
   worlds.test.js    varje värld är helt målad, ned till vad hjulen yr upp
+  vehicles.test.js  vilket fordon som får köra vilken bana
   replay.test.js    inspelning, kodning, ghost
   autopilot.js      sökning med checkpoints och backtracking
   levels.test.js    varje bana måste gå att klara
@@ -637,7 +696,7 @@ Alla kommer från banor som testföraren avslöjade som orättvisa eller omöjli
 
 ## Tester
 
-`npm test` kör fem sviter:
+`npm test` kör sex sviter:
 
 **`physics.test.js`** — att cykeln vilar stilla på marken, att gasen driver åt rätt håll,
 att volten ger och tar tillbaka rotation, att kupor/getingar/mål utlöser rätt, och att
@@ -653,6 +712,11 @@ varandra.
 **`worlds.test.js`** — att varje värld är helt målad: hela paletten, ett eget sprut
 under hjulen, inga öppna men tomma världar, och en okänd värld som faller tillbaka i
 stället för att krascha. Den finns för att snön en gång yrde upp sand.
+
+**`vehicles.test.js`** — reglerna för vilket fordon som får skickas på vilken bana:
+att varje fordon en bana namnger finns, att en maskin märkt `general: false` bara
+erbjuds där den efterfrågas, att en maskin utan volt kan resa sig på något annat sätt,
+och att en stråle är stark nog att lyfta sin egen bil.
 
 **`replay.test.js`** — att kodningen är förlustfri, att samma inmatning ger exakt samma
 lopp, att ghosten interpolerar rätt och slutar i tid, och att en inspelning avvisas när

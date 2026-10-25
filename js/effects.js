@@ -56,6 +56,31 @@ export class Effects {
     this.addShake(Math.min(strength * 5, 7));
   }
 
+  // Compressed air blasting out of the car's floor. Spawned under the
+  // three outlets and thrown downwards along the car's own down, because
+  // that is the direction the push is applied in — so the plume leans when
+  // the car does and the picture agrees with the physics.
+  jet(mot) {
+    const rot = mot.bike.rotation;
+    const ix = Math.cos(rot), iy = Math.sin(rot);
+    const jx = -iy, jy = ix; // the car's up
+    for (let i = 0; i < 3; i++) {
+      const along = -1.1 + i * 1.1;
+      const spread = (Math.random() - 0.5) * 0.5;
+      const speed = 5 + Math.random() * 7;
+      this.spawn({
+        x: mot.bike.r.x + ix * along - jx * 0.36,
+        y: mot.bike.r.y + iy * along - jy * 0.36,
+        vx: -jx * speed + ix * spread * 3,
+        vy: -jy * speed + iy * spread * 3,
+        life: 0, maxLife: 0.16 + Math.random() * 0.2,
+        size: 0.08 + Math.random() * 0.12,
+        drag: 5.5, gravity: 0,
+        color: '214, 236, 255',
+      });
+    }
+  }
+
   // Golden burst when a hive is collected.
   honeyBurst(x, y) {
     for (let i = 0; i < 20; i++) {

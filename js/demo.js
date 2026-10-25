@@ -4,6 +4,7 @@
 import { Level } from './level.js';
 import { LEVELS } from './levels.js';
 import { Driver, jitteredParams } from './driver.js';
+import { vehiclesFor } from './vehicles.js';
 import { createRun, advanceFrame, INPUT } from './sim.js';
 
 const RESTART_DELAY = 1.4; // real seconds after a crash or a win
@@ -19,11 +20,14 @@ export class Demo {
   restart(nextLevel = false) {
     if (nextLevel) this.levelIndex = (this.levelIndex + 1) % LEVELS.length;
     this.level = new Level(LEVELS[this.levelIndex]);
-    this.renderer.setBiome(this.level.biome);
-    this.effects.setBiome(this.level.biome);
+    this.renderer.setBiome(this.level.theme);
+    this.effects.setBiome(this.level.theme);
     this.renderer.horizonY =
       this.level.bounds.maxY * 0.55 + this.level.bounds.minY * 0.45;
-    this.run = createRun(this.level);
+    // On a machine the level allows. Most name none and get the default;
+    // the car levels name the car, and a motorbike sent at one would just
+    // fall into the first gap in front of whoever is reading the menu.
+    this.run = createRun(this.level, vehiclesFor(LEVELS[this.levelIndex])[0].id);
     this.driver = new Driver(jitteredParams((Math.random() * 1e9) | 0));
     this.deadTimer = 0;
     this.alive = true;

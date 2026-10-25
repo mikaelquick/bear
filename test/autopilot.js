@@ -45,7 +45,8 @@ export function drive(level, motor, startTime, opts = {}) {
   for (let i = 0; i < steps; i++) {
     t += DT;
     const inp = driver.inputs(level, m, t, DT);
-    simulateBikePhysics(level, m, t, DT, inp.gas, inp.brake, inp.rightVolt, inp.leftVolt);
+    simulateBikePhysics(level, m, t, DT, inp.gas, inp.brake, inp.rightVolt, inp.leftVolt,
+                        undefined, inp.thrust);
     const state = checkObjectCollision(level, m);
 
     if (m.appleCount > hivesAtCheckpoint) {

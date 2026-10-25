@@ -110,7 +110,7 @@ export function levelThumbnail(data) {
   const p = projection(boundsOf(level.polygons));
   // Painted in its own world's colours, so you can see which world a tile
   // belongs to before you read its name.
-  const pal = themeFor(biomeOf(data));
+  const pal = themeFor(data.theme || biomeOf(data));
 
   const sky = ctx.createLinearGradient(0, 0, 0, HEIGHT);
   sky.addColorStop(0, pal.skyTop);

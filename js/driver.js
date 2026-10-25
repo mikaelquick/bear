@@ -4,6 +4,11 @@
 // It is not meant to play well. It aims at the nearest hive, keeps the bike
 // roughly parallel to the ground on the way there, and volts to level out in
 // the air.
+//
+// A machine with an air jet and no volt is driven differently: it straightens
+// itself, so there is nothing to level out, and the one extra decision is
+// when to spend the tank. The rule is "falling, so push" — which is also
+// roughly what a person does over a gap.
 
 import { VOLT_DELAY, OBJ, GRAVITY_DIR } from './constants.js';
 
@@ -61,6 +66,9 @@ export const DRIVER_DEFAULTS = {
   turnDistance: 2.0,
   maxSpeed: 8.0,
   jitter: 0,
+  // How fast it has to be falling before the jet goes on. Low enough and
+  // it fires over every bump and the tank is empty when the gap arrives.
+  thrustFallSpeed: 1.5,
 };
 
 // Randomised parameter set, for search and for variety in the demo.
@@ -74,6 +82,7 @@ export function jitteredParams(seed) {
     turnDistance: 1.2 + r() * 2.5,
     maxSpeed: r() < 0.25 ? Infinity : 3.5 + r() * 11,
     jitter: r() * 0.3,
+    thrustFallSpeed: 0.4 + r() * 3,
   };
 }
 
@@ -105,7 +114,7 @@ export class Driver {
     const drivesRight = inverted ? !m.flipped : m.flipped;
     const wantRight = target.x > m.bike.r.x;
     this.turnCooldown -= dt;
-    if (onGround && wantRight !== drivesRight &&
+    if (m.spec.canTurn && onGround && wantRight !== drivesRight &&
         Math.abs(target.x - m.bike.r.x) > p.turnDistance && this.turnCooldown <= 0) {
       m.turn();
       this.turnCooldown = 0.3;
@@ -122,6 +131,7 @@ export class Driver {
     let brake = false;
     let rightVolt = false;
     let leftVolt = false;
+    let thrust = false;
 
     if (onGround) {
       const limit = p.pitchLimit + (this.rand() - 0.5) * p.jitter;
@@ -134,6 +144,12 @@ export class Driver {
       const tooFast = closing && speed > (nearly ? p.maxSpeed * 0.6 : p.maxSpeed);
       gas = relPitch < limit && absPitch < p.absPitchLimit && !tooFast;
       if (absPitch < -0.7) brake = true; // nose buried, lift the back end
+    } else if (m.spec.thrustTank > 0) {
+      // Airborne with a tank: push while falling. Nothing to level out —
+      // the machine does that itself — so the jet is the only decision,
+      // and spending it on the way down is what carries a gap.
+      const falling = (m.bike.v.y * -direction(m)) > p.thrustFallSpeed;
+      thrust = falling && m.thrustLeft > 0;
     } else {
       // Airborne: volt towards upright so we land on both wheels.
       const err = wrap(upright - m.bike.rotation);
@@ -146,7 +162,7 @@ export class Driver {
       }
     }
 
-    if (onGround && time > this.voltTime + VOLT_DELAY) {
+    if (m.spec.volt && onGround && time > this.voltTime + VOLT_DELAY) {
       if (relPitch > 0.55) { // wheelying over backwards
         if (m.flipped) rightVolt = true; else leftVolt = true;
         this.voltTime = time;
@@ -156,8 +172,11 @@ export class Driver {
       }
     }
 
-    return { gas, brake, rightVolt, leftVolt };
+    return { gas, brake, rightVolt, leftVolt, thrust };
   }
 }
 
-const NO_INPUT = { gas: false, brake: false, rightVolt: false, leftVolt: false };
+// "Down" for the gravity in force, as a sign on v.y: falling is positive.
+const direction = (m) => (m.gravityDirection === GRAVITY_DIR.UP ? -1 : 1);
+
+const NO_INPUT = { gas: false, brake: false, rightVolt: false, leftVolt: false, thrust: false };

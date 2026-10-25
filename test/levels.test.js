@@ -8,7 +8,7 @@ import assert from 'node:assert/strict';
 import { Level } from '../js/level.js';
 import { LEVELS } from '../js/levels.js';
 import { solve } from './autopilot.js';
-import { VEHICLES } from '../js/vehicles.js';
+import { vehiclesFor } from '../js/vehicles.js';
 
 // One successful run is proof, so the search gets several different
 // starting seeds before a level is called unfinishable. That matters more
@@ -54,12 +54,16 @@ function test(name, fn) {
 
 console.log('level completability');
 
-// Every level, on every vehicle. A level is only proven completable with
-// the machine it was proven with, and vehicles do not handle alike — the
-// bicycle is slower and shorter, so a gap the motorbike clears is a real
-// question for it.
-for (const vehicle of VEHICLES) {
-  for (const data of LEVELS) {
+// Every level, on every vehicle it may be ridden on. A level is only proven
+// completable with the machine it was proven with, and vehicles do not
+// handle alike — the bicycle is slower and shorter, so a gap the motorbike
+// clears is a real question for it.
+//
+// Most levels name no machine and are therefore claimed for all of them.
+// A level that names one is claiming less, so it is only held to that: the
+// car levels cannot be done without an air jet and nothing else has one.
+for (const data of LEVELS) {
+  for (const vehicle of vehiclesFor(data)) {
     test(`${data.name} can be finished on ${vehicle.name.toLowerCase()}`, () => {
       const level = new Level(data);
       const started = Date.now();

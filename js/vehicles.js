@@ -31,7 +31,10 @@ const WHEEL_DROP = DEFAULT_BIKE.r.y - DEFAULT_LEFT_WHEEL.r.y; // 0.6
  */
 function build({ wheelbase, mass, inertia, wheelRadius, wheelMass, wheelInertia,
                  gasTorque, maxAngularVelocity, voltAngularVelocity, frameColor,
-                 pedals = false }) {
+                 pedals = false, body = 'bike', volt = true, canTurn = true,
+                 bodyDy = BODY_DY,
+                 thrust = 0, thrustTank = 0, thrustRefill = 1,
+                 selfLevel = 0, selfLevelDamping = 0 }) {
   const half = wheelbase / 2;
   const anchor = DEFAULT_BIKE.r;
   const wheelY = anchor.y - WHEEL_DROP;
@@ -45,7 +48,7 @@ function build({ wheelbase, mass, inertia, wheelRadius, wheelMass, wheelInertia,
     leftWheelDy: -WHEEL_DROP,
     rightWheelDx: half,
     rightWheelDy: -WHEEL_DROP,
-    bodyDy: BODY_DY,
+    bodyDy,
     gasTorque,
     maxAngularVelocity,
     voltAngularVelocity,
@@ -57,6 +60,31 @@ function build({ wheelbase, mass, inertia, wheelRadius, wheelMass, wheelInertia,
     // A bicycle is pedalled and a motorbike is not, so the rider's legs
     // either turn a crank or rest on a peg.
     pedals,
+    // Which silhouette the renderer draws around all this: 'bike' or 'car'.
+    body,
+    // Can it volt? Everything on two wheels can. The car cannot, and gets
+    // the thruster in place of it.
+    volt,
+    // Can it turn round on the spot? A bike can. The car cannot: its one
+    // spare button is the jet, and a machine the player cannot turn must
+    // not be turned by the scripted driver either, or the test would prove
+    // a level with a move nobody has.
+    canTurn,
+    // Compressed air, fired straight down out of the floor. `thrust` is the
+    // force in newtons while the jet is on, `thrustTank` how many seconds of
+    // it there are, `thrustRefill` how many seconds on the ground it takes
+    // to fill an empty tank. Zero thrust means no jet and no gauge.
+    thrust,
+    thrustTank,
+    thrustRefill,
+    // Fly-by-wire. An angular spring towards upright that only runs while
+    // the wheels are off the ground. A machine with no volt cannot right
+    // itself, so without this one bad launch leaves it upside down with
+    // its jet pointing at the sky and the run is over. Zero for anything
+    // that can volt — a bike straightening itself would take the game away
+    // from the player.
+    selfLevel,
+    selfLevelDamping,
   };
 }
 
@@ -111,9 +139,85 @@ export const VEHICLES = [
       pedals: true,
     }),
   },
+  {
+    id: 'car',
+    name: 'Elbilen',
+    emoji: '🚙',
+    // Not offered unless a level asks for it by name. Every other machine
+    // is a bike and can be sent at any of the twenty; the car has no volt
+    // and cannot even turn round, so half of them are impossible in it.
+    // Putting the exception on the odd machine rather than on the twenty
+    // levels is what keeps those levels saying nothing about vehicles at
+    // all — the same way they say nothing about which world they are in.
+    general: false,
+    // The odd one out, and deliberately so. It cannot volt at all, and in
+    // its place it has compressed air it can fire out of the floor — so
+    // instead of rotating itself out of trouble it simply leaves the
+    // ground. That makes it a different game with the same physics, which
+    // is why it lives on its own levels rather than being offered on the
+    // twenty built for a bike.
+    //
+    // Long, heavy and low: a wheelbase of 2.6 and most of the mass in the
+    // frame is what keeps it level without a volt to straighten it. The
+    // inertia is deliberately far higher than the bikes' — it is what
+    // stops the jet from spinning the thing like a top the moment the nose
+    // drops.
+    //
+    // Nothing here is a ported constant. The whole vehicle is ours.
+    spec: build({
+      wheelbase: 2.6,
+      mass: 260,
+      inertia: 260 * 1.05 * 1.05,
+      wheelRadius: 0.38,
+      wheelMass: 12,
+      wheelInertia: 0.2 * 12 * 0.38 * 0.38,
+      // 45 rad/s on a 0.38 m wheel is about 17 m/s, call it 60 km/h. The
+      // first try left the cap where the bikes have it and the car did 168
+      // on the flat, which is not a go-kart, it is a blur.
+      gasTorque: 700,
+      maxAngularVelocity: 45,
+      voltAngularVelocity: 0,
+      frameColor: '#c9ced6',
+      body: 'car',
+      volt: false,
+      canTurn: false,
+      // You sit lower in a car than on a motorbike, and here that is not
+      // only true but necessary: the head is what kills you, so it has to
+      // be visibly inside the cabin, and a head perched at bike height
+      // needed a roof so tall the car came out shaped like a tent. The
+      // body spring's allowed box (move.js) bottoms out around 0.2, so
+      // this is about as low as the rider goes.
+      bodyDy: 0.22,
+      // It takes 2840 N to hold the car's own 284 kg still, so 4200 is
+      // about a half-g climb: enough to leave the ground deliberately,
+      // nowhere near enough to fly. The tank is the whole game — a second
+      // and a half of air, and a second and a half on the ground to fill
+      // it again, so a jump is something you spend rather than something
+      // you hold.
+      thrust: 4200,
+      thrustTank: 1.5,
+      thrustRefill: 1.5,
+      // Enough to pull a full rotation's worth of error out in about half
+      // a second, damped so it settles rather than wobbles.
+      selfLevel: 3000,
+      selfLevelDamping: 1100,
+    }),
+  },
 ];
 
 export const DEFAULT_VEHICLE = 'motorbike';
+
+export const hasThruster = (spec) => spec.thrust > 0 && spec.thrustTank > 0;
+
+/**
+ * The machines a level may be ridden on, in menu order. A level that names
+ * none means all of them.
+ * @param {object} data raw level data
+ */
+export const vehiclesFor = (data) =>
+  data && data.vehicles
+    ? VEHICLES.filter((v) => data.vehicles.includes(v.id))
+    : VEHICLES.filter((v) => v.general !== false);
 
 export const findVehicle = (id) =>
   VEHICLES.find((v) => v.id === id) || VEHICLES[0];

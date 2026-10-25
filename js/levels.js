@@ -575,4 +575,79 @@ export const LEVELS = [
       exit(91, 0.6),
     ],
   },
+
+  // ---------------------------------------------------------------------
+  // Beta. The car levels, parked here until they are good enough to go one
+  // apiece into the worlds above. They carry a `theme` so they already look
+  // like the world they are headed for, and `vehicles` so the chooser only
+  // offers the machine they were built around.
+  //
+  // These are meant to be easy. The game they play is not the bikes' game:
+  // there is no volt, the car straightens itself, and the only question is
+  // when to spend the air. A gap of about five metres goes at speed with no
+  // jet at all, so the ones here are nine and up.
+  // ---------------------------------------------------------------------
+
+  {
+    name: '1. Provturen',
+    biome: 'beta',
+    theme: 'forest',
+    vehicles: ['car'],
+    difficulty: 2,
+    polygons: [
+      ...grassyCave(
+        // Every landing sits a metre and a half below the lip it was
+        // launched from. The first version had them level and the far wall
+        // took the car in the face on a jump that was nine tenths right —
+        // slack on the landing is what turns "nearly" into "just".
+        [[0, 0], [26, 0],
+         [26, -12], [33, -12], [33, -1.5],
+         [52, -1.5],
+         [52, -12], [61, -12], [61, -3],
+         [80, -3],
+         [80, -12], [91, -12], [91, -5],
+         [112, -5]],
+        [[0, 20], [112, 20]]
+      ),
+    ],
+    objects: [
+      start(3, 1.1),
+      // On the line, not off it: the point of the level is the jumping.
+      hive(16, 0.6), hive(42, -0.9), hive(70, -2.4), hive(100, -4.4),
+      // Seven metres, then nine, then eleven.
+      wasps(29, -11.4), wasps(56, -11.4), wasps(85, -11.4),
+      exit(108, -4.4),
+    ],
+  },
+
+  {
+    name: '2. Isbanan',
+    biome: 'beta',
+    theme: 'snow',
+    vehicles: ['car'],
+    grip: 0.5,
+    difficulty: 3,
+    polygons: [
+      ...grassyCave(
+        // Ice under a car with no volt: the jet is the only thing that
+        // stops you, because it is the only thing that can get you off the
+        // ground. Longer run-ups than the forest one, since half the grip
+        // means half the pull and the speed has to be found somewhere.
+        [[0, 0], [30, 0],
+         [30, -12], [38, -12], [38, -1.5],
+         [48, -1.5], [54, -4], [66, -4],
+         [66, -14], [76, -14], [76, -5.5],
+         [98, -5.5],
+         [98, -14], [108, -14], [108, -7],
+         [130, -7]],
+        [[0, 20], [130, 20]]
+      ),
+    ],
+    objects: [
+      start(3, 1.1),
+      hive(18, 0.6), hive(44, -0.9), hive(86, -4.9), hive(118, -6.4),
+      wasps(34, -11.4), wasps(71, -13.4), wasps(103, -13.4),
+      exit(126, -6.4),
+    ],
+  },
 ];

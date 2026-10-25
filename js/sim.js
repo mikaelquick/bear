@@ -7,7 +7,10 @@
 import { Motor, simulateBikePhysics, checkObjectCollision } from './forces.js';
 import { MS_TO_PHYS_TIME, PHYS_MAX_TIMESTEP, VOLT_DELAY } from './constants.js';
 
-export const INPUT = { GAS: 1, BRAKE: 2, LEFT: 4, RIGHT: 8, TURN: 16 };
+// Flags are stored one byte per frame in a replay, so there were three
+// spare bits here and the jet cost none of the format: old recordings
+// decode unchanged and keep playing.
+export const INPUT = { GAS: 1, BRAKE: 2, LEFT: 4, RIGHT: 8, TURN: 16, THRUST: 32 };
 
 const MAX_SUBSTEPS_PER_FRAME = 40;
 
@@ -45,14 +48,18 @@ export function advanceFrame(level, run, dtMs, flags, hooks = {}) {
     const gas = (flags & INPUT.GAS) !== 0 && !brake; // brake wins over gas
 
     // Holding a volt key re-volts every VOLT_DELAY, as in the original.
+    // A machine that cannot volt ignores the keys rather than being given
+    // a zero-strength one, so nothing downstream has to special-case it.
     let rightVolt = false;
     let leftVolt = false;
-    if (run.time > run.voltTime + VOLT_DELAY) {
+    if (mot.spec.volt && run.time > run.voltTime + VOLT_DELAY) {
       if (flags & INPUT.RIGHT) { rightVolt = true; run.voltTime = run.time; }
       if (flags & INPUT.LEFT) { leftVolt = true; run.voltTime = run.time; }
     }
+    const thrust = (flags & INPUT.THRUST) !== 0;
 
-    simulateBikePhysics(level, mot, run.time, dt, gas, brake, rightVolt, leftVolt, hooks.onBump);
+    simulateBikePhysics(level, mot, run.time, dt, gas, brake, rightVolt, leftVolt,
+                        hooks.onBump, thrust);
     const result = checkObjectCollision(level, mot, hooks.onObject);
 
     if (hooks.onSubstep) hooks.onSubstep(run);
@@ -63,7 +70,7 @@ export function advanceFrame(level, run, dtMs, flags, hooks = {}) {
     }
 
     // Turning is edge-triggered: one flip per press.
-    const turnDown = (flags & INPUT.TURN) !== 0;
+    const turnDown = (flags & INPUT.TURN) !== 0 && mot.spec.canTurn;
     if (!run.turnPrev && turnDown) {
       mot.turn();
       if (hooks.onTurn) hooks.onTurn();
