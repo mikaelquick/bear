@@ -765,9 +765,14 @@ export class Renderer {
       ctx.lineTo(2.80, -0.18);          // blunt front face, not a beak
       ctx.lineTo(0.34, 0.90);
       ctx.quadraticCurveTo(0.10, ROOF, -0.14, ROOF);
-      ctx.lineTo(-1.34, ROOF);
-      ctx.quadraticCurveTo(-1.56, ROOF, -1.74, 0.96);
-      ctx.lineTo(-2.80, 0.66);          // a tall tailgate, as on the real one
+      // Behind the cabin the roof drops away to the bed rail, and the bed
+      // rail is low: on the real truck it sits at about 60 % of the car's
+      // height, not the 77 % this had at first. A bed wall almost as tall
+      // as the roof is what made the back end look enormous.
+      ctx.lineTo(-0.86, ROOF);
+      ctx.quadraticCurveTo(-1.02, ROOF, -1.14, 0.92);
+      ctx.lineTo(-1.74, 0.30);          // short steep drop behind the cabin
+      ctx.lineTo(-2.80, 0.26);          // then a long flat bed rail
       ctx.lineTo(-2.80, FLOOR);
       ctx.lineTo(-2.28, FLOOR);
       ctx.lineTo(-2.08, -0.20);
@@ -808,7 +813,7 @@ export class Renderer {
     ctx.lineWidth = 0.035;
     ctx.beginPath();
     ctx.moveTo(2.56, 0.00);
-    ctx.lineTo(-2.74, 0.18);
+    ctx.lineTo(-2.72, 0.14);
     ctx.stroke();
 
     // Door shuts and a handle, so the window sill is a door top rather
@@ -818,8 +823,8 @@ export class Renderer {
     ctx.beginPath();
     ctx.moveTo(1.76, 0.06);
     ctx.lineTo(1.70, -0.18);
-    ctx.moveTo(-1.32, 0.14);
-    ctx.lineTo(-1.36, -0.18);
+    ctx.moveTo(-0.94, 0.14);
+    ctx.lineTo(-0.98, -0.18);
     ctx.stroke();
     ctx.strokeStyle = 'rgba(240, 246, 255, 0.45)';
     ctx.lineWidth = 0.055;
@@ -843,8 +848,8 @@ export class Renderer {
       ctx.beginPath();
       ctx.moveTo(1.80, 0.08);
       ctx.lineTo(0.22, 0.88);
-      ctx.lineTo(-1.18, 0.88);
-      ctx.lineTo(-1.28, 0.08);
+      ctx.lineTo(-0.80, 0.88);
+      ctx.lineTo(-0.90, 0.08);
       ctx.closePath();
     };
     cabin();
@@ -893,10 +898,13 @@ export class Renderer {
     ctx.moveTo(2.78, -0.18);
     ctx.lineTo(2.22, 0.07);
     ctx.stroke();
+    // Along the top of the tailgate, not across it. It used to slope the
+    // opposite way to the body edge it sits on, which read as a light
+    // pointing the wrong way — and it was, it crossed the panel line.
     ctx.strokeStyle = '#ff5f4d';
     ctx.beginPath();
-    ctx.moveTo(-2.78, 0.66);
-    ctx.lineTo(-2.26, 0.52);
+    ctx.moveTo(-2.78, 0.26);
+    ctx.lineTo(-2.34, 0.28);
     ctx.stroke();
     ctx.lineCap = 'round';
 
