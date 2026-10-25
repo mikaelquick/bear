@@ -15,7 +15,8 @@
 // every time it redraws.
 
 import { OBJ } from './constants.js';
-import { PALETTE } from './render.js';
+import { PALETTE, themeFor } from './render.js';
+import { biomeOf } from './biomes.js';
 
 const WIDTH = 240;
 const HEIGHT = 135; // 16:9, the shape of the screen the level is played on
@@ -107,17 +108,20 @@ export function levelThumbnail(data) {
   const level = { polygons: data.polygons || [], objects: data.objects || [] };
   const ctx = scratchContext();
   const p = projection(boundsOf(level.polygons));
+  // Painted in its own world's colours, so you can see which world a tile
+  // belongs to before you read its name.
+  const pal = themeFor(biomeOf(data));
 
   const sky = ctx.createLinearGradient(0, 0, 0, HEIGHT);
-  sky.addColorStop(0, PALETTE.skyTop);
-  sky.addColorStop(1, PALETTE.skyBottom);
+  sky.addColorStop(0, pal.skyTop);
+  sky.addColorStop(1, pal.skyBottom);
   ctx.fillStyle = sky;
   ctx.fillRect(0, 0, WIDTH, HEIGHT);
 
   // The rock: everything outside the polygons.
   const rock = ctx.createLinearGradient(0, 0, 0, HEIGHT);
-  rock.addColorStop(0, PALETTE.groundLight);
-  rock.addColorStop(1, PALETTE.ground);
+  rock.addColorStop(0, pal.groundLight);
+  rock.addColorStop(1, pal.ground);
   ctx.beginPath();
   ctx.rect(0, 0, WIDTH, HEIGHT);
   for (const poly of level.polygons) {
@@ -130,7 +134,7 @@ export function levelThumbnail(data) {
   // A lit rim, which is what makes the cave read as a shape rather than a
   // stain at this size.
   ctx.lineWidth = 1;
-  ctx.strokeStyle = PALETTE.edge;
+  ctx.strokeStyle = pal.edge;
   ctx.beginPath();
   for (const poly of level.polygons) {
     if (poly.grass) continue;

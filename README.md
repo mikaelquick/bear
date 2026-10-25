@@ -224,6 +224,12 @@ långsammare är aldrig rätt svar på någon bana, så varje fordon byter bort 
 Cykeln ger alltså upp fart och drag mot lätthet, kort hjulbas och snabbare volt — den
 att ta in i ett trångt schakt, och fel val på en lång öppen sträcka.
 
+Och cykeln har **ekerhjul**. Motorcykelns hjul är en fylld skiva med fem grova ekrar;
+cykelns är mest luft — tunt däck, blank fälg, tolv tunna ekrar snedställda mot navet och
+banan som syns igenom. Det var det som fattades: med skivhjul läste cykeln som en liten
+motorcykel, och silhuetten är det enda man hinner se i fart. Samma flagga styr hjulet
+som styr benen (`spec.pedals`), för det är samma sak man vet om maskinen.
+
 Björnen **trampar** på cykeln: ett ben på var sida, upp och ner i motfas, det bortre
 mörkare så de två inte smälter ihop till en form. Ingen vev ritas — i den här skalan
 lästes vevarmen som en lös stötta i stället för som något fötterna vred runt, och två
@@ -241,10 +247,15 @@ noll hopp. Föraren, ghosten, reprisen och demon räknar var sin takt, annars sl
 samma räknare. `GEAR` i `drawBear` är siffran att ändra om trampandet ska vara lugnare
 eller ivrigare. På motorcykeln vilar benet på en fotpinne som förut.
 
-**`test/levels.test.js` bevisar varje bana på varje fordon**, fyrtio körningar på knappt
-fem sekunder. Den provar tre frön och tar en målgång som bevis. Det sista är inte
-kosmetik: drivrutinen är trubbig och dess tur varierar med fröet, och ett enda otursfrö
-fick två banor att se omöjliga ut som uppenbart inte är det.
+**`test/levels.test.js` bevisar varje bana på varje fordon**, fyrtiofyra körningar på
+knappt fem sekunder. Den provar sex frön och tar en målgång som bevis. Fröen är en fast
+lista och sökningen är seedad hela vägen ner, så testet är **deterministiskt** — det
+slumpar inte fram ett fel ibland, det säger samma sak varje gång. Vad fröen köper är
+marginal. Drivrutinen är trubbig, och på de vassaste banorna klarar den bara två eller
+tre frön av åtta; med en kort lista kan en dag en bana som bara är svår råka se omöjlig
+ut för att just de fröen hade otur. Sex kostar ingenting på en bana som går igenom —
+sökningen slutar vid första frö som når mål — och bara de verkligt marginella betalar
+för resten.
 
 **Rekord och repriser ligger per bana och fordon.** En tid går bara att jämföra med
 tider satta på samma maskin. Motorcykeln behåller det nakna bannamnet som nyckel, så
@@ -286,9 +297,9 @@ en förälder tittar och ett barn inte gör det. Hjälpen mötte ett tag varje n
 start — den gör den inte längre. Det här är ett spel för barn, och de listar ut det
 genom att trycka på saker, vilket är roligare än att få det berättat för sig.
 
-Först väljer man **värld**, sedan bana. Världarna står i `js/biomes.js`: i dag
-**Skogen 🌲** med alla tjugo banor och **Snön ❄️**, som visas men är låst. En låst värld
-ritas ändå — en tom hylla med ett datum på säger mer än ingen hylla alls.
+Först väljer man **värld**, sedan bana. Världarna står i `js/biomes.js`: **Skogen 🌲**
+med tjugo banor och **Snön ❄️** med två. Snön var ett tag en låst, tom hylla — en tom
+hylla säger mer än ingen hylla alls — och är nu öppen.
 
 Ett världskort är emoji, namn och hur långt man kommit — inget annat. En rad
 stämningstext är en mening ett barn måste ta sig förbi innan det får trycka, och bilden
@@ -297,8 +308,20 @@ ordet för ett, av samma skäl.
 
 En bana talar om vilken värld den hör till med ett `biome`-fält. Utelämnas det blir det
 den första, vilket är varför de tjugo banor som skrevs innan världar fanns inte behövde
-ändras alls. Nya snöbanor är alltså bara att lägga till med `biome: 'snow'` och ta bort
-`locked` från världen.
+ändras alls.
+
+**Numren på korten räknas per värld.** Den första snöbanan heter 1, inte 21 — listan
+visar en värld i taget, så det är i den listan siffran ska betyda något. Framstegsraden
+under banorna räknar av samma skäl den öppna världen och inte hela spelet; på
+världsväljaren, där ingen värld är öppen, räknar den allihop.
+
+**Varje värld målas i sina egna färger.** `THEMES` i `js/render.js` är skogens palett med
+ett par nycklar utbytta, så en värld kostar fem rader och inte en fil. Bara kulissen
+byts — björnen, maskinen och kuporna ser likadana ut överallt, så man aldrig behöver
+lära om vad någonting är. I snön är himlen kallare, berget blekt i stället för brunt,
+och grässtrået på marken blir en driva: fet, vit linje utan grästuvor, eftersom vita
+grässtrån är precis vad snö inte får se ut som. Banbilderna i väljaren läser samma
+palett, så man ser vilken värld en ruta hör till innan man läst namnet.
 
 `← Världar` tar en ut igen. Och **var man var sparas per värld**: panelen är det som
 scrollar, så det är dess `scrollTop` vi minns, i `settings.biomeScroll`. Den som kört
@@ -323,6 +346,53 @@ varje gång den ritas om. Och den återanvänder en enda canvas och sparar resul
 data-URL:er — tjugo levande canvaselement är megabyte av bildminne för bilder som aldrig
 ändras. Inbyggda banor ritas en gång per sidladdning, egna banor varje gång, eftersom
 editorn kan ha ändrat dem.
+
+## Svårighetskurvan
+
+De fyra första banorna är lektionen, och de har inget att dö i. Bana 3 hette "Hoppet"
+och hade en nio meter djup grop med getingar i; nu är den en ramp, en kant och en kupa
+hängd i luften över landningen. Man lär sig att ramper kastar en utan att betala för
+det. Gropen med något under finns kvar — den har bara flyttat till efter att man mött
+en ofarlig variant först.
+
+Därifrån stramas det åt hela vägen. `difficulty` på varje bana är prickarna på kortet
+och går 1–10:
+
+| Banor | Prickar | Vad som ändras |
+|---|---|---|
+| 1–2 | ● | plan mark, inget att dö i |
+| 3–4 | ●● | första hoppet, första låga taket |
+| 5–6 | ●●●–●●●● | metertrappsteg och skålar som kräver fart för att ta sig ur |
+| 7–9 | ●●●●● | svärmarna ner till en meter över en ren linje, fallen längre |
+| 10–12 | ●●●●●● | längre gap, lägre balkar |
+| 13–15 | ●●●●●●● | fler svärmar, brantare klyfta, högre trösklar i taket |
+| 16–18 | ●●●●●●●● | trängre passage, sex meter mellan avsatserna, kortare ramper |
+| 19–20 | ●●●●●●●●●–● | allt på en gång, med vändning |
+
+Det mätbara i det: hur ofta den skriptade föraren tar sig i mål. På åtta frön per bana
+och fordon klarar den varenda av de sex första banorna 8/8, medan 10, 18 och 19 på
+cykeln ligger på 2/8. Det är inte ett mått på svårighet för en människa, men det är ett
+mått på att kurvan går åt rätt håll — och det gick att mäta före och efter.
+
+Två saker satte taket. **Bikupan** provades med fem meter mellan avsatserna och blev då
+oklarbar: föraren fick en kupa av sex. Det är skillnad på en svår bana och ett stup, och
+den gränsen går där. **Takridaren** fick fyra trösklar i taket på 0,8 m och tappade
+cykeln; tre på 0,6 m, utspridda tolv meter i stället för tio, går i stället bättre än
+originalet gjorde. Uppför och ner i taket är det inlopet till en tröskel som är jobbet,
+inte tröskeln.
+
+## Snön
+
+Två banor hittills, och is: `grip` i bandatan, beskriven under [Fysiken](#fysiken).
+**1. Första halkan** ligger på 0.55 och är en rink — inga getingar, ingen grop, bara en
+lång slät bana och en sista backe som är för brant att ta från stillastående, så hela
+rinken före är ansatsen. Det är världens lektion i en form: behåll det du har.
+**2. Isgrottan** ligger på 0.42 och har allt det kostar — skål, lågt tak med svärmar
+över, en grop med ramp till, en backe som kräver fart, och en istagg över inloppet till
+krukan där det enda som går under är en platt linje.
+
+Namnen börjar om på 1 i varje värld. Rekordnyckeln är bannamnet, och "1. Första halkan"
+är en annan sträng än "1. Första steget", så numren får upprepas utan att krocka.
 
 ## Repriser och ghosts
 
@@ -372,6 +442,21 @@ fart får du behålla den. Hela rekordjakten i originalet bygger på den buggen.
 **Gasen går genom en "växel"** vars radie är fjäderns aktuella längd. En hoptryckt fjäder
 kräver enorm kraft för samma moment, vilket är ursprunget till bug bounces.
 
+**Is är den enda kroken fysiken har för ett underlag**, och den är med flit den minsta
+som går. En bana kan sätta `grip` under 1, och då får varken motorn eller bromsen be ett
+hjul om mer moment än `grip × dragkraft`. Det är ett *tak*, inte en skalning: bromsen är
+en vinkelfjäder här, så halverar man dess styrka vrider den sig bara dubbelt så långt och
+stannar en precis lika bra. Ett tak är vad som gör en broms som inte håller. Mätt på plan
+mark, motorcykeln: 0→8 m/s tar 1,31 s med fullt grepp och 2,96 s på `grip` 0.42, och
+efter en halv sekunds broms från 8 m/s är man nere på 3,50 m/s respektive 5,19 m/s. Man
+tar alltså upp farten långsamt och — det som faktiskt är världens karaktär — får inte av
+den igen.
+
+Bara ett hjul som står på marken halkar; i luften finns inget att greppa, så bromsen
+låser hjulen för en volt precis som förut. Och `grip` 1 hoppar över grenen helt, vilket
+är varenda skogsbana och varenda fysiktest, så den portade känslan är orörd där den
+betyder något.
+
 Simuleringen kör i sin egen tidsenhet: en verklig millisekund är 0.0004368 simenheter.
 Den visade klockan räknar tillbaka, så den visar riktiga hundradelar.
 
@@ -402,7 +487,7 @@ js/
   biomes.js      världarna och vilken bana som hör till vilken
   vehicles.js    fordonen; motorcykelns spec är de portade konstanterna
   level.js       polygoner, segment, kollisionsrutnät
-  levels.js      de tjugo inbyggda banorna
+  levels.js      de tjugotvå inbyggda banorna
   render.js      Canvas 2D: terräng, parallax, björn, objekt, ghost
   effects.js     partiklar och skärmskak
   audio.js       WebAudio-syntade ljud, inga filer (avstängt som standard)
@@ -461,6 +546,10 @@ Alla kommer från banor som testföraren avslöjade som orättvisa eller omöjli
 - Lodräta steg högre än ca 0,6 m stoppar cykeln — fasa av dem
 - Getingsvärmar på marken utan ramp före är omöjliga att passera
 - Hängande svärmar behöver ca 1,2 m fri höjd över huvudet (huvudets topp ligger ca 2,4 m över marken)
+- Räknat i mitten: huvudet sitter ca 2,1 m över marken man står på och svärmen når ca
+  0,65 m, så en svärm under 2,75 m träffar en som kör alldeles rakt. 3,1 m är en meters
+  marginal — platt linje går igenom, minsta vurpa gör det inte. Mät från marken **under**
+  svärmen, inte från nollplanet: samma svärm över en ramp står en meter lägre
 - En ramp uppåt måste peka åt det håll du redan kör, annars kör du in i dess undersida
 - Fall på mer än ca 4 m ner på en kort avsats är en slantsingling, inte en landning
 - Gravitationsvändning **upp** fungerar; att vända tillbaka ner mitt i luften är
@@ -484,7 +573,10 @@ varje upplockad kupa och backtrackar när den kör fast, så en lång bana blir 
 korta problem. Klarar föraren banan gör en människa det garanterat. Testet har hittat
 flera verkliga fel under bygget: flytande hinder man inte kunde ta sig förbi, 1,6 m höga
 trappsteg, ramper som blockerade hyllan under sig, en getingsvärm inbäddad i en pelare,
-och mål för nära väggen.
+och mål för nära väggen. Under åtstramningen av kurvan fångade det en svärm hängd så
+lågt att en helt rak linje gick in i den, en kupa hamnad inuti en tröskel i taket, en
+istagg över en ramp där marken står en meter högre och glipan därmed försvann, och en
+skål brantare än något fordon tar sig upp ur.
 
 ## Vad som inte finns än
 

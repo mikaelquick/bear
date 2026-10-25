@@ -48,6 +48,7 @@ export class Game {
   load(level, vehicleId) {
     this.level = level;
     this.vehicleId = vehicleId;
+    this.renderer.setBiome(level.biome);
     this.renderer.horizonY = level.bounds.maxY * 0.55 + level.bounds.minY * 0.45;
     this.restart();
   }

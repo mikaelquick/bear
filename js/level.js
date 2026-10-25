@@ -3,12 +3,20 @@
 // segments into a collision grid and only tests the cell the circle sits in.
 
 import { OBJ } from './constants.js';
+import { DEFAULT_BIOME } from './biomes.js';
 
 const CELL_SIZE = 2.0; // metres
 
 export class Level {
   constructor(data) {
     this.name = data.name || 'Namnlös';
+    // Which world this belongs to. The chooser groups by it and the renderer
+    // paints by it; the simulation does not care.
+    this.biome = data.biome || DEFAULT_BIOME;
+    // How much bite the wheels get on the ground. 1 is normal, and is what
+    // every level written before ice existed gets. Less than 1 is an icy
+    // level: see simulateBikePhysics, which is the only place it is read.
+    this.grip = data.grip === undefined ? 1 : data.grip;
     // { grass: bool, points: [{x, y}, ...] }
     this.polygons = (data.polygons || []).map((p) => ({
       grass: !!p.grass,
@@ -108,6 +116,8 @@ export class Level {
   toJSON() {
     return {
       name: this.name,
+      ...(this.biome !== DEFAULT_BIOME ? { biome: this.biome } : {}),
+      ...(this.grip !== 1 ? { grip: this.grip } : {}),
       polygons: this.polygons.map((p) => ({
         grass: p.grass,
         points: p.points.map((pt) => [round(pt.x), round(pt.y)]),

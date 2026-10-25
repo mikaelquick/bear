@@ -10,12 +10,22 @@ import { LEVELS } from '../js/levels.js';
 import { solve } from './autopilot.js';
 import { VEHICLES } from '../js/vehicles.js';
 
-// One successful run is proof, so the search gets a few different starting
-// seeds before a level is called unfinishable. That matters more than it
-// sounds: the driver is crude and its luck varies, and a single unlucky
-// seed had two levels looking impossible on the bicycle when both are
-// plainly not. Fixed list, so the test stays a stable regression test.
-const SEEDS = [12345, 777, 4242];
+// One successful run is proof, so the search gets several different
+// starting seeds before a level is called unfinishable. That matters more
+// than it sounds: the driver is crude and its luck varies, and a single
+// unlucky seed had two levels looking impossible on the bicycle when both
+// are plainly not.
+//
+// The list is fixed and the search is seeded all the way down, so this test
+// is deterministic: it does not fail at random, it fails or passes the same
+// way every time. What the seeds buy is margin. The hardest levels are near
+// enough to the driver's ceiling that it clears them on only two or three
+// seeds out of eight, so a short list could one day say "impossible" about
+// a level that is merely hard, purely because of which seeds are on it.
+// Six costs nothing on a level that passes — the search stops at the first
+// seed that finishes — and only the genuinely marginal ones pay for the
+// rest.
+const SEEDS = [12345, 777, 4242, 31337, 99, 60606];
 const BUDGET = 800;
 
 // Proof is one finish. Returns the best attempt for the failure message.

@@ -24,7 +24,40 @@ const PALETTE = {
   wasp: '#f5c518',
   waspDark: '#232323',
   danger: '#e0453a',
+  ridgeFar: '#24314a',
+  ridgeNear: '#1b2838',
+  star: '#cfe0ff',
 };
+
+// Each world paints the same shapes in its own colours. Only the scenery
+// changes: the bear, the machine and the hives look the same wherever you
+// ride them, so a player never has to relearn what anything is.
+//
+// A theme is the forest palette with a few keys swapped, which is why a
+// world costs five lines rather than a file.
+const THEMES = {
+  forest: PALETTE,
+  snow: {
+    ...PALETTE,
+    skyTop: '#132747',
+    skyBottom: '#5b7aa6',
+    ground: '#4a5a7e',
+    groundLight: '#7b8cb0',
+    edge: '#d4e4f7',
+    litEdge: 'rgba(255,255,255,0.75)',
+    // Grass polygons are a painted surface line, so in the snow they are
+    // the snow cap on top of the rock.
+    grass: '#eef5ff',
+    grassLight: '#ffffff',
+    ridgeFar: '#2c4570',
+    ridgeNear: '#1d3050',
+    star: '#ffffff',
+    // Drawn as a drift rather than as blades of grass.
+    snowy: true,
+  },
+};
+
+export const themeFor = (biome) => THEMES[biome] || PALETTE;
 
 // Lighten (t > 0) or darken (t < 0) a #rrggbb by a fraction, so one frame
 // colour per vehicle is enough to paint its whole gradient.
@@ -49,6 +82,13 @@ export class Renderer {
     this.shakeY = 0;
     this.stars = makeStars(140);
     this.horizonY = 0;
+    this.pal = PALETTE;
+  }
+
+  // Which world's colours to paint in. Called when a level is loaded, so a
+  // renderer that is only ever shown the forest keeps the original palette.
+  setBiome(biome) {
+    this.pal = themeFor(biome);
   }
 
   resize() {
@@ -115,8 +155,8 @@ export class Renderer {
   clear() {
     const { ctx } = this;
     const g = ctx.createLinearGradient(0, 0, 0, this.h);
-    g.addColorStop(0, PALETTE.skyTop);
-    g.addColorStop(1, PALETTE.skyBottom);
+    g.addColorStop(0, this.pal.skyTop);
+    g.addColorStop(1, this.pal.skyBottom);
     ctx.fillStyle = g;
     ctx.fillRect(0, 0, this.w, this.h);
     this.drawParallax();
@@ -133,13 +173,13 @@ export class Renderer {
       const px = mod(st.x - cx * 0.04 * this.scale * 0.02, 1) * this.w;
       const py = mod(st.y - cy * 0.02 * this.scale * 0.01, 1) * this.h * 0.7;
       ctx.globalAlpha = st.a;
-      ctx.fillStyle = '#cfe0ff';
+      ctx.fillStyle = this.pal.star;
       ctx.fillRect(px, py, st.s, st.s);
     }
     ctx.restore();
 
-    this.ridge(0.14, 2.5, '#24314a', 9, 160);
-    this.ridge(0.3, 0.8, '#1b2838', 6, 110);
+    this.ridge(0.14, 2.5, this.pal.ridgeFar, 9, 160);
+    this.ridge(0.3, 0.8, this.pal.ridgeNear, 6, 110);
   }
 
   // A distant ridge line. It is anchored to a world altitude so it reads as
@@ -169,8 +209,8 @@ export class Renderer {
     // side: outside the cave is rock, the cave interior shows the sky
     // through, and blocks nested inside the cave become rock again.
     const gg = ctx.createLinearGradient(0, 0, 0, this.h);
-    gg.addColorStop(0, PALETTE.groundLight);
-    gg.addColorStop(1, PALETTE.ground);
+    gg.addColorStop(0, this.pal.groundLight);
+    gg.addColorStop(1, this.pal.ground);
     ctx.beginPath();
     ctx.rect(0, 0, this.w, this.h);
     for (const poly of level.polygons) {
@@ -201,7 +241,7 @@ export class Renderer {
     // Edges. Surfaces you can land on get a lit rim so they read at a glance.
     ctx.lineWidth = 2;
     ctx.lineCap = 'round';
-    ctx.strokeStyle = PALETTE.edge;
+    ctx.strokeStyle = this.pal.edge;
     ctx.beginPath();
     for (const poly of level.polygons) {
       if (poly.grass) continue;
@@ -222,8 +262,11 @@ export class Renderer {
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
 
-    ctx.lineWidth = Math.max(2, 0.13 * s);
-    ctx.strokeStyle = PALETTE.grass;
+    // In the snow this same line is a drift lying on the rock, so it is drawn
+    // fat and pale instead of as a thin green edge.
+    const snowy = !!this.pal.snowy;
+    ctx.lineWidth = Math.max(2, (snowy ? 0.3 : 0.13) * s);
+    ctx.strokeStyle = this.pal.grass;
     ctx.beginPath();
     for (const poly of level.polygons) {
       if (!poly.grass || poly.points.length < 2) continue;
@@ -233,10 +276,30 @@ export class Renderer {
     }
     ctx.stroke();
 
+    if (snowy) {
+      // A sheen along the top of the drift. Snow gets no tufts: blades of
+      // white grass is exactly what it must not look like.
+      ctx.lineWidth = Math.max(1, 0.08 * s);
+      ctx.strokeStyle = this.pal.grassLight;
+      ctx.beginPath();
+      for (const poly of level.polygons) {
+        if (!poly.grass || poly.points.length < 2) continue;
+        const pts = poly.points;
+        const lift = 0.09 * s;
+        ctx.moveTo(this.sx(pts[0].x), this.sy(pts[0].y) - lift);
+        for (let i = 1; i < pts.length; i++) {
+          ctx.lineTo(this.sx(pts[i].x), this.sy(pts[i].y) - lift);
+        }
+      }
+      ctx.stroke();
+      ctx.restore();
+      return;
+    }
+
     // Tufts, placed deterministically from world position so they do not
     // crawl as the camera moves.
     ctx.lineWidth = Math.max(1, 0.05 * s);
-    ctx.strokeStyle = PALETTE.grassLight;
+    ctx.strokeStyle = this.pal.grassLight;
     ctx.beginPath();
     const spacing = 0.32;
     for (const poly of level.polygons) {
@@ -296,7 +359,7 @@ export class Renderer {
         ctx.lineTo(bx, by);
       }
     }
-    ctx.strokeStyle = 'rgba(190,160,120,0.45)';
+    ctx.strokeStyle = this.pal.litEdge || 'rgba(190,160,120,0.45)';
     ctx.stroke();
     ctx.restore();
   }
@@ -549,8 +612,8 @@ export class Renderer {
     ctx.moveTo(bx, by); ctx.lineTo(this.sx(mot.rightWheel.r.x), this.sy(mot.rightWheel.r.y));
     ctx.stroke();
 
-    this.drawWheel(mot.leftWheel);
-    this.drawWheel(mot.rightWheel);
+    this.drawWheel(mot.leftWheel, mot.pedals);
+    this.drawWheel(mot.rightWheel, mot.pedals);
     this.drawFrame(mot, bx, by, rot, face);
     this.drawBear(mot, handlebar, toWorld, face, dead, rider);
   }
@@ -647,12 +710,22 @@ export class Renderer {
     ctx.restore();
   }
 
-  drawWheel(wheel) {
+  /**
+   * @param {boolean} [spoked] draw it as a bicycle wheel rather than a
+   *   motorbike one. Same flag that gives the rider pedals, because it is
+   *   the same fact about the machine.
+   */
+  drawWheel(wheel, spoked = false) {
     const { ctx } = this;
     const s = this.scale;
     const x = this.sx(wheel.r.x);
     const y = this.sy(wheel.r.y);
     const r = wheel.radius * s;
+
+    if (spoked) {
+      this.drawSpokedWheel(x, y, r, wheel.rotation);
+      return;
+    }
 
     ctx.beginPath();
     ctx.arc(x, y, r, 0, Math.PI * 2);
@@ -678,6 +751,69 @@ export class Renderer {
     ctx.beginPath();
     ctx.arc(0, 0, r * 0.72, 0, Math.PI * 2);
     ctx.stroke();
+    ctx.restore();
+  }
+
+  // A bicycle wheel is mostly air. The motorbike's filled disc is what made
+  // the bicycle read as a small motorbike, so this is the one drawing that
+  // tells the two machines apart at a glance: a thin tyre, a bright rim and
+  // a lot of spokes, with the hub left open behind them.
+  drawSpokedWheel(x, y, r, rotation) {
+    const { ctx } = this;
+    const s = this.scale;
+    const tyre = 0.07 * s;   // tyre thickness in pixels
+    const rim = r - tyre - 0.015 * s;
+
+    ctx.save();
+    ctx.translate(x, y);
+    // World y is flipped on screen, so positive rotation must draw clockwise.
+    ctx.rotate(-rotation);
+
+    // Spokes first, so the rim lays over their ends. Thin and a little
+    // translucent: spinning spokes are a haze, not a star.
+    ctx.strokeStyle = 'rgba(216, 224, 234, 0.8)';
+    ctx.lineWidth = Math.max(1, 0.016 * s);
+    ctx.beginPath();
+    const SPOKES = 12;
+    const hub = Math.max(2, 0.06 * s);
+    for (let i = 0; i < SPOKES; i++) {
+      const a = (i / SPOKES) * TURN;
+      // Laced to alternating sides of the hub, as on a real wheel. Without
+      // the offset twelve spokes read as six straight lines through the
+      // middle.
+      const hubA = a + (i % 2 ? 0.3 : -0.3);
+      ctx.moveTo(Math.cos(hubA) * hub, Math.sin(hubA) * hub);
+      ctx.lineTo(Math.cos(a) * rim, Math.sin(a) * rim);
+    }
+    ctx.stroke();
+
+    ctx.strokeStyle = PALETTE.rim;
+    ctx.lineWidth = Math.max(1.5, 0.04 * s);
+    ctx.beginPath();
+    ctx.arc(0, 0, rim, 0, TURN);
+    ctx.stroke();
+
+    // The tyre sits on the rim instead of filling the wheel, so the level
+    // shows through the spokes.
+    ctx.strokeStyle = PALETTE.tyre;
+    ctx.lineWidth = Math.max(2, tyre);
+    ctx.beginPath();
+    ctx.arc(0, 0, r - tyre / 2, 0, TURN);
+    ctx.stroke();
+
+    // Hub, with a valve stem on the rim so the wheel visibly turns even
+    // when the spokes blur together.
+    ctx.fillStyle = '#9aa0aa';
+    ctx.beginPath();
+    ctx.arc(0, 0, hub, 0, TURN);
+    ctx.fill();
+    ctx.strokeStyle = '#596070';
+    ctx.lineWidth = Math.max(1, 0.025 * s);
+    ctx.beginPath();
+    ctx.moveTo(rim, 0);
+    ctx.lineTo(r - tyre, 0);
+    ctx.stroke();
+
     ctx.restore();
   }
 

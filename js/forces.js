@@ -222,6 +222,28 @@ export function simulateBikePhysics(level, mot, time, dt, gas, brake, rightVolt,
     clampWheelRotation(mot.rightWheel);
   }
 
+  // Ice. A slippery level puts a ceiling on what the contact patch can
+  // carry: neither the engine nor the brake may ask a wheel for more torque
+  // than this. So you pick speed up slowly, and — the part that is actually
+  // the character of the world — you cannot take it off again.
+  //
+  // A ceiling rather than a scale, because the brake is an angular spring
+  // here: halve its gain and it simply winds up twice as far and stops you
+  // just the same. Capping it is what makes a brake that cannot hold.
+  //
+  // Only a wheel that is on the ground slips. In the air there is nothing to
+  // grip, so the brake still locks the wheels for a volt exactly as it
+  // always did. And grip 1 skips the branch altogether, which is every
+  // forest level and every physics test, so the ported feel is untouched
+  // where it matters.
+  const grip = level.grip ?? 1;
+  if (grip < 1) {
+    const cap = grip * mot.spec.gasTorque;
+    const slip = (t) => Math.max(-cap, Math.min(cap, t));
+    if (mot.leftWheel.touchingEdge) torqueLeftWheel = slip(torqueLeftWheel);
+    if (mot.rightWheel.touchingEdge) torqueRightWheel = slip(torqueRightWheel);
+  }
+
   calculateWheelForces(mot, mot.leftWheel, i1, j1,
     mot.spec.leftWheelDx, mot.spec.leftWheelDy, torqueLeftWheel, leftOut);
   calculateWheelForces(mot, mot.rightWheel, i1, j1,

@@ -173,7 +173,11 @@ const escapeHtml = (s) =>
 const hiveCount = (data) => (data.objects || []).filter((o) => o.type === OBJ.APPLE).length;
 
 // The scale runs to 7 so the second half of the game has somewhere to go.
-const MAX_DIFFICULTY = 7;
+// Ten, not seven: the levels now run from a flat field you cannot fall off
+// to the finale, and a scale that tops out before the last four levels do
+// cannot show that. Keep it in step with the highest `difficulty` in
+// levels.js.
+const MAX_DIFFICULTY = 10;
 
 function difficultyDots(n) {
   if (!n) return '';
@@ -185,7 +189,14 @@ function difficultyDots(n) {
 // A card rather than a row: a picture of the cave says more about which
 // level this is than its name does, and a tick you can see across a room
 // says more about having finished it than a time in small print.
-function levelRow(entry, index, times) {
+/**
+ * @param {number} index position in the full level list, which is what
+ *   starting a level needs.
+ * @param {number} ordinal what to print on the tile: where this level sits
+ *   in the list being shown. Worlds each count from one, so the first snow
+ *   level is 1 and not 21.
+ */
+function levelRow(entry, index, times, ordinal) {
   const name = entry.data.name;
   const cleared = clearedOn(times, name);
   const done = cleared.length > 0;
@@ -198,7 +209,7 @@ function levelRow(entry, index, times) {
   li.innerHTML = `
     <span class="shot">
       <img src="${shot}" alt="" draggable="false">
-      <span class="num">${index + 1}</span>
+      <span class="num">${ordinal}</span>
       ${done ? `<span class="tick" title="Klarad med ${cleared.map((v) => v.name.toLowerCase()).join(' och ')}">${cleared.map((v) => v.emoji).join('')}</span>` : ''}
     </span>
     <span class="name">
@@ -263,16 +274,18 @@ function renderLevelList() {
   // costs nothing and keeps the two views from disagreeing.
   const builtIn = $('levelList');
   builtIn.innerHTML = '';
+  let shown = 0;
   entries.forEach((entry, index) => {
     if (entry.custom || biomeOf(entry.data) !== openBiomeId) return;
-    builtIn.appendChild(levelRow(entry, index, times));
+    builtIn.appendChild(levelRow(entry, index, times, ++shown));
   });
 
   const custom = $('customList');
   custom.innerHTML = '';
+  let made = 0;
   entries.forEach((entry, index) => {
     if (!entry.custom) return;
-    const li = levelRow(entry, index, times);
+    const li = levelRow(entry, index, times, ++made);
     const del = document.createElement('button');
     del.className = 'del';
     del.textContent = '✕';
@@ -287,9 +300,12 @@ function renderLevelList() {
   });
   $('customEmpty').classList.toggle('hidden', customLevels.length > 0);
 
-  const cleared = LEVELS.filter((l) => clearedOn(times, l.name).length > 0).length;
-  $('progressFill').style.width = `${(cleared / LEVELS.length) * 100}%`;
-  $('progressText').textContent = `${cleared} av ${LEVELS.length} banor klarade`;
+  // The bar under an open world counts that world, not the whole game: it
+  // sits beneath that world's levels, so counting anything else is a lie.
+  const here = LEVELS.filter((l) => biomeOf(l) === openBiomeId);
+  const cleared = here.filter((l) => clearedOn(times, l.name).length > 0).length;
+  $('progressFill').style.width = here.length ? `${(cleared / here.length) * 100}%` : '0%';
+  $('progressText').textContent = `${cleared} av ${here.length} banor klarade`;
 }
 
 // ------------------------------------------------------------ vehicles
@@ -452,6 +468,7 @@ function startReplay(index, vehicleId = currentVehicle) {
 
   currentIndex = index;
   renderer.fitScale();
+  renderer.setBiome(level.biome);
   renderer.horizonY = level.bounds.maxY * 0.55 + level.bounds.minY * 0.45;
   renderer.lead = { x: 0, y: 0 };
   renderer.camInit = false;

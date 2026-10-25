@@ -247,6 +247,7 @@ export class Editor {
 
   render(wallClock) {
     const r = this.renderer;
+    r.setBiome(this.level.biome);
     r.clear();
     this.drawGrid();
     r.drawTerrain(this.level);

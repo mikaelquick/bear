@@ -16,7 +16,7 @@ export const DEFAULT_BIOME = 'forest';
 
 export const BIOMES = [
   { id: 'forest', name: 'Skogen', emoji: '🌲' },
-  { id: 'snow', name: 'Snön', emoji: '❄️', locked: true },
+  { id: 'snow', name: 'Snön', emoji: '❄️' },
 ];
 
 export const biomeOf = (data) => data.biome || DEFAULT_BIOME;
