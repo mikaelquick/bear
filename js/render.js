@@ -747,39 +747,50 @@ export class Renderer {
     ctx.lineJoin = 'round';
     ctx.lineCap = 'round';
 
-    // The wedge. One straight line from the bumper to the roof peak and one
-    // straight line down to the tailgate is the whole silhouette, and it is
-    // the only car shape a four-year-old can draw from memory.
-    // The wedge. One straight line from the bumper up to the roof peak and
-    // one longer, shallower line down to the tailgate: that is the whole
-    // silhouette, and it is the only car shape a four-year-old can draw
-    // from memory. The bottom edge arcs up over each wheel, which is the
-    // one detail that stops a slab on two circles reading as a slab on two
-    // circles.
+    // The silhouette, at the real truck's proportions: 5.8 m long and
+    // 2.0 m tall, a ratio of 2.9 against the real 3.17. Getting there is
+    // what the low driving position is for — see headUp in vehicles.js.
+    // Before that the car was 2.2 and read as a van, which is what Mikael
+    // kept calling out and was right about.
     //
-    // These numbers were fitted on paper rather than by eye in the game:
-    // the head is the part that kills you, so it has to be visibly inside
-    // the cabin, and the first few shapes either decapitated the bear or
-    // came out like a tent. See the note on bodyDy in vehicles.js.
-    const FLOOR = -0.34;
+    // A blunt low nose, one long straight rise, a flat roof over the
+    // cabin, then down to a tall tailgate. The wheel arches are cut as
+    // angular notches rather than round ones, which is the detail that
+    // says "this one" rather than "a car".
+    const FLOOR = -0.56;
+    const ROOF = 1.02;
     const shell = () => {
       ctx.beginPath();
-      ctx.moveTo(2.30, FLOOR);
-      ctx.lineTo(2.30, 0.06);
-      ctx.lineTo(0.30, 1.42);
-      ctx.lineTo(-2.30, 0.44);
-      ctx.lineTo(-2.30, FLOOR);
-      ctx.lineTo(-1.86, FLOOR);
-      ctx.quadraticCurveTo(-1.30, FLOOR + 0.37, -0.74, FLOOR);
-      ctx.lineTo(0.74, FLOOR);
-      ctx.quadraticCurveTo(1.30, FLOOR + 0.37, 1.86, FLOOR);
+      ctx.moveTo(2.80, FLOOR);
+      ctx.lineTo(2.80, -0.18);          // blunt front face, not a beak
+      ctx.lineTo(0.34, 0.90);
+      ctx.quadraticCurveTo(0.10, ROOF, -0.14, ROOF);
+      ctx.lineTo(-1.34, ROOF);
+      ctx.quadraticCurveTo(-1.56, ROOF, -1.74, 0.96);
+      ctx.lineTo(-2.80, 0.66);          // a tall tailgate, as on the real one
+      ctx.lineTo(-2.80, FLOOR);
+      ctx.lineTo(-2.28, FLOOR);
+      ctx.lineTo(-2.08, -0.20);
+      ctx.lineTo(-1.12, -0.20);
+      ctx.lineTo(-0.92, FLOOR);
+      ctx.lineTo(0.92, FLOOR);
+      ctx.lineTo(1.12, -0.20);
+      ctx.lineTo(2.08, -0.20);
+      ctx.lineTo(2.28, FLOOR);
       ctx.closePath();
     };
+
+    // Brushed stainless: a band of light across the middle of the flank
+    // with the panel darker above and below it. A flat fill or a plain
+    // top-to-bottom ramp both read as painted card; it is the band that
+    // reads as metal.
     const base = mot.frameColor || PALETTE.rim;
-    const g = ctx.createLinearGradient(-2.3, FLOOR, 1.5, 1.4);
-    g.addColorStop(0, shade(base, -0.42));
-    g.addColorStop(0.55, shade(base, -0.12));
-    g.addColorStop(1, shade(base, 0.3));
+    const g = ctx.createLinearGradient(0, ROOF, 0, FLOOR);
+    g.addColorStop(0, shade(base, -0.30));
+    g.addColorStop(0.40, shade(base, 0.30));
+    g.addColorStop(0.50, shade(base, 0.46));
+    g.addColorStop(0.60, shade(base, 0.06));
+    g.addColorStop(1, shade(base, -0.48));
     shell();
     ctx.fillStyle = g;
     ctx.fill();
@@ -787,125 +798,229 @@ export class Renderer {
     ctx.lineWidth = 0.05;
     ctx.stroke();
 
-    // The crease along the flank, which is what stops the flat panel
-    // reading as a slab of card.
-    ctx.strokeStyle = 'rgba(255,255,255,0.2)';
+    ctx.save();
+    shell();
+    ctx.clip();
+
+    // The crease under the glass, which is the one line the flat flank
+    // needs to stop being a sheet of card.
+    ctx.strokeStyle = 'rgba(255,255,255,0.22)';
     ctx.lineWidth = 0.035;
     ctx.beginPath();
-    ctx.moveTo(2.24, 0.0);
-    ctx.lineTo(-2.24, 0.26);
+    ctx.moveTo(2.56, 0.00);
+    ctx.lineTo(-2.74, 0.18);
     ctx.stroke();
+
+    // Door shuts and a handle, so the window sill is a door top rather
+    // than a blade across the bear.
+    ctx.strokeStyle = 'rgba(16, 21, 30, 0.42)';
+    ctx.lineWidth = 0.04;
+    ctx.beginPath();
+    ctx.moveTo(1.76, 0.06);
+    ctx.lineTo(1.70, -0.18);
+    ctx.moveTo(-1.32, 0.14);
+    ctx.lineTo(-1.36, -0.18);
+    ctx.stroke();
+    ctx.strokeStyle = 'rgba(240, 246, 255, 0.45)';
+    ctx.lineWidth = 0.055;
+    ctx.beginPath();
+    ctx.moveTo(0.20, -0.06);
+    ctx.lineTo(0.64, -0.05);
+    ctx.stroke();
+    ctx.restore();
 
     // Cabin. Traced once as a path, used first as a clip for the bear and
     // then again for the glass over the top of him.
+    // The glass follows the body instead of sitting in a hole in it. On
+    // the real truck the bonnet and the windscreen are one straight line
+    // with only a thin frame between the glass and the roof edge; drawn as
+    // a trapezoid set well inside the panel, with a thick silver band
+    // above it, the whole car reads as a van with a small window — which
+    // is exactly what it looked like. So the windscreen runs nearly
+    // parallel to the nose line, 27 degrees against the nose's 24, and the
+    // frame is kept to about eight centimetres all the way round.
     const cabin = () => {
       ctx.beginPath();
-      ctx.moveTo(1.62, 0.34);
-      ctx.lineTo(0.42, 1.26);
-      ctx.lineTo(-0.95, 0.94);
-      ctx.lineTo(-1.05, 0.34);
+      ctx.moveTo(1.80, 0.08);
+      ctx.lineTo(0.22, 0.88);
+      ctx.lineTo(-1.18, 0.88);
+      ctx.lineTo(-1.28, 0.08);
       ctx.closePath();
     };
     cabin();
-    ctx.fillStyle = '#141d2b';
+    ctx.fillStyle = '#111823';
     ctx.fill();
 
-    // The bear, seen through the window. His head is wherever the physics
-    // put it, converted into car-local metres, so he leans with the car and
-    // ducks behind the sill on a hard landing instead of floating.
-    const rel = sub(mot.headR, mot.bike.r);
-    const hx = (rel.x * i1.x + rel.y * i1.y) * face;
-    const hy = rel.x * j1.x + rel.y * j1.y;
+    // The bear. His head and his body are wherever the physics put them,
+    // converted into car-local metres, so he leans and bounces as he does
+    // on the bikes and ducks behind the sill on a hard landing.
+    const toLocal = (p) => {
+      const rel = sub(p, mot.bike.r);
+      return { x: (rel.x * i1.x + rel.y * i1.y) * face, y: rel.x * j1.x + rel.y * j1.y };
+    };
     ctx.save();
     cabin();
     ctx.clip();
-    ctx.translate(hx, hy);
-    ctx.scale(face, 1); // undo the mirror so he always faces the way he drives
-    this.drawBearHeadLocal(dead);
+    this.drawBearDriving(toLocal(mot.bodyR), toLocal(mot.headR), dead);
     ctx.restore();
 
     // Glass over him: a sheen, not a pane, or he disappears behind it.
     cabin();
-    ctx.fillStyle = 'rgba(150, 200, 255, 0.17)';
+    const glass = ctx.createLinearGradient(0, 0.95, 0, 0.1);
+    glass.addColorStop(0, 'rgba(185, 220, 255, 0.28)');
+    glass.addColorStop(0.5, 'rgba(120, 170, 230, 0.08)');
+    glass.addColorStop(1, 'rgba(90, 130, 190, 0.16)');
+    ctx.fillStyle = glass;
     ctx.fill();
     ctx.strokeStyle = shade(base, -0.5);
     ctx.lineWidth = 0.045;
     ctx.stroke();
     ctx.beginPath();
-    ctx.moveTo(1.44, 0.44);
-    ctx.lineTo(0.5, 1.16);
-    ctx.strokeStyle = 'rgba(255,255,255,0.3)';
+    ctx.moveTo(1.58, 0.21);
+    ctx.lineTo(0.42, 0.80);
+    ctx.strokeStyle = 'rgba(255,255,255,0.26)';
     ctx.lineWidth = 0.07;
     ctx.stroke();
 
-    // Light bar across the nose, and one across the tail.
-    ctx.strokeStyle = '#ffeec0';
-    ctx.lineWidth = 0.09;
+    // The light bars. On the real thing they run the full width of the
+    // car; from the side you catch the end of one and the sliver that
+    // wraps round the corner, so each is a short bright run along the
+    // body edge rather than a dot.
+    ctx.lineCap = 'butt';
+    ctx.strokeStyle = '#fff3d2';
+    ctx.lineWidth = 0.075;
     ctx.beginPath();
-    ctx.moveTo(2.26, -0.08);
-    ctx.lineTo(2.26, 0.02);
+    ctx.moveTo(2.78, -0.18);
+    ctx.lineTo(2.22, 0.07);
     ctx.stroke();
-    ctx.strokeStyle = '#ff5a4a';
+    ctx.strokeStyle = '#ff5f4d';
     ctx.beginPath();
-    ctx.moveTo(-2.26, 0.2);
-    ctx.lineTo(-2.26, 0.38);
+    ctx.moveTo(-2.78, 0.66);
+    ctx.lineTo(-2.26, 0.52);
     ctx.stroke();
+    ctx.lineCap = 'round';
 
     ctx.restore();
 
     this.drawTank(mot);
   }
 
-  // The bear from the chest up, drawn at the origin in local metres. The
-  // full drawBear hangs arms and legs off a bike; in a car none of that is
-  // visible, so this is the part that is.
-  drawBearHeadLocal(dead) {
+  /**
+   * The bear, seen through the side window. Head, shoulders and a sliver
+   * of chest, and nothing else.
+   *
+   * He had a full torso, two arms and a steering wheel before this. At
+   * the size the car is actually drawn it was a tangle, and the car is a
+   * self-driving one anyway — so the arms and the wheel are gone and what
+   * is left is a bear sitting in a seat looking where he is going. The
+   * head circle is exactly the hitbox, so it is drawn where the
+   * simulation says and not where it would look nicest.
+   *
+   * @param {{x: number, y: number}} body the physics body, in local metres
+   * @param {{x: number, y: number}} head the physics head, likewise
+   */
+  drawBearDriving(body, head, dead) {
     const { ctx } = this;
-    const r = HEAD_RADIUS;
-    ctx.lineWidth = 0.04;
+    const hr = HEAD_RADIUS;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+
+    // The seat, drawn first so he sits in front of it rather than floating
+    // in a black box. A headrest beside his ear is the clearest "he is in
+    // a chair" there is, and it is most of what makes this read at all.
+    ctx.fillStyle = '#2a3140';
+    ctx.strokeStyle = '#1a1f29';
+    ctx.lineWidth = 0.035;
+    ctx.beginPath();
+    ctx.moveTo(-0.22, 0.00);
+    ctx.lineTo(-0.58, 0.06);
+    ctx.lineTo(-0.54, 0.52);
+    ctx.quadraticCurveTo(-0.52, 0.68, -0.37, 0.68);
+    ctx.quadraticCurveTo(-0.21, 0.68, -0.21, 0.52);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+
+    // Shoulders. Drawn from a point below the body rather than from the
+    // body itself, so the chest reaches the window sill instead of
+    // stopping in mid air above it — the bear used to end in a straight
+    // horizontal cut with daylight under him.
+    const dx = head.x - body.x;
+    const dy = head.y - body.y;
+    const l = Math.hypot(dx, dy) || 1;
+    const nx = -dy / l;
+    const ny = dx / l;
+    const lowX = body.x - dx * 1.6;
+    const lowY = body.y - dy * 1.6;
+    const hip = 0.31;
+    const shoulderW = 0.26;
+    ctx.beginPath();
+    ctx.moveTo(lowX + nx * hip, lowY + ny * hip);
+    ctx.lineTo(head.x + nx * shoulderW, head.y + ny * shoulderW);
+    ctx.quadraticCurveTo(
+      head.x + nx * shoulderW * 0.7, head.y + ny * shoulderW * 0.7,
+      head.x + nx * 0.12, head.y + ny * 0.12
+    );
+    ctx.lineTo(head.x - nx * 0.12, head.y - ny * 0.12);
+    ctx.quadraticCurveTo(
+      head.x - nx * shoulderW * 0.7, head.y - ny * shoulderW * 0.7,
+      head.x - nx * shoulderW, head.y - ny * shoulderW
+    );
+    ctx.lineTo(lowX - nx * hip, lowY - ny * hip);
+    ctx.closePath();
+    ctx.fillStyle = PALETTE.fur;
+    ctx.fill();
+    ctx.strokeStyle = PALETTE.furDark;
+    ctx.lineWidth = 0.03;
+    ctx.stroke();
+
+    ctx.save();
+    ctx.translate(head.x, head.y);
 
     // Ears
     ctx.fillStyle = PALETTE.furDark;
     for (const ex of [-0.62, 0.52]) {
       ctx.beginPath();
-      ctx.arc(ex * r, 0.74 * r, 0.42 * r, 0, Math.PI * 2);
+      ctx.arc(ex * hr, 0.74 * hr, 0.42 * hr, 0, Math.PI * 2);
       ctx.fill();
     }
 
-    const g = ctx.createLinearGradient(0, r, 0, -r);
+    // Head. This circle is exactly the hitbox.
+    const g = ctx.createLinearGradient(0, hr, 0, -hr);
     g.addColorStop(0, PALETTE.furLight);
     g.addColorStop(1, PALETTE.fur);
     ctx.beginPath();
-    ctx.arc(0, 0, r, 0, Math.PI * 2);
+    ctx.arc(0, 0, hr, 0, Math.PI * 2);
     ctx.fillStyle = g;
     ctx.fill();
+    ctx.lineWidth = 0.04;
     ctx.strokeStyle = dead ? PALETTE.danger : PALETTE.furDark;
     ctx.stroke();
 
-    // Snout and eyes, facing forward (+x).
+    // Snout and eye face +x, which is the way the car is going.
     ctx.beginPath();
-    ctx.ellipse(0.42 * r, -0.16 * r, 0.42 * r, 0.3 * r, 0, 0, Math.PI * 2);
+    ctx.ellipse(0.42 * hr, -0.16 * hr, 0.42 * hr, 0.3 * hr, 0, 0, Math.PI * 2);
     ctx.fillStyle = PALETTE.snout;
     ctx.fill();
     ctx.fillStyle = '#1b1109';
     ctx.beginPath();
-    ctx.ellipse(0.62 * r, -0.08 * r, 0.14 * r, 0.1 * r, 0, 0, Math.PI * 2);
+    ctx.ellipse(0.62 * hr, -0.08 * hr, 0.14 * hr, 0.1 * hr, 0, 0, Math.PI * 2);
     ctx.fill();
-    for (const ey of [0.34, -0.3]) {
+    if (dead) {
+      ctx.lineWidth = 0.035;
+      ctx.strokeStyle = '#1b1109';
       ctx.beginPath();
-      if (dead) {
-        ctx.lineWidth = 0.035;
-        ctx.strokeStyle = '#1b1109';
-        ctx.moveTo(0.1 * r, (ey + 0.12) * r);
-        ctx.lineTo(0.42 * r, (ey - 0.12) * r);
-        ctx.moveTo(0.42 * r, (ey + 0.12) * r);
-        ctx.lineTo(0.1 * r, (ey - 0.12) * r);
-        ctx.stroke();
-      } else {
-        ctx.arc(0.26 * r, ey * r, 0.12 * r, 0, Math.PI * 2);
-        ctx.fill();
-      }
+      ctx.moveTo(0.1 * hr, 0.46 * hr);
+      ctx.lineTo(0.42 * hr, 0.22 * hr);
+      ctx.moveTo(0.42 * hr, 0.46 * hr);
+      ctx.lineTo(0.1 * hr, 0.22 * hr);
+      ctx.stroke();
+    } else {
+      ctx.beginPath();
+      ctx.arc(0.26 * hr, 0.34 * hr, 0.12 * hr, 0, Math.PI * 2);
+      ctx.fill();
     }
+    ctx.restore();
   }
 
   // Dark tyre, bright hubcap. No spokes: a car wheel at this size is a
@@ -928,20 +1043,30 @@ export class Renderer {
     ctx.save();
     ctx.translate(x, y);
     ctx.rotate(-wheel.rotation);
+    // An aero cover: a pale disc with six angular cuts. Flat and graphic
+    // rather than spoked, which is what the covers on this car actually
+    // are and what stops it reading as a motorbike wheel.
+    const face = ctx.createLinearGradient(-r, -r, r, r);
+    face.addColorStop(0, '#c3cad6');
+    face.addColorStop(1, '#848d9c');
     ctx.beginPath();
-    ctx.arc(0, 0, r * 0.58, 0, Math.PI * 2);
-    ctx.fillStyle = '#9aa2ae';
+    ctx.arc(0, 0, r * 0.68, 0, TURN);
+    ctx.fillStyle = face;
     ctx.fill();
-    // Five shallow cuts, so the hub visibly turns without reading as spokes.
-    ctx.strokeStyle = '#5e6775';
-    ctx.lineWidth = Math.max(1, 0.05 * s);
-    ctx.beginPath();
-    for (let i = 0; i < 5; i++) {
-      const a = (i / 5) * TURN;
-      ctx.moveTo(Math.cos(a) * r * 0.22, Math.sin(a) * r * 0.22);
-      ctx.lineTo(Math.cos(a) * r * 0.5, Math.sin(a) * r * 0.5);
+    ctx.fillStyle = '#20252e';
+    for (let i = 0; i < 6; i++) {
+      const a = (i / 6) * TURN;
+      ctx.beginPath();
+      ctx.moveTo(Math.cos(a) * r * 0.26, Math.sin(a) * r * 0.26);
+      ctx.lineTo(Math.cos(a + 0.26) * r * 0.6, Math.sin(a + 0.26) * r * 0.6);
+      ctx.lineTo(Math.cos(a + 0.46) * r * 0.6, Math.sin(a + 0.46) * r * 0.6);
+      ctx.closePath();
+      ctx.fill();
     }
-    ctx.stroke();
+    ctx.beginPath();
+    ctx.arc(0, 0, r * 0.2, 0, TURN);
+    ctx.fillStyle = '#2b313c';
+    ctx.fill();
     ctx.restore();
   }
 
@@ -954,15 +1079,15 @@ export class Renderer {
     ctx.translate(this.sx(mot.bike.r.x), this.sy(mot.bike.r.y));
     ctx.rotate(-mot.bike.rotation);
     ctx.scale(s, -s);
-    for (const px of [-1.1, 0, 1.1]) {
-      const g = ctx.createLinearGradient(px, -0.34, px, -2.1);
+    for (const px of [-2.1, 0, 2.1]) {
+      const g = ctx.createLinearGradient(px, -0.56, px, -2.3);
       g.addColorStop(0, 'rgba(226, 242, 255, 0.85)');
       g.addColorStop(1, 'rgba(180, 215, 255, 0)');
       ctx.beginPath();
-      ctx.moveTo(px - 0.26, -0.34);
-      ctx.lineTo(px + 0.26, -0.34);
-      ctx.lineTo(px + 0.55, -2.1);
-      ctx.lineTo(px - 0.55, -2.1);
+      ctx.moveTo(px - 0.26, -0.56);
+      ctx.lineTo(px + 0.26, -0.56);
+      ctx.lineTo(px + 0.55, -2.3);
+      ctx.lineTo(px - 0.55, -2.3);
       ctx.closePath();
       ctx.fillStyle = g;
       ctx.fill();
@@ -982,7 +1107,7 @@ export class Renderer {
     const w = 1.9 * s;
     const h = 0.17 * s;
     const x = this.sx(mot.bike.r.x) - w / 2;
-    const y = this.sy(mot.bike.r.y) - 1.95 * s;
+    const y = this.sy(mot.bike.r.y) - 1.28 * s;
 
     ctx.save();
     ctx.fillStyle = 'rgba(10, 16, 28, 0.6)';

@@ -92,6 +92,13 @@ satt bredvid är borttagen — hörnet visas bara på pekskärmar, och där hade
 göra. Installerad finns ingen webbläsarram kvar att gömma; på iPhone finns inte
 Fullscreen API alls; och där det fungerar finns växeln kvar i menyfoten.
 
+**Målrutan är två rutor.** Ett lopp som slog den sparade tiden får först en egen ruta
+— "Nytt rekord!", tiden stor, och en enda väg vidare — och därefter den som frågar vad
+man vill göra sedan. Firandet är ett ögonblick, inte en rad ovanför tre saker att
+trycka på, och när en highscorelista kommer är det i den första rutan namnet skrivs in:
+fältet går mellan tiden och knappen och inget annat behöver flytta. Rutan efter visar
+bara knapparna. Tiden står kvar i HUD:en bakom, där den stått hela loppet.
+
 Pausrutan är därmed fem rader: *Fortsätt*, *Börja om*, *Byt fordon*, *Banor* och
 *Avsluta appen*. **Byt fordon** finns där för att man ibland bara råkat starta på fel
 maskin, och då ska man inte behöva ut till banlistan och tillbaka. Den öppnar samma
@@ -277,10 +284,10 @@ långsammare är aldrig rätt svar på någon bana, så varje fordon byter bort 
 
 | | Motorcykeln 🏍️ | Cykeln 🚲 | Elbilen 🚙 |
 |---|---|---|---|
-| Dragkraft | 600 | 420 | 700 |
-| Topp (hjulvarv × radie) | 110 × 0,4 | 98 × 0,36 | 45 × 0,38 |
+| Dragkraft | 600 | 420 | 950 |
+| Topp (hjulvarv × radie) | 110 × 0,4 | 98 × 0,36 | 62 × 0,38 |
 | Vikt | 200 | 120 | 260 |
-| Hjulbas | 1,7 | 1,3 | 2,6 |
+| Hjulbas | 1,7 | 1,3 | 3,4 |
 | Volt | 12 | 15 | — |
 | Tryckluft | — | — | 4200 N, 1,5 s |
 
@@ -311,14 +318,31 @@ någonting om fordon alls — precis som de inte säger någonting om världar. 
 vill ha ett visst fordon skriver `vehicles: ['car']`, och då är det bara det som erbjuds
 i väljaren, bara det `levels.test.js` provar, och "Byt fordon" i pausrutan göms.
 
-Hur bilen ritas står för sig: en kil, en rak linje från stötfångaren upp till takets
-topp och en längre, flackare ner till bakluckan, med hjulhusen urgröpta ur underkanten.
-Måtten är **inpassade på papper, inte med ögat i spelet**: huvudet är det som dödar en,
-så det måste synas sitta inne i kupén, och de första formerna antingen kapade björnen
-eller kom ut som ett tält. Det är också därför björnen sitter lägre i bilen än på en
-motorcykel (`bodyDy` 0,22 mot 0,44) — med huvudet på cykelhöjd krävdes ett tak så högt
-att bilen blev kvadratisk. Lägre än så går inte: kroppsfjäderns tillåtna låda i
-`move.js` bottnar kring 0,2.
+Hur bilen ritas står för sig, och tog fem försök. **Det som styr allt är hur högt
+björnens huvud sitter**, eftersom huvudet är det som dödar en och därför måste synas
+sitta inne i kupén. På cykelhöjd (`HEAD_UP` 0,63 över kroppen) krävdes ett tak så högt
+att bilen blev 2,2 gånger längre än hög — riktiga Cybertrucken är 3,17, och allt under
+ungefär 2,8 läser som skåpbil hur man än ritar taket. Därför sitter föraren lågt:
+`bodyDy` 0,22 mot cyklarnas 0,44, och `headUp` 0,24 mot 0,63. Med det på plats blev
+bilen 5,6 × 2,0 m, kvot 2,8.
+
+Tre saker till som gick fel innan de gick rätt, var och en synlig på skärmen och ingen
+av dem uppenbar på papper:
+
+- **Taket var en spets.** Den riktiga har ett *platt* tak över kupén ungefär en
+  tredjedel av längden, och först därefter ner till en baklucka som står nästan lika
+  högt som taket. En triangel är inte en Cybertruck.
+- **Hjulen satt för tätt.** Hjulbasen var 2,6 under en 5,8 m kaross, alltså 1,6 m
+  överhäng i båda ändar; den riktiga har hjulen 64 % av längden isär. Bakdelen hängde
+  och drattade. Hjulbasen är 3,4 nu, vilket också gör bilen stadigare.
+- **Glaset satt i ett hål i plåten.** Ett tjockt silverband mellan rutan och takkanten
+  är precis vad en skåpbil har. På den riktiga är motorhuven och vindrutan *samma raka
+  linje* med en tunn ram, så kupén följer nu nosens vinkel — 27 grader mot nosens 24 —
+  och ramen är åtta centimeter hela vägen runt.
+
+Björnen i bilen är bara huvud, axlar och en bit bröst, i en stol med nackstöd. Han hade
+hel kropp, två armar och en ratt ett tag; i den storlek bilen faktiskt ritas blev det en
+röra, och bilen är ju självkörande.
 
 Och cykeln har **ekerhjul**. Motorcykelns hjul är en fylld skiva med fem grova ekrar;
 cykelns är mest luft — tunt däck, blank fälg, tolv tunna ekrar snedställda mot navet och

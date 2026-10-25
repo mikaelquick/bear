@@ -16,7 +16,7 @@
 
 import {
   DEFAULT_BIKE, DEFAULT_LEFT_WHEEL, DEFAULT_RIGHT_WHEEL, DEFAULT_BODY_R,
-  GAS_TORQUE, MAX_ANGULAR_VELOCITY, VOLT_ANGULAR_VELOCITY, BODY_DY,
+  GAS_TORQUE, MAX_ANGULAR_VELOCITY, VOLT_ANGULAR_VELOCITY, BODY_DY, HEAD_UP,
 } from './constants.js';
 
 // The wheels sit this far below the bike's centre. Shared by every vehicle:
@@ -32,7 +32,7 @@ const WHEEL_DROP = DEFAULT_BIKE.r.y - DEFAULT_LEFT_WHEEL.r.y; // 0.6
 function build({ wheelbase, mass, inertia, wheelRadius, wheelMass, wheelInertia,
                  gasTorque, maxAngularVelocity, voltAngularVelocity, frameColor,
                  pedals = false, body = 'bike', volt = true, canTurn = true,
-                 bodyDy = BODY_DY,
+                 bodyDy = BODY_DY, headUp = HEAD_UP,
                  thrust = 0, thrustTank = 0, thrustRefill = 1,
                  selfLevel = 0, selfLevelDamping = 0 }) {
   const half = wheelbase / 2;
@@ -49,6 +49,7 @@ function build({ wheelbase, mass, inertia, wheelRadius, wheelMass, wheelInertia,
     rightWheelDx: half,
     rightWheelDy: -WHEEL_DROP,
     bodyDy,
+    headUp,
     gasTorque,
     maxAngularVelocity,
     voltAngularVelocity,
@@ -165,17 +166,26 @@ export const VEHICLES = [
     //
     // Nothing here is a ported constant. The whole vehicle is ours.
     spec: build({
-      wheelbase: 2.6,
+      // 3.4 m, not the 2.6 it started at. The real truck puts its wheels
+      // 64 % of its length apart; at 2.6 under a 5.8 m body the car hung
+      // 1.6 m out at each end and the back drooped like a melted wedge.
+      // This also makes it steadier, which suits it.
+      wheelbase: 3.4,
       mass: 260,
       inertia: 260 * 1.05 * 1.05,
       wheelRadius: 0.38,
       wheelMass: 12,
       wheelInertia: 0.2 * 12 * 0.38 * 0.38,
-      // 45 rad/s on a 0.38 m wheel is about 17 m/s, call it 60 km/h. The
-      // first try left the cap where the bikes have it and the car did 168
-      // on the flat, which is not a go-kart, it is a blur.
-      gasTorque: 700,
-      maxAngularVelocity: 45,
+      // 62 rad/s on a 0.38 m wheel is about 23.5 m/s, call it 85 km/h, and
+      // it is the second answer to this question. The first try left the
+      // cap where the bikes have it and the car did 168 on the flat, which
+      // is not a go-kart but a blur; 45 was then too sedate for something
+      // meant to feel like a fast electric car. The ceiling on this is the
+      // camera, not the engine: the view is about 24 m wide and the lead
+      // caps at 4.5 m, so past roughly 25 m/s you arrive at things before
+      // you can see them.
+      gasTorque: 950,
+      maxAngularVelocity: 62,
       voltAngularVelocity: 0,
       frameColor: '#c9ced6',
       body: 'car',
@@ -188,6 +198,14 @@ export const VEHICLES = [
       // body spring's allowed box (move.js) bottoms out around 0.2, so
       // this is about as low as the rider goes.
       bodyDy: 0.22,
+      // And his head sits 0.34 above that rather than the bikes' 0.63.
+      // This is the number that decides how tall the car is: the head is
+      // the hitbox, so it has to be inside the roof, and at bike height
+      // the roof had to go so high the thing came out shaped like a van —
+      // 2.2 times longer than tall against the real truck's 3.2. Lower
+      // also happens to be true: you do not sit in a car with your head
+      // where a motorcyclist's is.
+      headUp: 0.24,
       // It takes 2840 N to hold the car's own 284 kg still, so 4200 is
       // about a half-g climb: enough to leave the ground deliberately,
       // nowhere near enough to fly. The tank is the whole game — a second

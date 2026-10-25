@@ -452,6 +452,21 @@
 </div>
 
 <!-- Result -->
+<!-- A new record gets a box of its own, shown before the one with the
+     buttons. Two reasons it is separate: the celebration is a moment
+     rather than a line above three things to press, and a highscore list
+     will want a name typed in — and that field has somewhere to go here,
+     between the time and the single way out. -->
+<div id="record" class="overlay hidden">
+  <div class="panel narrow">
+    <h2>Nytt rekord!</h2>
+    <p id="recordText"></p>
+    <div class="row" id="recordButtons"></div>
+  </div>
+</div>
+
+<!-- And the box after it is only what to do next. The time is still on
+     the HUD behind, which is where it has been all run. -->
 <div id="dialog" class="overlay hidden">
   <div class="panel narrow">
     <h2 id="dialogTitle"></h2>

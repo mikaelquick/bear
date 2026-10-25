@@ -14,6 +14,11 @@ export const SPRING_TENSION_COEFFICIENT = 10000.0; // N/m
 export const SPRING_RESISTANCE_COEFFICIENT = 1000.0; // N/(m/s)
 
 export const HEAD_RADIUS = 0.238; // m
+// How far the head sits above the rider's body. A ported constant for the
+// bikes; the car overrides it, because a driver's head is not perched at
+// motorcyclist height and a roof built over one that is comes out so tall
+// the car reads as a van. See vehicles.js.
+export const HEAD_UP = 0.63; // m
 export const OBJECT_RADIUS = 0.4; // m
 
 export const MAX_ANGULAR_VELOCITY = 110.0;

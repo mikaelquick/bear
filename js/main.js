@@ -439,7 +439,7 @@ function showMenu() {
   renderer.fitScale();
   if (!demo) demo = new Demo(renderer, effects);
   show('menu');
-  hideAll('hud', 'dialog', 'pause', 'editorBar', 'editorHint', 'startHint',
+  hideAll('hud', 'dialog', 'record', 'pause', 'editorBar', 'editorHint', 'startHint',
           'touch', 'touchTop', 'replayBadge', 'rideChoice');
   hideToast();
 }
@@ -468,7 +468,7 @@ function startLevel(index, vehicleId = currentVehicle) {
 
   mode = 'play';
   document.body.classList.add('playing');
-  hideAll('menu', 'dialog', 'pause', 'editorBar', 'editorHint', 'replayBadge');
+  hideAll('menu', 'dialog', 'record', 'pause', 'editorBar', 'editorHint', 'replayBadge');
   show('hud', 'startHint', 'touch', 'touchTop');
   $('hudLevel').textContent = level.name;
   const best = loadTimes()[recordKey(level.name, currentVehicle)];
@@ -505,7 +505,7 @@ function startReplay(index, vehicleId = currentVehicle) {
   replay = { level, ghost, time: 0, hold: 0, lastPos: null };
   mode = 'replay';
   document.body.classList.remove('playing');
-  hideAll('menu', 'dialog', 'pause', 'editorBar', 'editorHint', 'startHint', 'touch');
+  hideAll('menu', 'dialog', 'record', 'pause', 'editorBar', 'editorHint', 'startHint', 'touch');
   show('hud', 'replayBadge', 'touchTop');
   $('hudLevel').textContent = entry.data.name;
   $('hudBest').textContent = formatTime(ghost.centiseconds);
@@ -527,7 +527,7 @@ function openEditor(level) {
   renderer.shakeX = 0;
   renderer.shakeY = 0;
   renderer.camInit = true;
-  hideAll('menu', 'hud', 'dialog', 'pause', 'startHint', 'touch', 'touchTop', 'replayBadge');
+  hideAll('menu', 'hud', 'dialog', 'record', 'pause', 'startHint', 'touch', 'touchTop', 'replayBadge');
   show('editorBar', 'editorHint');
   hideToast();
 }
@@ -575,28 +575,56 @@ function hideToast() {
 
 // ---------------------------------------------------------------- dialogs
 
+// Finishing shows one box or two. A run that beat the stored time gets
+// the record box first, with one way out of it; then, either way, the box
+// that asks what to do next.
 function showResult() {
-  const entries = allLevels();
   const name = game.level.name;
   const time = game.finalTime;
   const isRecord = returnToEditor ? false : saveTime(name, time, currentVehicle);
+  const replaySaved = isRecord
+    ? saveReplay(game.level, time, game.recorder, currentVehicle)
+    : false;
 
-  let replaySaved = false;
-  if (isRecord) replaySaved = saveReplay(game.level, time, game.recorder, currentVehicle);
-  const best = loadTimes()[recordKey(name, currentVehicle)];
+  if (isRecord) showRecord(time, () => showFinished(name, replaySaved));
+  else showFinished(name, replaySaved);
+}
 
-  $('dialogTitle').textContent = isRecord ? 'Nytt rekord!' : 'Klarat!';
-  $('dialogText').innerHTML =
+/**
+ * The record box. One button, because the only thing to decide here is
+ * "yes, I saw that". When a highscore list arrives, the name field goes
+ * between the time and the button and this becomes a small form; nothing
+ * else has to move.
+ */
+function showRecord(time, onContinue) {
+  $('recordText').innerHTML =
     `<span class="result-time">${formatTime(time)}</span>` +
-    (returnToEditor
-      ? '<span class="fine">Testläge — tiden sparas inte.</span>'
-      : isRecord
-        ? '<span class="record-badge">personbästa</span>'
-        : `<span class="fine">Ditt rekord: ${formatTime(best)}</span>`);
+    '<span class="record-badge">personbästa</span>';
+  const buttons = $('recordButtons');
+  buttons.innerHTML = '';
+  addButton(buttons, '⭐', 'Vidare', () => {
+    hideAll('record');
+    onContinue();
+  });
+  $('record').classList.remove('hidden');
+}
 
-  // One per row, stacked. Four buttons wrapped across two lines put them
-  // in an order nobody reads, and on a phone they were small targets in
-  // the middle of the screen.
+// What to do next, and nothing else. The time and the record used to sit
+// above these; the time is on the HUD behind and the record has a box of
+// its own now, so this is three things to press and a word saying you got
+// there.
+//
+// One per row, stacked. Four buttons wrapped across two lines put them in
+// an order nobody reads, and on a phone they were small targets in the
+// middle of the screen.
+function showFinished(name, replaySaved) {
+  const entries = allLevels();
+  $('dialogTitle').textContent = returnToEditor ? 'Testet klart' : 'Klarat!';
+  $('dialogText').innerHTML = returnToEditor
+    ? '<span class="fine">Testläge — tiden sparas inte.</span>'
+    : '';
+  $('dialogText').classList.toggle('hidden', !returnToEditor);
+
   const buttons = $('dialogButtons');
   buttons.innerHTML = '';
   if (returnToEditor) {
@@ -615,7 +643,7 @@ function showResult() {
 }
 
 function restartRun() {
-  hideAll('dialog', 'pause');
+  hideAll('dialog', 'record', 'pause');
   hideToast();
   game.restart();
   show('startHint');
@@ -1343,7 +1371,9 @@ function frame(now) {
         ? 'Aj! Huvudet tog i. Tryck var som helst för att börja om.'
         : 'Aj! Huvudet tog i. Tryck Enter för att börja om.', 0);
     }
-    if (game.canShowResult && $('dialog').classList.contains('hidden')) showResult();
+    if (game.canShowResult
+        && $('dialog').classList.contains('hidden')
+        && $('record').classList.contains('hidden')) showResult();
   } else if (mode === 'replay' && replay) {
     renderReplay(dtMs / 1000, wallClock);
   } else if (mode === 'editor') {

@@ -6,7 +6,7 @@ import { rigidbodyMovement, bodyMovement } from './move.js';
 import { getTwoAnchorPoints, getTouchingObject } from './collision.js';
 import {
   SPRING_TENSION_COEFFICIENT, SPRING_RESISTANCE_COEFFICIENT,
-  GRAVITY, HEAD_RADIUS, VOLT_DELAY,
+  GRAVITY, HEAD_RADIUS, HEAD_UP, VOLT_DELAY,
   ANGULAR_SPRING_TENSION_COEFFICIENT, ANGULAR_SPRING_RESISTANCE_COEFFICIENT,
   COUNTERVOLT_ANGULAR_VELOCITY,
   GRAVITY_DIR, GRAVITY_VECTORS, OBJ,
@@ -97,9 +97,12 @@ export function setHeadPosition(mot) {
   const i1 = { x: Math.cos(mot.bike.rotation), y: Math.sin(mot.bike.rotation) };
   const j1 = rot90(i1);
   const s = mot.flipped ? 0.09 : -0.09;
+  // The bikes use the ported 0.63. The car sits its driver lower — see the
+  // note on HEAD_UP in constants.js.
+  const up = mot.spec ? mot.spec.headUp : HEAD_UP;
   mot.headR = {
-    x: mot.bodyR.x + i1.x * s + j1.x * 0.63,
-    y: mot.bodyR.y + i1.y * s + j1.y * 0.63,
+    x: mot.bodyR.x + i1.x * s + j1.x * up,
+    y: mot.bodyR.y + i1.y * s + j1.y * up,
   };
 }
 

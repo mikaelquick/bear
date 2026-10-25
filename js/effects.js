@@ -65,12 +65,12 @@ export class Effects {
     const ix = Math.cos(rot), iy = Math.sin(rot);
     const jx = -iy, jy = ix; // the car's up
     for (let i = 0; i < 3; i++) {
-      const along = -1.1 + i * 1.1;
+      const along = -2.1 + i * 2.1;
       const spread = (Math.random() - 0.5) * 0.5;
       const speed = 5 + Math.random() * 7;
       this.spawn({
-        x: mot.bike.r.x + ix * along - jx * 0.36,
-        y: mot.bike.r.y + iy * along - jy * 0.36,
+        x: mot.bike.r.x + ix * along - jx * 0.56,
+        y: mot.bike.r.y + iy * along - jy * 0.56,
         vx: -jx * speed + ix * spread * 3,
         vy: -jy * speed + iy * spread * 3,
         life: 0, maxLife: 0.16 + Math.random() * 0.2,
