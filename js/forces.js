@@ -37,6 +37,7 @@ export class Motor {
     this.frameColor = this.spec.frameColor;
     this.pedals = this.spec.pedals;
     this.body = this.spec.body;
+    this.wheelStyle = this.spec.wheelStyle;
     this.init();
   }
 

@@ -655,8 +655,31 @@ som skiljer de två loppen åt är vad man sitter på; på ny mark hade man lär
 Kullen byggs därför av `firstHill()` i `levels.js` — en funktion, inte en konstant, så
 att de tre banorna får var sina fält och ingen kan räcka över och ändra de andras.
 
+Och de ska **se ut** som det de är. En maskin som bara har en annan färg är samma
+maskin, så `body` har två nya värden (`'space'` och `'heavy'`) och hjulen har tre
+stilar (`disc`, `spoked`, `fat`). Bara *ramen* byts — stöttålar, hjul och björn står
+där fysiken sätter dem på varje tvåhjuling, vilket är varför `drawFrame` är den enda
+metoden som förgrenar sig på `body`.
+
+Två saker som var fel först och är värda att minnas:
+
+- **Björnens ben är en solid platta rakt ner genom mitten av varje tvåhjuling.** Allt
+  som ska kunna läsas måste därför sitta framför eller bakom benet. Första
+  rymdcykeln hade jetpacken och hela dess sken precis bakom benet, där ingenting av
+  det syntes. Den sitter på svansen nu.
+- **Hjulen hänger 0,6 m under ramens mitt**, och de rör sig dessutom på sina fjädrar.
+  Magnetens stänkskärmar ritades först på en fast höjd och svävade som ett par horn
+  över cykeln. De utgår från hjulens *faktiska* lägen nu, vilket både är rättare och
+  det enda som funkar.
+
 **🌙 Måncykeln** faller under 4,2 i stället för 10. Ett hopp man hade fått förtjäna
 på motorcykeln är en promenad, och en landning som hade brutit nacken är en fjäder.
+Ritad därefter också: en öppen rörtriangel man ser himlen genom, ingen kåpa, inget
+tanklock, tunna ekerhjul, och en kanister på svansen som lyser hela tiden och flammar
+upp när man ber om drag. Den är inte en jetmotor — maskinen har ingen `thrust` och en
+mätare hade varit en lögn. Den är *förklaringen till tyngdkraften*: saken hålls uppe,
+alltså faller den som den gör. Det är därför den lyser även när man rullar.
+
 Det den ger upp är inte fart utan grepp om sin egen nos: draget genom bakhjulet tippar
 ramen uppåt och det som håller framänden nere är tyngd, varav det nu finns två
 femtedelar. Gasen är alltså något man knackar på, inte håller. Under ett lågt tak är
@@ -667,7 +690,9 @@ dras mot marken. Tung, lång och stark — den klättrar det ingen annan klättr
 i väg från en ramp som en kastad tegelsten. Och kommer rakt ner igen. Luften är vad
 den byter bort: över ett hål är den sämst här, och den långa volten (8 mot
 motorcykelns 12) räcker inte till för att reda ut något under den korta tid den är
-uppe. Flyg den plant eller flyg den inte.
+uppe. Flyg den plant eller flyg den inte. Ritad därefter: en lång platta till tank
+över nästan hela hjulbasen, breda stänkskärmar, tvillingrör och däck med mönster man
+kan räkna — mest gummi och lite fälg, tvärtemot motorcykelns skiva.
 
 Ett fall på tre meter säger det kortast: 1,20 s på Måncykeln, 0,77 på
 motorcykeln, 0,59 på Magneten. Mer än dubbelt så länge i luften mellan ytterligheterna,

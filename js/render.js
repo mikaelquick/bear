@@ -638,14 +638,22 @@ export class Renderer {
     ctx.moveTo(bx, by); ctx.lineTo(this.sx(mot.rightWheel.r.x), this.sy(mot.rightWheel.r.y));
     ctx.stroke();
 
-    this.drawWheel(mot.leftWheel, mot.pedals);
-    this.drawWheel(mot.rightWheel, mot.pedals);
+    const style = mot.wheelStyle || (mot.pedals ? 'spoked' : 'disc');
+    this.drawWheel(mot.leftWheel, style);
+    this.drawWheel(mot.rightWheel, style);
     this.drawFrame(mot, bx, by, rot, face);
     this.drawBear(mot, handlebar, toWorld, face, dead, rider);
   }
 
-  // Frame drawn in bike-local metres: +x forward, +y up. The transform maps
-  // that onto the screen (which has +y down), mirroring on x when turned.
+  /**
+   * Frame drawn in bike-local metres: +x forward, +y up. The transform maps
+   * that onto the screen (which has +y down), mirroring on x when turned.
+   *
+   * Everything around it — the struts, the wheels, the bear — is the same
+   * for every two-wheeler, because all of that stands where the physics
+   * puts it. Only what is drawn in between is the machine's own, which is
+   * why this is the one method that branches on `body`.
+   */
   drawFrame(mot, bx, by, rot, face) {
     const { ctx } = this;
     ctx.save();
@@ -654,6 +662,8 @@ export class Renderer {
     ctx.scale(face * this.scale, -this.scale);
     ctx.lineJoin = 'round';
     ctx.lineCap = 'round';
+    if (mot.body === 'space') { this.drawSpaceFrame(mot); ctx.restore(); return; }
+    if (mot.body === 'heavy') { this.drawHeavyFrame(mot); ctx.restore(); return; }
 
     // Exhaust
     ctx.strokeStyle = '#9aa0aa';
@@ -721,6 +731,240 @@ export class Renderer {
     ctx.stroke();
 
     ctx.restore();
+  }
+
+  /**
+   * Måncykeln. Everything about the drawing is there to say "this weighs
+   * nothing" before the first jump says it: an open tube frame you can see
+   * the sky through, no tank, no bodywork, and a pack slung underneath
+   * that is lit the whole time.
+   *
+   * The pack is not a jet — the machine has no thrust and the gauge would
+   * be a lie. It is the explanation for the gravity: the thing is held up,
+   * so it falls at four metres a second squared instead of ten. It glows
+   * faintly while you coast and flares when you ask for drive, which is
+   * what makes it read as the reason rather than as decoration.
+   *
+   * Drawn in bike-local metres inside the caller's transform.
+   */
+  drawSpaceFrame(mot) {
+    const { ctx } = this;
+    const base = mot.frameColor || '#cfd6ff';
+    const t = this.clock ?? 0;
+    const flare = mot.gassing ? 1 : 0.4;
+
+    // The pack lives at the tail, not under the middle. That is not where
+    // a backpack would go; it is where there is *room*. The bear's leg is
+    // a solid slab down the centre of every two-wheeler here, and the
+    // first version put the pack and its glow directly behind it, where
+    // none of it could be seen. Anything that has to be read has to sit
+    // fore or aft of that leg.
+    const PX = -0.52;
+    const PY = 0.06;
+
+    const glow = ctx.createRadialGradient(PX, PY, 0, PX, PY, 0.5 + 0.35 * flare);
+    glow.addColorStop(0, `rgba(150, 220, 255, ${0.45 * flare + 0.12})`);
+    glow.addColorStop(1, 'rgba(110, 190, 255, 0)');
+    ctx.fillStyle = glow;
+    ctx.beginPath();
+    ctx.arc(PX, PY, 0.5 + 0.35 * flare, 0, TURN);
+    ctx.fill();
+
+    // Two nozzles under it, angled down and back rather than straight
+    // down: a plume that falls vertically reads as a leak, one that rakes
+    // backwards reads as drive.
+    for (const [nx, phase] of [[PX - 0.16, 0], [PX + 0.1, 2.1]]) {
+      const len = (mot.gassing ? 0.62 : 0.2)
+        * (0.86 + 0.14 * Math.sin(t * 31 + phase));
+      const tipX = nx - len * 0.42;
+      const tipY = PY - 0.12 - len;
+      const plume = ctx.createLinearGradient(nx, PY - 0.12, tipX, tipY);
+      plume.addColorStop(0, 'rgba(232, 248, 255, 0.92)');
+      plume.addColorStop(0.5, 'rgba(150, 215, 255, 0.45)');
+      plume.addColorStop(1, 'rgba(110, 190, 255, 0)');
+      ctx.beginPath();
+      ctx.moveTo(nx - 0.075, PY - 0.12);
+      ctx.lineTo(nx + 0.075, PY - 0.12);
+      ctx.lineTo(tipX + 0.03, tipY);
+      ctx.lineTo(tipX - 0.1, tipY);
+      ctx.closePath();
+      ctx.fillStyle = plume;
+      ctx.fill();
+    }
+
+    // The canister: a rounded tank across the tail, with a lit window.
+    roundRect(ctx, PX - 0.26, PY - 0.13, 0.52, 0.26, 0.12);
+    const pack = ctx.createLinearGradient(0, PY + 0.13, 0, PY - 0.13);
+    pack.addColorStop(0, shade(base, -0.1));
+    pack.addColorStop(1, shade(base, -0.5));
+    ctx.fillStyle = pack;
+    ctx.fill();
+    ctx.strokeStyle = shade(base, -0.62);
+    ctx.lineWidth = 0.03;
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.ellipse(PX, PY, 0.14, 0.055, 0, 0, TURN);
+    ctx.fillStyle = `rgba(160, 230, 255, ${0.4 + 0.55 * flare})`;
+    ctx.fill();
+
+    // The frame: an open triangle and a down tube, and nothing else. You
+    // can see the sky through the middle of the machine, which is most of
+    // why it reads as weighing nothing.
+    ctx.strokeStyle = base;
+    ctx.lineWidth = 0.065;
+    ctx.beginPath();
+    ctx.moveTo(PX + 0.2, PY + 0.1);
+    ctx.lineTo(-0.1, 0.34);
+    ctx.lineTo(0.42, 0.18);
+    ctx.lineTo(PX + 0.22, PY + 0.02);
+    ctx.moveTo(-0.1, 0.34);
+    ctx.lineTo(0.14, 0.04);
+    ctx.stroke();
+
+    // A thin pad instead of a saddle.
+    roundRect(ctx, -0.34, 0.3, 0.3, 0.07, 0.035);
+    ctx.fillStyle = '#2a3140';
+    ctx.fill();
+
+    // Fork, bar, and a cold white lamp where the motorbike has a warm one.
+    ctx.strokeStyle = shade(base, -0.3);
+    ctx.lineWidth = 0.05;
+    ctx.beginPath();
+    ctx.moveTo(0.42, 0.18);
+    ctx.lineTo(0.58, 0.44);
+    ctx.stroke();
+    ctx.lineWidth = 0.06;
+    ctx.beginPath();
+    ctx.moveTo(0.48, 0.44);
+    ctx.lineTo(0.68, 0.44);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.arc(0.52, 0.31, 0.075, 0, TURN);
+    ctx.fillStyle = '#dff2ff';
+    ctx.fill();
+  }
+
+  /**
+   * Magneten. The opposite drawing problem: it has to look like it weighs
+   * what it weighs. A long slab of a tank that runs most of the wheelbase,
+   * a wide guard over each tyre, twin pipes down the back, and the whole
+   * thing sitting low and broad between the axles.
+   *
+   * Drawn in bike-local metres inside the caller's transform.
+   */
+  drawHeavyFrame(mot) {
+    const { ctx } = this;
+    const base = mot.frameColor || '#7a45d6';
+
+    // Mudguards, first so the frame sits over them. Wide arcs hugging the
+    // tyres — the one detail that says "big" at a glance, because nothing
+    // else on a bike is allowed to be this broad.
+    //
+    // They are placed off the wheels' *actual* positions rather than off
+    // the frame, which is both more correct and the only thing that works:
+    // the wheels hang 0.6 m below the frame centre and move on their
+    // springs besides, so a guard drawn at a fixed height floats over the
+    // bike like a pair of horns. It did, until this was written.
+    const rot = mot.bike.rotation;
+    const i = { x: Math.cos(rot), y: Math.sin(rot) };
+    const j = rot90(i);
+    const face = mot.flipped ? 1 : -1;
+    const toLocal = (p) => {
+      const dx = p.x - mot.bike.r.x;
+      const dy = p.y - mot.bike.r.y;
+      return { x: (dx * i.x + dy * i.y) * face, y: dx * j.x + dy * j.y };
+    };
+    ctx.strokeStyle = shade(base, -0.42);
+    ctx.lineWidth = 0.11;
+    for (const w of [mot.leftWheel, mot.rightWheel]) {
+      const c = toLocal(w.r);
+      ctx.beginPath();
+      ctx.arc(c.x, c.y, w.radius + 0.12, Math.PI * 0.14, Math.PI * 0.86);
+      ctx.stroke();
+    }
+
+    // Twin pipes out of the back, low and fat.
+    ctx.strokeStyle = '#aab0bb';
+    ctx.lineWidth = 0.11;
+    ctx.beginPath();
+    ctx.moveTo(0.16, -0.04);
+    ctx.quadraticCurveTo(-0.4, -0.12, -0.86, -0.02);
+    ctx.stroke();
+    ctx.strokeStyle = '#878d98';
+    ctx.lineWidth = 0.09;
+    ctx.beginPath();
+    ctx.moveTo(0.16, 0.04);
+    ctx.quadraticCurveTo(-0.4, -0.02, -0.8, 0.08);
+    ctx.stroke();
+
+    // The engine: a block under the tank, between the axles, because that
+    // is where the weight of a heavy bike visibly is.
+    roundRect(ctx, -0.3, -0.12, 0.62, 0.34, 0.06);
+    ctx.fillStyle = '#3c424e';
+    ctx.fill();
+    ctx.strokeStyle = '#272c35';
+    ctx.lineWidth = 0.03;
+    ctx.stroke();
+    ctx.strokeStyle = '#596170';
+    ctx.lineWidth = 0.035;
+    ctx.beginPath();
+    for (const fx of [-0.18, -0.06, 0.06, 0.18]) {
+      ctx.moveTo(fx, -0.08);
+      ctx.lineTo(fx, 0.17);
+    }
+    ctx.stroke();
+
+    // Tank and tail as one long slab, nearly the whole wheelbase.
+    ctx.beginPath();
+    ctx.moveTo(-0.82, 0.3);
+    ctx.lineTo(-0.72, 0.42);
+    ctx.lineTo(-0.16, 0.44);
+    ctx.quadraticCurveTo(0.16, 0.62, 0.44, 0.48);
+    ctx.lineTo(0.6, 0.24);
+    ctx.lineTo(0.38, 0.06);
+    ctx.lineTo(-0.3, 0.0);
+    ctx.quadraticCurveTo(-0.74, 0.06, -0.82, 0.3);
+    ctx.closePath();
+    const g = ctx.createLinearGradient(-0.8, 0, 0.6, 0.55);
+    g.addColorStop(0, shade(base, -0.38));
+    g.addColorStop(0.5, base);
+    g.addColorStop(1, shade(base, 0.32));
+    ctx.fillStyle = g;
+    ctx.fill();
+    ctx.strokeStyle = shade(base, -0.58);
+    ctx.lineWidth = 0.035;
+    ctx.stroke();
+
+    // Seat: long, low and black, the way a big tourer's is.
+    ctx.beginPath();
+    ctx.moveTo(-0.76, 0.4);
+    ctx.lineTo(-0.1, 0.43);
+    ctx.lineTo(-0.12, 0.51);
+    ctx.lineTo(-0.72, 0.48);
+    ctx.closePath();
+    ctx.fillStyle = '#1b1e25';
+    ctx.fill();
+
+    // Fork, bar and a big round lamp.
+    ctx.strokeStyle = '#333944';
+    ctx.lineWidth = 0.1;
+    ctx.beginPath();
+    ctx.moveTo(0.44, 0.2);
+    ctx.lineTo(0.58, 0.44);
+    ctx.stroke();
+    ctx.strokeStyle = '#c9ced6';
+    ctx.lineWidth = 0.09;
+    ctx.beginPath();
+    ctx.moveTo(0.46, 0.46);
+    ctx.lineTo(0.72, 0.46);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.arc(0.6, 0.3, 0.14, 0, TURN);
+    ctx.fillStyle = '#ffe9a8';
+    ctx.fill();
+    ctx.strokeStyle = shade(base, -0.6);
+    ctx.lineWidth = 0.03;
+    ctx.stroke();
   }
 
   /**
@@ -1243,19 +1487,24 @@ export class Renderer {
   }
 
   /**
-   * @param {boolean} [spoked] draw it as a bicycle wheel rather than a
-   *   motorbike one. Same flag that gives the rider pedals, because it is
-   *   the same fact about the machine.
+   * @param {string} [style] 'disc' like the motorbike, 'spoked' like the
+   *   bicycle, or 'fat' for a machine that has to look heavy. It is the
+   *   same fact about the machine that decides pedals, so it comes from
+   *   the spec rather than being worked out here.
    */
-  drawWheel(wheel, spoked = false) {
+  drawWheel(wheel, style = 'disc') {
     const { ctx } = this;
     const s = this.scale;
     const x = this.sx(wheel.r.x);
     const y = this.sy(wheel.r.y);
     const r = wheel.radius * s;
 
-    if (spoked) {
+    if (style === 'spoked' || style === true) {
       this.drawSpokedWheel(x, y, r, wheel.rotation);
+      return;
+    }
+    if (style === 'fat') {
+      this.drawFatWheel(x, y, r, wheel.rotation);
       return;
     }
 
@@ -1283,6 +1532,62 @@ export class Renderer {
     ctx.beginPath();
     ctx.arc(0, 0, r * 0.72, 0, Math.PI * 2);
     ctx.stroke();
+    ctx.restore();
+  }
+
+  // A tyre with tread you can count, on a rim you can barely see. Weight
+  // is the whole brief: the motorbike's disc is mostly rim, so this one is
+  // mostly rubber — half the radius of it — with a small hub sunk in the
+  // middle and blocks round the outside that turn with the wheel.
+  drawFatWheel(x, y, r, rotation) {
+    const { ctx } = this;
+    const s = this.scale;
+
+    ctx.beginPath();
+    ctx.arc(x, y, r, 0, TURN);
+    ctx.fillStyle = '#15171c';
+    ctx.fill();
+
+    ctx.save();
+    ctx.translate(x, y);
+    // World y is flipped on screen, so positive rotation must draw clockwise.
+    ctx.rotate(-rotation);
+
+    // Tread blocks, cut into the outer edge of the rubber.
+    ctx.strokeStyle = '#2b2f37';
+    ctx.lineWidth = Math.max(1, 0.07 * s);
+    ctx.beginPath();
+    for (let i = 0; i < 12; i++) {
+      const a = (i / 12) * TURN;
+      ctx.moveTo(Math.cos(a) * r * 0.78, Math.sin(a) * r * 0.78);
+      ctx.lineTo(Math.cos(a) * r * 0.99, Math.sin(a) * r * 0.99);
+    }
+    ctx.stroke();
+
+    // The rim, small against all that rubber.
+    ctx.beginPath();
+    ctx.arc(0, 0, r * 0.52, 0, TURN);
+    ctx.fillStyle = '#6a7280';
+    ctx.fill();
+    ctx.lineWidth = Math.max(1, 0.03 * s);
+    ctx.strokeStyle = '#3c424e';
+    ctx.stroke();
+
+    // Five fat struts, more casting than spoke.
+    ctx.strokeStyle = '#8d96a6';
+    ctx.lineWidth = Math.max(2, 0.085 * s);
+    ctx.beginPath();
+    for (let i = 0; i < 5; i++) {
+      const a = (i / 5) * TURN;
+      ctx.moveTo(0, 0);
+      ctx.lineTo(Math.cos(a) * r * 0.46, Math.sin(a) * r * 0.46);
+    }
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.arc(0, 0, r * 0.17, 0, TURN);
+    ctx.fillStyle = '#434a57';
+    ctx.fill();
     ctx.restore();
   }
 

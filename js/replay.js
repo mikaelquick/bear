@@ -247,6 +247,7 @@ function blankMotor(vehicleId) {
     frameColor: spec.frameColor,
     pedals: spec.pedals,
     body: spec.body,
+    wheelStyle: spec.wheelStyle,
   };
 }
 

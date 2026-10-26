@@ -31,7 +31,8 @@ const WHEEL_DROP = DEFAULT_BIKE.r.y - DEFAULT_LEFT_WHEEL.r.y; // 0.6
  */
 function build({ wheelbase, mass, inertia, wheelRadius, wheelMass, wheelInertia,
                  gasTorque, maxAngularVelocity, voltAngularVelocity, frameColor,
-                 pedals = false, body = 'bike', volt = true, canTurn = true,
+                 pedals = false, body = 'bike', wheelStyle = null,
+                 volt = true, canTurn = true,
                  bodyDy = BODY_DY, headUp = HEAD_UP,
                  thrust = 0, thrustTank = 0, thrustRefill = 1,
                  selfLevel = 0, selfLevelDamping = 0,
@@ -62,8 +63,16 @@ function build({ wheelbase, mass, inertia, wheelRadius, wheelMass, wheelInertia,
     // A bicycle is pedalled and a motorbike is not, so the rider's legs
     // either turn a crank or rest on a peg.
     pedals,
-    // Which silhouette the renderer draws around all this: 'bike' or 'car'.
+    // Which silhouette the renderer draws around all this: 'bike', 'car',
+    // 'space' or 'heavy'. The frame is the only part that changes — the
+    // wheels stand where the physics puts them and the bear sits where the
+    // spring leaves him, whatever is drawn between them.
     body,
+    // And which wheels under it: 'disc' like the motorbike, 'spoked' like
+    // the bicycle, or 'fat' for something that needs to look like it
+    // weighs what it weighs. Pedals imply spokes, because that is the same
+    // fact about the machine said twice.
+    wheelStyle: wheelStyle || (pedals ? 'spoked' : 'disc'),
     // Can it volt? Everything on two wheels can. The car cannot, and gets
     // the thruster in place of it.
     volt,
@@ -293,7 +302,12 @@ export const VEHICLES = [
       maxAngularVelocity: 92,
       voltAngularVelocity: 13,
       frameColor: '#cfd6ff',
-      pedals: true,
+      // Thin tube, big hollow wheels, and a pack slung under it that is
+      // lit whenever the machine is: the drawing has to say "this weighs
+      // nothing" before the first jump does. Feet on pegs, not on a crank
+      // — nobody pedals in space.
+      body: 'space',
+      wheelStyle: 'spoked',
       gravityScale: 0.42,
     }),
   },
@@ -321,6 +335,10 @@ export const VEHICLES = [
       maxAngularVelocity: 96,
       voltAngularVelocity: 8,
       frameColor: '#7a45d6',
+      // A big heavy hoj, drawn like one: a long slab of a tank, a wide
+      // guard over each wheel and tyres with tread you can count.
+      body: 'heavy',
+      wheelStyle: 'fat',
       gravityScale: 1.7,
       launchBoost: 1.8,
     }),
