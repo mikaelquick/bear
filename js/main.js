@@ -10,7 +10,7 @@ import { Touchpad } from './touchpad.js';
 import { OBJ, MS_TO_PHYS_TIME, TIME_TO_CENTISECONDS } from './constants.js';
 import { loadGhost, levelFingerprint, REPLAY_VERSION } from './replay.js';
 import { cachedThumbnail } from './thumbnail.js';
-import { BIOMES, DEFAULT_BIOME, biomeOf, findBiome } from './biomes.js';
+import { BIOMES, DEFAULT_BIOME, biomeOf, inBiome, findBiome } from './biomes.js';
 import { stageTurn, quartered, systemAngle } from './stage.js';
 import { VEHICLES, DEFAULT_VEHICLE, findVehicle, vehiclesFor } from './vehicles.js';
 
@@ -114,6 +114,40 @@ function saveSettings() {
   writeJson(SETTINGS_KEY, settings);
 }
 
+// A level's name is its record key, so renaming one throws the player's
+// times and ghosts away unless they are carried over. This is the one
+// rename there has been: the two car levels dropped the numbers from their
+// names when they took a place in Skogen and Snön, because a tile numbers
+// itself by where it sits in the world on screen and "1. Provturen" sitting
+// at 21 reads as a bug.
+//
+// It rewrites both stores once, in place, and leaves anything it does not
+// recognise alone. A second run finds nothing to do. Keep entries here
+// forever: a save from any older version may still turn up.
+const RENAMED_LEVELS = { '1. Provturen': 'Provturen', '2. Isbanan': 'Isbanan' };
+
+function migrateLevelNames() {
+  for (const key of [TIMES_KEY, REPLAYS_KEY]) {
+    const store = readJson(key, null);
+    if (!store) continue;
+    let touched = false;
+    for (const [from, to] of Object.entries(RENAMED_LEVELS)) {
+      for (const field of Object.keys(store)) {
+        // Either the bare name, or the name plus a NUL and a machine.
+        if (field !== from && !field.startsWith(from + '\u0000')) continue;
+        const moved = to + field.slice(from.length);
+        // A record already standing under the new name wins: it was set on
+        // this version, which is the one the level is on now.
+        if (!(moved in store)) store[moved] = store[field];
+        delete store[field];
+        touched = true;
+      }
+    }
+    if (touched) writeJson(key, store);
+  }
+}
+migrateLevelNames();
+
 // A time is only comparable against times set on the same machine, so each
 // one keeps its own record. The motorbike keeps the bare level name, which
 // means every record set before vehicles existed is still exactly where the
@@ -150,7 +184,7 @@ function saveReplay(level, centiseconds, recorder, vehicleId) {
     v: REPLAY_VERSION,
     vehicle: vehicleId,
     time: centiseconds,
-    fingerprint: levelFingerprint(level),
+    fingerprint: levelFingerprint(level, vehicleId),
     frames,
   };
   return writeJson(REPLAYS_KEY, replays);
@@ -201,16 +235,26 @@ function levelRow(entry, index, times, ordinal) {
   const name = entry.data.name;
   const cleared = clearedOn(times, name);
   const done = cleared.length > 0;
-  // The time shown is the one for the machine you would set off on, since
-  // that is the one you are about to try to beat.
-  const best = times[recordKey(name, currentVehicle)];
   const li = document.createElement('li');
   if (done) li.classList.add('done');
+  // A level that asks for one particular machine is a different kind of
+  // level — the car's two play nothing like the bikes' twenty — and
+  // standing in the same grid they need to say so before they are opened.
+  // The colour carries it; the machine's own emoji says which one.
+  const only = entry.data.vehicles ? vehiclesFor(entry.data) : [];
+  if (only.length) li.classList.add('ride-only');
+  // The time shown is the one for the machine you would set off on, since
+  // that is the one you are about to try to beat. On a level with only one
+  // machine that is its machine, whatever you last rode elsewhere — the
+  // card used to go blank on the car levels for exactly that reason.
+  const riding = only.length === 1 ? only[0].id : currentVehicle;
+  const best = times[recordKey(name, riding)];
   const shot = cachedThumbnail(entry.data, !entry.custom);
   li.innerHTML = `
     <span class="shot">
       <img src="${shot}" alt="" draggable="false">
       <span class="num">${ordinal}</span>
+      ${only.length && !done ? `<span class="only" title="Körs med ${only.map((v) => v.name.toLowerCase()).join(' eller ')}">${only.map((v) => v.emoji).join('')}</span>` : ''}
       ${done ? `<span class="tick" title="Klarad med ${cleared.map((v) => v.name.toLowerCase()).join(' och ')}">${cleared.map((v) => v.emoji).join('')}</span>` : ''}
     </span>
     <span class="name">
@@ -223,12 +267,12 @@ function levelRow(entry, index, times, ordinal) {
   `;
   li.addEventListener('click', () => openRideChoice(index));
 
-  if (hasReplay(name, currentVehicle)) {
+  if (hasReplay(name, riding)) {
     const play = document.createElement('button');
     play.className = 'play';
     play.textContent = '▶';
     play.title = 'Se reprisen av ditt rekord';
-    play.addEventListener('click', (e) => { e.stopPropagation(); startReplay(index, currentVehicle); });
+    play.addEventListener('click', (e) => { e.stopPropagation(); startReplay(index, riding); });
     li.querySelector('.foot').appendChild(play);
   }
   return li;
@@ -237,7 +281,7 @@ function levelRow(entry, index, times, ordinal) {
 // A world card: emoji, name, and how far through it you are. The progress
 // is the point — it is what tells you which world you left unfinished.
 function biomeCard(biome, entries, times) {
-  const mine = entries.filter((e) => !e.custom && biomeOf(e.data) === biome.id);
+  const mine = entries.filter((e) => !e.custom && inBiome(e.data, biome.id));
   const cleared = mine.filter((e) => clearedOn(times, e.data.name).length > 0).length;
   const share = mine.length ? (cleared / mine.length) * 100 : 0;
   const li = document.createElement('li');
@@ -277,7 +321,7 @@ function renderLevelList() {
   builtIn.innerHTML = '';
   let shown = 0;
   entries.forEach((entry, index) => {
-    if (entry.custom || biomeOf(entry.data) !== openBiomeId) return;
+    if (entry.custom || !inBiome(entry.data, openBiomeId)) return;
     builtIn.appendChild(levelRow(entry, index, times, ++shown));
   });
 
@@ -303,7 +347,7 @@ function renderLevelList() {
 
   // The bar under an open world counts that world, not the whole game: it
   // sits beneath that world's levels, so counting anything else is a lie.
-  const here = LEVELS.filter((l) => biomeOf(l) === openBiomeId);
+  const here = LEVELS.filter((l) => inBiome(l, openBiomeId));
   const cleared = here.filter((l) => clearedOn(times, l.name).length > 0).length;
   $('progressFill').style.width = here.length ? `${(cleared / here.length) * 100}%` : '0%';
   $('progressText').textContent = `${cleared} av ${here.length} banor klarade`;
@@ -329,6 +373,18 @@ function openRideChoice(index, from = 'menu') {
   const entries = allLevels();
   const entry = entries[index];
   if (!entry) return;
+  // A chooser with one row in it is a question with one answer. The car
+  // levels only ever offer the car, so pressing the tile should set off
+  // rather than ask the player to agree with it. The pause panel's "Byt
+  // maskin" is hidden under the same rule, so in practice this is the
+  // menu, but a single machine starts from either place.
+  const rides = vehiclesFor(entry.data);
+  if (rides.length === 1) {
+    if (from === 'pause') hideAll('pause');
+    startLevel(index, rides[0].id);
+    return;
+  }
+
   pendingLevel = index;
   rideChoiceFrom = from;
   // One dim layer at a time: the pause panel and this one are both
@@ -338,7 +394,7 @@ function openRideChoice(index, from = 'menu') {
   $('rideLevel').textContent = entry.data.name;
   const list = $('rideList');
   list.innerHTML = '';
-  for (const vehicle of vehiclesFor(entry.data)) {
+  for (const vehicle of rides) {
     const best = times[recordKey(entry.data.name, vehicle.id)];
     const btn = document.createElement('button');
     btn.className = 'choice' + (vehicle.id === currentVehicle ? '' : ' secondary');

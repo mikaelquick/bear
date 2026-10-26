@@ -3,7 +3,7 @@
 // segments into a collision grid and only tests the cell the circle sits in.
 
 import { OBJ } from './constants.js';
-import { DEFAULT_BIOME } from './biomes.js';
+import { DEFAULT_BIOME, biomeOf } from './biomes.js';
 
 const CELL_SIZE = 2.0; // metres
 
@@ -12,7 +12,9 @@ export class Level {
     this.name = data.name || 'Namnlös';
     // Which world this belongs to. The chooser groups by it and the renderer
     // paints by it; the simulation does not care.
-    this.biome = data.biome || DEFAULT_BIOME;
+    // A level may stand in more than one world; the one being played is
+    // always its home, since that is the only one the palette can follow.
+    this.biome = biomeOf(data);
     // How much bite the wheels get on the ground. 1 is normal, and is what
     // every level written before ice existed gets. Less than 1 is an icy
     // level: see simulateBikePhysics, which is the only place it is read.

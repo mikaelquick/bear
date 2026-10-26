@@ -10,7 +10,7 @@
 // and no two worlds may share the stuff that is supposed to tell them apart.
 
 import assert from 'node:assert/strict';
-import { BIOMES, DEFAULT_BIOME, biomeOf } from '../js/biomes.js';
+import { BIOMES, DEFAULT_BIOME, biomesOf, inBiome } from '../js/biomes.js';
 import { themeFor } from '../js/render.js';
 import { Effects } from '../js/effects.js';
 import { LEVELS } from '../js/levels.js';
@@ -84,7 +84,31 @@ test('an unknown world falls back rather than throwing', () => {
 test('every built-in level belongs to a world that exists', () => {
   const known = new Set(BIOMES.map((b) => b.id));
   for (const data of LEVELS) {
-    assert.ok(known.has(biomeOf(data)), `${data.name} is in world "${biomeOf(data)}"`);
+    for (const id of biomesOf(data)) {
+      assert.ok(known.has(id), `${data.name} is in world "${id}"`);
+    }
+  }
+});
+
+// A level may stand in several worlds, and then it is the same level: one
+// name, one record, one ghost. Two entries sharing a name would be two of
+// everything, which is the mistake this guards against.
+test('no two levels share a name', () => {
+  const seen = new Set();
+  for (const data of LEVELS) {
+    assert.ok(!seen.has(data.name), `${data.name} is in the list twice`);
+    seen.add(data.name);
+  }
+});
+
+// The palette follows the home world unless a theme says otherwise, so a
+// level that stands in two of them has to pick one or be painted by hand.
+test('a level in more than one world says how it is painted', () => {
+  for (const data of LEVELS) {
+    if (biomesOf(data).length < 2) continue;
+    assert.ok(data.theme, `${data.name} is in several worlds with no theme`);
+    assert.ok(biomesOf(data).includes(data.theme),
+      `${data.name} is painted "${data.theme}", a world it is not in`);
   }
 });
 
@@ -93,7 +117,7 @@ test('no world is both unlocked and empty', () => {
   // but an open world with nothing in it is a dead end.
   for (const biome of BIOMES) {
     if (biome.locked) continue;
-    const count = LEVELS.filter((l) => biomeOf(l) === biome.id).length;
+    const count = LEVELS.filter((l) => inBiome(l, biome.id)).length;
     assert.ok(count > 0, `${biome.id} is open but has no levels`);
   }
 });

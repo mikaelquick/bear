@@ -91,8 +91,24 @@ function base64ToBytes(base64) {
 }
 
 // Cheap content hash, so a replay is discarded when its level is edited.
-export function levelFingerprint(level) {
-  const text = JSON.stringify(level.toJSON());
+/**
+ * What a recording was made against. A replay is stored input, so it only
+ * reproduces the run while both the level *and* the machine are what they
+ * were — tune a vehicle and every ghost of it drives a different line to a
+ * time that no longer matches its own label.
+ *
+ * The motorbike keeps the bare level hash, which is the same trick
+ * recordKey plays with names: its spec is the ported physics and cannot
+ * drift without physics.test.js saying so, and leaving it out means every
+ * recording written before this still matches.
+ *
+ * @param {string} [vehicleId] the machine it was driven on.
+ */
+export function levelFingerprint(level, vehicleId) {
+  let text = JSON.stringify(level.toJSON());
+  if (vehicleId && vehicleId !== DEFAULT_VEHICLE) {
+    text += '\u0000' + JSON.stringify(specOf(vehicleId));
+  }
   let h = 2166136261;
   for (let i = 0; i < text.length; i++) {
     h ^= text.charCodeAt(i);
@@ -237,12 +253,12 @@ function blankMotor(vehicleId) {
 // Builds a ghost from stored replay data, or null if it cannot be used.
 export function loadGhost(level, stored) {
   if (!stored || stored.v !== REPLAY_VERSION) return null;
-  if (stored.fingerprint && stored.fingerprint !== levelFingerprint(level)) return null;
+  // A replay is stored input, not positions, so it only reproduces the run
+  // on the machine it was driven on. Recordings written before vehicles
+  // existed have no field and were all motorbike, which is the default.
+  const vehicleId = stored.vehicle || DEFAULT_VEHICLE;
+  if (stored.fingerprint && stored.fingerprint !== levelFingerprint(level, vehicleId)) return null;
   try {
-    // A replay is stored input, not positions, so it only reproduces the run
-    // on the machine it was driven on. Recordings written before vehicles
-    // existed have no field and were all motorbike, which is the default.
-    const vehicleId = stored.vehicle || DEFAULT_VEHICLE;
     const frames = decodeFrames(stored.frames);
     const result = simulateReplay(level, frames, vehicleId);
     if (result.samples.length < 2) return null;

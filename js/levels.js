@@ -589,8 +589,11 @@ export const LEVELS = [
   // ---------------------------------------------------------------------
 
   {
-    name: '1. Provturen',
-    biome: 'beta',
+    // Home in Skogen, still on the Beta shelf. No number in the name: the
+    // tile numbers itself by where it sits in the world you are looking
+    // at, and this one is 21 in Skogen and 1 in Beta.
+    name: 'Provturen',
+    biome: ['forest', 'beta'],
     theme: 'forest',
     vehicles: ['car'],
     difficulty: 2,
@@ -621,8 +624,8 @@ export const LEVELS = [
   },
 
   {
-    name: '2. Isbanan',
-    biome: 'beta',
+    name: 'Isbanan',
+    biome: ['snow', 'beta'],
     theme: 'snow',
     vehicles: ['car'],
     grip: 0.5,

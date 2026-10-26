@@ -344,6 +344,12 @@ någonting om fordon alls — precis som de inte säger någonting om världar. 
 vill ha ett visst fordon skriver `vehicles: ['car']`, och då är det bara det som erbjuds
 i väljaren, bara det `levels.test.js` provar, och "Byt fordon" i pausrutan göms.
 
+**Står det bara en maskin i väljaren öppnas den inte alls.** En ruta med en knapp i är
+en fråga med ett svar; att trycka på en bilbana ska köra i väg, inte be spelaren hålla
+med. Kortet visar då också *den* maskinens tid och dess repris, inte den man senast
+körde någon annanstans — bilbanornas kort stod tomma innan, eftersom tiden de letade
+efter låg under motorcykeln.
+
 Hur bilen ritas står för sig, och tog fem försök. **Det som styr allt är hur högt
 björnens huvud sitter**, eftersom huvudet är det som dödar en och därför måste synas
 sitta inne i kupén. På cykelhöjd (`HEAD_UP` 0,63 över kroppen) krävdes ett tak så högt
@@ -462,7 +468,7 @@ start — den gör den inte längre. Det här är ett spel för barn, och de lis
 genom att trycka på saker, vilket är roligare än att få det berättat för sig.
 
 Först väljer man **värld**, sedan bana. Världarna står i `js/biomes.js`: **Skogen 🌲**
-med tjugo banor och **Snön ❄️** med två. Snön var ett tag en låst, tom hylla — en tom
+med tjugoen banor och **Snön ❄️** med tre. Snön var ett tag en låst, tom hylla — en tom
 hylla säger mer än ingen hylla alls — och är nu öppen.
 
 Ett världskort är emoji, namn och hur långt man kommit — inget annat. En rad
@@ -473,6 +479,23 @@ ordet för ett, av samma skäl.
 En bana talar om vilken värld den hör till med ett `biome`-fält. Utelämnas det blir det
 den första, vilket är varför de tjugo banor som skrevs innan världar fanns inte behövde
 ändras alls.
+
+**Fältet får också vara en lista, och då står banan på flera hyllor.** Det är inte ett
+trick: bilbanorna förtjänade en plats i Skogen och Snön och är fortfarande önskade i
+Beta, och en bana i två världar är ett mycket bättre svar än två kopior av den. De
+delar namn, alltså delar de rekord och ghost: klarar man den i Skogen är den klarad i
+Beta. Den första i listan är banans hem — den bestämmer paletten när inget `theme`
+sägs, och den är den `Level.toJSON` behåller. `biomesOf`, `biomeOf` och `inBiome` i
+`biomes.js` är hela skillnaden; de som filtrerar listor frågar `inBiome` och behöver
+aldrig veta vilken form som skrevs.
+
+**En bana som vill ha en viss maskin är violett.** Det är den enda kulör rutnätet hade
+kvar: blå är "inte börjad", grön är "klarad", guld är menyns egen. Bland tjugo
+cykelbanor är färgen det som säger "den här är inte som de andra" tvärs över rummet,
+innan den lilla bilen i hörnet säger vilken väg. Färgen *vinner över* klarad-grönt,
+vilket är hela poängen med att ha den: en klarad bilbana är fortfarande en bilbana, och
+blev den grön som alla andra när man klarat den skulle spelaren behöva minnas det. Så
+klarad syns som en grön kant på ett violett kort, plus bocken i hörnet.
 
 **Numren på korten räknas per värld.** Den första snöbanan heter 1, inte 21 — listan
 visar en värld i taget, så det är i den listan siffran ska betyda något. Framstegsraden
@@ -574,23 +597,32 @@ Namnen börjar om på 1 i varje värld. Rekordnyckeln är bannamnet, och "1. Fö
 
 ## Beta
 
-En tredje värld, 🧪 **Beta**, och den är verkstaden i det öppna. Där ligger bilbanorna
-tills de är bra nog att flytta in som specialbana i var sin av världarna ovanför. Att
-visa dem i stället för att gömma dem bakom en flagga är poängen: då blir de spelade,
-vilket är det enda sättet de blir bättre.
+En tredje värld, 🧪 **Beta**, och den är verkstaden i det öppna. Där föddes
+bilbanorna, och där ligger de kvar — men de har också tagit plats i var sin av
+världarna ovanför, vilket var vad hyllan var till för hela tiden. Att visa dem i
+stället för att gömma dem bakom en flagga var poängen: då blev de spelade, vilket var
+det enda sättet de blev bra nog att flytta.
 
 Två saker gör att en bana kan ligga parkerad där utan att se parkerad ut. `theme` låter
 en bana måla sig i en annan världs färger än den är sorterad under, så snöbilbanan redan
-ser ut som snö och ingenting syns ändra sig den dagen den flyttar. Och `vehicles` låter
-den säga vilken maskin den är byggd för.
+såg ut som snö och ingenting syntes ändra sig den dagen den flyttade. Och `vehicles`
+låter den säga vilken maskin den är byggd för.
 
-**1. Provturen** är en rak väg med tre hål: sju meter, nio, elva. Ungefär fem går på
+**Flytten kostade dem sina nummer.** De hette "1. Provturen" och "2. Isbanan", och ett
+kort numrerar sig efter var det står i den värld man tittar på — "1. Provturen" på
+plats 21 i Skogen läser som ett fel. Så de heter **Provturen** och **Isbanan** nu, och
+eftersom en banas namn är dess rekordnyckel följde en engångsflytt med
+(`RENAMED_LEVELS` i `main.js`): den skriver om båda lagren på plats, låter allt den inte
+känner igen vara, och hittar ingenting att göra andra gången. Posterna där får stå kvar
+för alltid: ett sparat spel från vilken äldre version som helst kan dyka upp.
+
+**Provturen** är en rak väg med tre hål: sju meter, nio, elva. Ungefär fem går på
 fart allena, så det första är nästan gratis och det sista är det inte. Varje landning
 ligger en och en halv meter under kanten man for ifrån — första versionen hade dem i
 nivå och den bortre väggen tog bilen rakt i nosen på ett hopp som var nio tiondelar
 rätt. Slack i landningen är det som gör "nästan" till "precis".
 
-**2. Isbanan** är samma sak på is (`grip` 0.5): halva dragkraften, så farten måste
+**Isbanan** är samma sak på is (`grip` 0.5): halva dragkraften, så farten måste
 hittas någonstans, och längre ansatser för att den ska hinna byggas.
 
 Båda är med flit lätta. Det är inte cyklarnas spel — ingen volt, bilen rätar upp sig
@@ -612,6 +644,15 @@ Mellan olika motorer är `sin`/`cos`/`atan2` inte garanterat bitidentiska, så e
 inspelning gjord någon annanstans kan driva isär. Inget går sönder om den gör det —
 ghosten följer bara en lite annan linje. Inspelningen kastas automatiskt om banan den
 hör till har ändrats.
+
+**Och om maskinen har ändrats.** En inspelning är inmatning, så den återskapar loppet
+bara så länge både banan *och* fordonet är vad de var; skruvar man på ett fordon kör
+varje ghost av det en annan linje till en tid som inte längre stämmer med dess egen
+etikett. Därför blandas fordonets spec in i `levelFingerprint`. Motorcykeln lämnas
+utanför — samma knep som `recordKey` spelar med namn: dess spec är den portade fysiken
+och kan inte driva utan att `physics.test.js` säger till, och utan den i hashen matchar
+varenda inspelning som gjordes innan det här fanns. Priset är att cykelns och bilens
+gamla repriser kastades en gång, när regeln infördes.
 
 ## Fysiken
 
