@@ -349,8 +349,26 @@ björnens huvud sitter**, eftersom huvudet är det som dödar en och därför m�
 sitta inne i kupén. På cykelhöjd (`HEAD_UP` 0,63 över kroppen) krävdes ett tak så högt
 att bilen blev 2,2 gånger längre än hög — riktiga Cybertrucken är 3,17, och allt under
 ungefär 2,8 läser som skåpbil hur man än ritar taket. Därför sitter föraren lågt:
-`bodyDy` 0,22 mot cyklarnas 0,44, och `headUp` 0,24 mot 0,63. Med det på plats blev
+`bodyDy` 0,22 mot cyklarnas 0,44, och `headUp` 0,14 mot 0,63. Med det på plats blev
 bilen 5,6 × 2,0 m, kvot 2,8.
+
+`headUp` var 0,24 ett tag till, och då satt björnen uppe i glaset med öronen i taket.
+Tio centimeter till ner och han sitter i stolen i stället. Två saker följer med den
+siffran och syns direkt om man glömmer dem: stolen ritas i bilens egna meter medan
+björnen är där fysiken sätter honom, så nackstödet blir en vägg bakom hans huvud om
+stolen inte kommer med ner — och bröstet slutade plötsligt mitt i rutan. Det andra är
+värt en egen rad, för det var inte uppenbart:
+
+- **Björnen får inte se halv ut.** Bröstet ritas från en punkt längs linjen
+  kropp–huvud, förlängd förbi rutkanten så att skarven hamnar bakom dörrplåten. Men
+  den linjen *lutar bakåt mer ju lägre huvudet sitter*, så en förlängning som nätt och
+  jämnt gick under kanten när han satt upp svingade upp över den så fort `headUp` sjönk — och
+  björnen fick ett diagonalt snitt tvärs över bröstet mitt i rutan. Den går nu 4,2
+  gånger längre än bröstet behöver; kupén klipper ändå bort överskottet. Därtill är
+  rutan mindre och dörren högre (fönsterkanten från 0,08 till 0,17), vilket var
+  Mikaels eget förslag och gör skarven omöjlig att se även när han guppar.
+- **Baklyktan är borta.** Den röda remsan längs bakluckan togs bort på hans ord;
+  bakdelen är lugnare utan. Strålkastaren fram är kvar.
 
 Tre saker till som gick fel innan de gick rätt, var och en synlig på skärmen och ingen
 av dem uppenbar på papper:

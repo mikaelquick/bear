@@ -812,8 +812,8 @@ export class Renderer {
     ctx.strokeStyle = 'rgba(255,255,255,0.22)';
     ctx.lineWidth = 0.035;
     ctx.beginPath();
-    ctx.moveTo(2.56, 0.00);
-    ctx.lineTo(-2.72, 0.14);
+    ctx.moveTo(2.56, -0.04);
+    ctx.lineTo(-2.72, 0.08);
     ctx.stroke();
 
     // Door shuts and a handle, so the window sill is a door top rather
@@ -821,9 +821,9 @@ export class Renderer {
     ctx.strokeStyle = 'rgba(16, 21, 30, 0.42)';
     ctx.lineWidth = 0.04;
     ctx.beginPath();
-    ctx.moveTo(1.76, 0.06);
+    ctx.moveTo(1.76, 0.15);
     ctx.lineTo(1.70, -0.18);
-    ctx.moveTo(-0.94, 0.14);
+    ctx.moveTo(-0.94, 0.15);
     ctx.lineTo(-0.98, -0.18);
     ctx.stroke();
     ctx.strokeStyle = 'rgba(240, 246, 255, 0.45)';
@@ -846,10 +846,10 @@ export class Renderer {
     // frame is kept to about eight centimetres all the way round.
     const cabin = () => {
       ctx.beginPath();
-      ctx.moveTo(1.80, 0.08);
-      ctx.lineTo(0.22, 0.88);
+      ctx.moveTo(1.80, 0.17);
+      ctx.lineTo(0.24, 0.88);
       ctx.lineTo(-0.80, 0.88);
-      ctx.lineTo(-0.90, 0.08);
+      ctx.lineTo(-0.90, 0.17);
       ctx.closePath();
     };
     cabin();
@@ -887,24 +887,17 @@ export class Renderer {
     ctx.lineWidth = 0.07;
     ctx.stroke();
 
-    // The light bars. On the real thing they run the full width of the
-    // car; from the side you catch the end of one and the sliver that
-    // wraps round the corner, so each is a short bright run along the
-    // body edge rather than a dot.
+    // The headlight. On the real thing the bar runs the full width of the
+    // car; from the side you catch the end of it and the sliver that wraps
+    // round the corner, so it is a short bright run along the body edge
+    // rather than a dot. There was a red one along the tailgate to match
+    // it, and the back end is quieter without.
     ctx.lineCap = 'butt';
     ctx.strokeStyle = '#fff3d2';
     ctx.lineWidth = 0.075;
     ctx.beginPath();
     ctx.moveTo(2.78, -0.18);
     ctx.lineTo(2.22, 0.07);
-    ctx.stroke();
-    // Along the top of the tailgate, not across it. It used to slope the
-    // opposite way to the body edge it sits on, which read as a light
-    // pointing the wrong way — and it was, it crossed the panel line.
-    ctx.strokeStyle = '#ff5f4d';
-    ctx.beginPath();
-    ctx.moveTo(-2.78, 0.26);
-    ctx.lineTo(-2.34, 0.28);
     ctx.stroke();
     ctx.lineCap = 'round';
 
@@ -936,30 +929,41 @@ export class Renderer {
     // The seat, drawn first so he sits in front of it rather than floating
     // in a black box. A headrest beside his ear is the clearest "he is in
     // a chair" there is, and it is most of what makes this read at all.
+    // It is in car-local metres while the bear is wherever the physics put
+    // him, so it has to come down by whatever headUp comes down by, or the
+    // headrest ends up standing over his head like a wall.
     ctx.fillStyle = '#2a3140';
     ctx.strokeStyle = '#1a1f29';
     ctx.lineWidth = 0.035;
     ctx.beginPath();
-    ctx.moveTo(-0.22, 0.00);
-    ctx.lineTo(-0.58, 0.06);
-    ctx.lineTo(-0.54, 0.52);
-    ctx.quadraticCurveTo(-0.52, 0.68, -0.37, 0.68);
-    ctx.quadraticCurveTo(-0.21, 0.68, -0.21, 0.52);
+    ctx.moveTo(-0.22, -0.10);
+    ctx.lineTo(-0.58, -0.04);
+    ctx.lineTo(-0.54, 0.42);
+    ctx.quadraticCurveTo(-0.52, 0.58, -0.37, 0.58);
+    ctx.quadraticCurveTo(-0.21, 0.58, -0.21, 0.42);
     ctx.closePath();
     ctx.fill();
     ctx.stroke();
 
     // Shoulders. Drawn from a point below the body rather than from the
-    // body itself, so the chest reaches the window sill instead of
-    // stopping in mid air above it — the bear used to end in a straight
-    // horizontal cut with daylight under him.
+    // body itself, so the chest runs out through the bottom of the window
+    // instead of stopping in mid air above it — the bear used to end in a
+    // straight cut with daylight under him, and then, once he had been
+    // lowered into the seat, in a diagonal one across his own chest.
+    //
+    // The reach is deliberately far more than the chest needs. It is taken
+    // along the body-to-head line, which leans further back the lower the
+    // head sits, so a reach that just cleared the sill upright swung up
+    // above it as soon as headUp came down. Running it well past the sill
+    // costs nothing — the cabin clips it — and it keeps the join hidden
+    // whatever the rider is doing.
     const dx = head.x - body.x;
     const dy = head.y - body.y;
     const l = Math.hypot(dx, dy) || 1;
     const nx = -dy / l;
     const ny = dx / l;
-    const lowX = body.x - dx * 1.6;
-    const lowY = body.y - dy * 1.6;
+    const lowX = body.x - dx * 4.2;
+    const lowY = body.y - dy * 4.2;
     const hip = 0.31;
     const shoulderW = 0.26;
     ctx.beginPath();

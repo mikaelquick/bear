@@ -198,14 +198,20 @@ export const VEHICLES = [
       // body spring's allowed box (move.js) bottoms out around 0.2, so
       // this is about as low as the rider goes.
       bodyDy: 0.22,
-      // And his head sits 0.34 above that rather than the bikes' 0.63.
+      // And his head sits a little above that rather than the bikes' 0.63.
       // This is the number that decides how tall the car is: the head is
       // the hitbox, so it has to be inside the roof, and at bike height
       // the roof had to go so high the thing came out shaped like a van —
       // 2.2 times longer than tall against the real truck's 3.2. Lower
       // also happens to be true: you do not sit in a car with your head
       // where a motorcyclist's is.
-      headUp: 0.24,
+      //
+      // 0.24 still sat him up in the glass with his ears at the roof, so
+      // he came down another ten centimetres and settled into the seat.
+      // The seat in drawBearDriving is in car-local metres and had to come
+      // down with him. Lowering the hitbox makes the car a touch more
+      // forgiving under a low ceiling; the Beta levels still pass.
+      headUp: 0.14,
       // It takes 2840 N to hold the car's own 284 kg still, so 4200 is
       // about a half-g climb: enough to leave the ground deliberately,
       // nowhere near enough to fly. The tank is the whole game — a second
