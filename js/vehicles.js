@@ -34,7 +34,8 @@ function build({ wheelbase, mass, inertia, wheelRadius, wheelMass, wheelInertia,
                  pedals = false, body = 'bike', volt = true, canTurn = true,
                  bodyDy = BODY_DY, headUp = HEAD_UP,
                  thrust = 0, thrustTank = 0, thrustRefill = 1,
-                 selfLevel = 0, selfLevelDamping = 0 }) {
+                 selfLevel = 0, selfLevelDamping = 0,
+                 gravityScale = 1, launchBoost = 1, launchFade = 0.4 }) {
   const half = wheelbase / 2;
   const anchor = DEFAULT_BIKE.r;
   const wheelY = anchor.y - WHEEL_DROP;
@@ -86,6 +87,18 @@ function build({ wheelbase, mass, inertia, wheelRadius, wheelMass, wheelInertia,
     // from the player.
     selfLevel,
     selfLevelDamping,
+    // What gravity this machine falls under, as a multiple of the ported
+    // 10 m/s². Mass does not do this on its own: in a rigid-body sim every
+    // body falls at the same rate whatever it weighs, so a heavy machine
+    // that should *feel* heavy has to be told to. 1 is the ported number
+    // and the branch that reads this is a plain multiply, so the bikes come
+    // out bit-identical.
+    gravityScale,
+    // Rivstart. An electric motor pulls hardest from a standstill, so gas
+    // torque is multiplied by this at zero wheel speed and falls back to
+    // the plain figure by `launchFade` of the top speed. 1 skips it.
+    launchBoost,
+    launchFade,
   };
 }
 
@@ -218,7 +231,22 @@ export const VEHICLES = [
       // and a half of air, and a second and a half on the ground to fill
       // it again, so a jump is something you spend rather than something
       // you hold.
-      thrust: 4200,
+      // A car is heavy and should fall like it. The bikes keep the ported
+      // 10 m/s²; this one gets 13, which is what reads as weight — it
+      // lands sooner and sits harder on its springs. Everything that has
+      // to hold it up was rescaled with it, the jet below included.
+      gravityScale: 1.3,
+      // And it pulls like an electric motor: a bit over twice the torque
+      // off the line, back to the plain 950 by two fifths of top speed.
+      // The ice cap in forces.js is deliberately left on the plain figure,
+      // so a rivstart on Isbanan is still a rivstart that goes nowhere.
+      launchBoost: 2.2,
+      launchFade: 0.4,
+      // 2840 N held the car's own 284 kg at the ported gravity and 4200
+      // was about a half-g climb. At 13 m/s² it weighs 3692, so the same
+      // climb against the same weight wants 5400. Left at 4200 the jet
+      // would have become a shrug, and the jet is the whole game.
+      thrust: 5400,
       thrustTank: 1.5,
       thrustRefill: 1.5,
       // Enough to pull a full rotation's worth of error out in about half

@@ -427,7 +427,14 @@ export class Renderer {
 
   // `armed` means every hive is collected, so the pot will actually finish
   // the level. Until then it is inert and should look it.
+  //
+  // This is also where the renderer picks up the wall clock. Everything
+  // that flickers on its own — the wasps, the pot, the car's exhaust —
+  // needs one, and every frame draws the objects before it draws anything
+  // else that moves, so taking it here saves threading the same number
+  // through drawBike, drawGhost and the demo.
   drawObjects(level, time, armed = false) {
+    this.clock = time;
     for (const obj of level.objects) {
       if (obj.taken) continue;
       const x = this.sx(obj.x);
@@ -746,6 +753,8 @@ export class Renderer {
     ctx.scale(face * this.scale, -this.scale);
     ctx.lineJoin = 'round';
     ctx.lineCap = 'round';
+
+    this.drawExhaust(mot);
 
     // The silhouette, at the real truck's proportions: 5.8 m long and
     // 2.0 m tall, a ratio of 2.9 against the real 3.17. Getting there is
@@ -1105,6 +1114,90 @@ export class Renderer {
       ctx.fill();
     }
     ctx.restore();
+  }
+
+  /**
+   * A pipe out of the back of the car, and fire out of the pipe while the
+   * throttle is down.
+   *
+   * Drawn before the shell and in the same car-local transform, so the
+   * root of the pipe disappears under the body and only the stub shows.
+   *
+   * Yes, on an electric car. Mikael asked for it and it is his car; if the
+   * badge ever wins the argument, the two gradients below are the whole
+   * change — blue and white instead of orange and yellow reads as plasma
+   * and nothing else here has to move.
+   */
+  drawExhaust(mot) {
+    const { ctx } = this;
+    const MOUTH = -3.02;
+    const CY = -0.37;
+
+    if (mot.gassing) {
+      const t = this.clock ?? 0;
+
+      // A wash of light on the panel behind it. Without this the flame is
+      // a shape beside the car rather than something coming out of it.
+      const glow = ctx.createRadialGradient(MOUTH, CY, 0, MOUTH, CY, 0.46);
+      glow.addColorStop(0, 'rgba(255, 168, 72, 0.42)');
+      glow.addColorStop(1, 'rgba(255, 140, 40, 0)');
+      ctx.fillStyle = glow;
+      ctx.beginPath();
+      ctx.arc(MOUTH, CY, 0.46, 0, TURN);
+      ctx.fill();
+
+      // Three tongues, longest and dimmest on the outside. Each one
+      // flickers on two frequencies that do not divide into each other, so
+      // the flame never finds a beat, and the tip wanders across the axis
+      // as well as along it.
+      //
+      // The first attempt was two tongues of nearly the same shape with a
+      // smooth ramp along a single axis, and it came out as an orange
+      // bullet: a cone with a hard edge reads as metal, not as fire. What
+      // fixes it is the overlap — three different lengths, every one of
+      // them fading to nothing before it ends.
+      const tongues = [
+        { len: 0.74, half: 0.115, phase: 0.0, wob: 0.06,
+          hot: 'rgba(255, 150, 54, 0.70)', cold: 'rgba(206, 56, 20, 0)' },
+        { len: 0.48, half: 0.085, phase: 1.7, wob: 0.045,
+          hot: 'rgba(255, 196, 86, 0.85)', cold: 'rgba(255, 120, 40, 0)' },
+        { len: 0.26, half: 0.055, phase: 3.1, wob: 0.03,
+          hot: 'rgba(255, 246, 219, 0.95)', cold: 'rgba(255, 206, 110, 0)' },
+      ];
+      for (const { len, half, phase, wob, hot, cold } of tongues) {
+        const f = 0.74 + 0.26 * Math.sin(t * 29 + phase)
+                       + 0.12 * Math.sin(t * 47 + phase * 1.7);
+        const L = Math.max(0.1, len * f);
+        const ty = CY + wob * Math.sin(t * 23 + phase * 2.3);
+        const g = ctx.createLinearGradient(MOUTH, CY, MOUTH - L, ty);
+        g.addColorStop(0, hot);
+        g.addColorStop(1, cold);
+        ctx.beginPath();
+        ctx.moveTo(MOUTH, CY - half);
+        ctx.bezierCurveTo(MOUTH - L * 0.35, CY - half * 1.3,
+                          MOUTH - L * 0.78, ty - half * 0.45,
+                          MOUTH - L, ty);
+        ctx.bezierCurveTo(MOUTH - L * 0.78, ty + half * 0.45,
+                          MOUTH - L * 0.35, CY + half * 1.3,
+                          MOUTH, CY + half);
+        ctx.closePath();
+        ctx.fillStyle = g;
+        ctx.fill();
+      }
+    }
+
+    // The pipe. A dark stub with a lit rim, which is what makes it read as
+    // a tube rather than as a peg.
+    roundRect(ctx, MOUTH, CY - 0.085, -2.62 - MOUTH, 0.17, 0.06);
+    ctx.fillStyle = '#39414e';
+    ctx.fill();
+    ctx.strokeStyle = '#20262f';
+    ctx.lineWidth = 0.035;
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.ellipse(MOUTH + 0.02, CY, 0.028, 0.072, 0, 0, Math.PI * 2);
+    ctx.fillStyle = mot.gassing ? '#ffcf8a' : '#161b22';
+    ctx.fill();
   }
 
   // How much air is left, drawn on the car rather than in the HUD: it is a

@@ -210,10 +210,22 @@ export function simulateBikePhysics(level, mot, time, dt, gas, brake, rightVolt,
     // Only the trailing wheel drives, and it caps out at the vehicle's own
     // maximum: that cap times the wheel radius is its top speed.
     const { maxAngularVelocity, gasTorque } = mot.spec;
+    const driven = mot.flipped ? mot.leftWheel : mot.rightWheel;
+    // Rivstart, for a machine that has asked for one. An electric motor
+    // pulls hardest from rest, so the torque starts multiplied and fades
+    // to the plain figure as the wheel spins up. `launchBoost` 1 skips the
+    // branch, which is both bikes, so the ported pull is untouched.
+    let torque = gasTorque;
+    const boost = mot.spec.launchBoost ?? 1;
+    if (boost > 1) {
+      const share = Math.abs(driven.angularVelocity) / maxAngularVelocity;
+      const left = Math.max(0, 1 - share / (mot.spec.launchFade ?? 0.4));
+      torque = gasTorque * (1 + (boost - 1) * left);
+    }
     if (mot.flipped) {
-      if (mot.leftWheel.angularVelocity > -maxAngularVelocity) torqueLeftWheel = -gasTorque;
+      if (mot.leftWheel.angularVelocity > -maxAngularVelocity) torqueLeftWheel = -torque;
     } else {
-      if (mot.rightWheel.angularVelocity < maxAngularVelocity) torqueRightWheel = gasTorque;
+      if (mot.rightWheel.angularVelocity < maxAngularVelocity) torqueRightWheel = torque;
     }
   }
 
@@ -323,6 +335,10 @@ export function simulateBikePhysics(level, mot, time, dt, gas, brake, rightVolt,
   // It pushes the frame, not the wheels. That is deliberate and it is what
   // makes it look right: the body rises first, the suspension stretches,
   // and the wheels are pulled up after it.
+  // Presentation only, read by the renderer for the car's exhaust. Nothing
+  // in the simulation looks at it, so it is not part of the snapshot.
+  mot.gassing = gas;
+
   mot.thrusting = false;
   const tank = mot.spec.thrustTank;
   if (tank > 0) {
@@ -354,15 +370,20 @@ export function simulateBikePhysics(level, mot, time, dt, gas, brake, rightVolt,
     levelTorque = mot.spec.selfLevel * err - mot.spec.selfLevelDamping * mot.bike.angularVelocity;
   }
 
+  // Weight. A multiple of the ported constant, 1 for the bikes — and
+  // `GRAVITY * 1` is exactly `GRAVITY`, so their forces come out of the
+  // same arithmetic they always did.
+  const gravity = GRAVITY * (mot.spec.gravityScale ?? 1);
+
   bodyMovement(mot, direction, i1, j1, dt);
 
   rigidbodyMovement(
     level,
     mot.bike,
     {
-      x: leftOut.forceBike.x + rightOut.forceBike.x + direction.x * mot.bike.mass * GRAVITY
+      x: leftOut.forceBike.x + rightOut.forceBike.x + direction.x * mot.bike.mass * gravity
          + j1.x * jet,
-      y: leftOut.forceBike.y + rightOut.forceBike.y + direction.y * mot.bike.mass * GRAVITY
+      y: leftOut.forceBike.y + rightOut.forceBike.y + direction.y * mot.bike.mass * gravity
          + j1.y * jet,
     },
     leftOut.torqueBike + rightOut.torqueBike + levelTorque,
@@ -374,8 +395,8 @@ export function simulateBikePhysics(level, mot, time, dt, gas, brake, rightVolt,
     level,
     mot.leftWheel,
     {
-      x: leftOut.forceWheel.x + direction.x * mot.leftWheel.mass * GRAVITY,
-      y: leftOut.forceWheel.y + direction.y * mot.leftWheel.mass * GRAVITY,
+      x: leftOut.forceWheel.x + direction.x * mot.leftWheel.mass * gravity,
+      y: leftOut.forceWheel.y + direction.y * mot.leftWheel.mass * gravity,
     },
     torqueLeftWheel,
     dt,
@@ -386,8 +407,8 @@ export function simulateBikePhysics(level, mot, time, dt, gas, brake, rightVolt,
     level,
     mot.rightWheel,
     {
-      x: rightOut.forceWheel.x + direction.x * mot.rightWheel.mass * GRAVITY,
-      y: rightOut.forceWheel.y + direction.y * mot.rightWheel.mass * GRAVITY,
+      x: rightOut.forceWheel.x + direction.x * mot.rightWheel.mass * gravity,
+      y: rightOut.forceWheel.y + direction.y * mot.rightWheel.mass * gravity,
     },
     torqueRightWheel,
     dt,

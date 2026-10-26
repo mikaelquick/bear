@@ -215,7 +215,7 @@ export function bodyMovement(mot, gravityDir, i, j, dt) {
   const relativeV = sub(mot.bodyV, neutralV);
   const forceDamping = scale(relativeV, SPRING_RESISTANCE_COEFFICIENT * 3.0);
 
-  const g = mot.bike.mass * GRAVITY;
+  const g = mot.bike.mass * GRAVITY * (mot.spec.gravityScale ?? 1);
   const total = {
     x: forceSpring.x - forceDamping.x + gravityDir.x * g,
     y: forceSpring.y - forceDamping.y + gravityDir.y * g,
