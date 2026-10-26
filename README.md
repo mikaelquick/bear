@@ -60,11 +60,10 @@ igenom väggar — det är så originalet fungerar och det är det banorna är b
 | `←` `→` | Volt — roterar cykeln. Riktningarna är absoluta, inte relativa till hur du är vänd. Båda samtidigt = supervolt. |
 | `Space` | Vänd cykeln |
 | `Enter` / `R` | Börja om |
-| `P` | Paus |
+| `Esc` / `P` | Paus — panelen med fortsätt, börja om, byt maskin och tillbaka till menyn |
 | `G` | Visa/dölj ghost |
 | `M` | Ljud av/på |
 | `F` | Fullskärm av/på |
-| `Esc` | Meny |
 
 Tiden mäts i hundradelar och sparas per bana i `localStorage`.
 
@@ -86,11 +85,38 @@ knuffade in det upp till 59 px för en ö det aldrig skulle röra. Det ett hörn
 måste klara är den rundade skärmkanten: för en ruta indragen `d` på båda axlarna mot ett
 hörn med radie `R` vill geometrin ha `d ≥ R(1 − 1/√2)`, alltså ungefär `0,29R` — så 18 px
 täcker en radie på 61 px, mer än någon iPhone har. Där ligger taket, med golv på 6 px för
-skärmar som varken har skyddsyta eller rundade hörn. Kupräknarens högermarginal följde
-med ner, eftersom den siffran bara finns för att hålla räknaren fri från kugghjulet. Omstart flyttade in i den menyn, där den redan erbjöds, och fullskärmsknappen som
-satt bredvid är borttagen — hörnet visas bara på pekskärmar, och där hade den inget att
+skärmar som varken har skyddsyta eller rundade hörn. Kupräknaren
+är inte längre granne med kugghjulet — hela HUD:en står i vänsterkanten — så
+högermarginalen som bara fanns för att hålla dem isär är borta, och hörnet är
+kugghjulets ensamt. Omstart flyttade in i den menyn, där den redan erbjöds, och
+fullskärmsknappen som satt bredvid är borttagen — hörnet visas bara på pekskärmar, och där hade den inget att
 göra. Installerad finns ingen webbläsarram kvar att gömma; på iPhone finns inte
 Fullscreen API alls; och där det fungerar finns växeln kvar i menyfoten.
+
+**HUD:en är en kolumn.** Tiden och kuporna är de två siffror som ändrar sig medan du
+kör, och de satt länge i varsitt hörn — ögat fick resa tvärs över hela banan för att
+läsa båda. Nu står de på varandra uppe till vänster, klockan störst och kuporna ett
+snurr mindre så att klockan leder; i samma storlek blev de tvillingar och ingen av dem
+ledde. Under dem går banans namn och rekordet på samma rad, med en punkt emellan som
+stilmallen sätter (`#hudBest:not(:empty)::before`) och därmed utelämnar när det inte
+finns något rekord — en rad som sa *inget rekord än* var bara i vägen. Kupikonen är
+samma halmkupa som på banan, ritad en gång till i SVG med `Renderer.drawHive`:s kurvor,
+band och färger. Den var en guldcirkel förut, och en guldcirkel läses som ett mynt,
+vilket är ett annat spel.
+
+**`Esc` pausar, den lämnar inte banan.** På dator fanns ingen väg till pauspanelen alls
+— kugghjulet visas bara på pekskärm, och `P` stod ingenstans på skärmen — medan `Esc`
+kastade bort loppet på första trycket. Nu öppnar `Esc` samma panel som kugghjulet, och
+ett andra tryck sätter dig tillbaka på cykeln. Tangenthinten vid start nämner den, så
+att panelen går att hitta.
+
+I fullskärm är `Esc` dessutom webbläsarens egen tangent för att lämna fullskärm, och
+den behåller `keydown` för sig själv — sidan ser den aldrig. Därför pausar spelet på
+`fullscreenchange` ut ur fullskärm också, så att det blir samma sak vare sig tangenten
+nådde fram eller inte, och **Fortsätt** går in i fullskärm igen när inställningen säger
+det (klicket är just den användargest `requestFullscreen` kräver). Vår egen växel — `F`
+och kryssrutan i menyfoten — är undantagen med en flagga: den betyder "ge mig fönstret
+tillbaka", inte "vänta".
 
 **Målrutan är två rutor.** Ett lopp som slog den sparade tiden får först en egen ruta
 — "Nytt rekord!", tiden stor, och en enda väg vidare — och därefter den som frågar vad

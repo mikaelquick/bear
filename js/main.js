@@ -472,7 +472,9 @@ function startLevel(index, vehicleId = currentVehicle) {
   show('hud', 'startHint', 'touch', 'touchTop');
   $('hudLevel').textContent = level.name;
   const best = loadTimes()[recordKey(level.name, currentVehicle)];
-  $('hudBest').textContent = best === undefined ? 'inget rekord än' : 'bäst ' + formatTime(best);
+  // No record, no line: the HUD says nothing rather than saying there is
+  // nothing to say.
+  $('hudBest').textContent = best === undefined ? '' : 'bäst ' + formatTime(best);
   $('hudGhost').textContent = '';
   hideToast();
   applyFullscreenPreference();
@@ -509,7 +511,10 @@ function startReplay(index, vehicleId = currentVehicle) {
   show('hud', 'replayBadge', 'touchTop');
   $('hudLevel').textContent = entry.data.name;
   $('hudBest').textContent = formatTime(ghost.centiseconds);
+  // Plain muted grey: the element is shared with the ghost readout, which
+  // leaves an ahead/behind colour behind it.
   $('hudGhost').textContent = 'Esc för att stänga';
+  $('hudGhost').className = 'hud-sub';
   hideToast();
 }
 
@@ -712,7 +717,26 @@ function applySettings() {
 function syncFullscreenUi() {
   $('optFullscreen').checked = fullscreen.isActive();
 }
-fullscreen.onChange(syncFullscreenUi);
+
+// Raised across our own toggle so the fullscreenchange it fires is not
+// mistaken for the browser's Escape. The event lands before toggle()
+// resolves, which is why the flag is cleared after the await and not before.
+let togglingFullscreen = false;
+
+// Esc is the browser's own key for leaving fullscreen, and it keeps the
+// keydown to itself — the page never sees it. Without this the player drops
+// out of fullscreen and keeps rolling, at the one moment a pause is most
+// obviously wanted. Our own F or the menu checkbox are excluded: those mean
+// "give me the window back", not "wait".
+function pauseOnFullscreenExit() {
+  if (fullscreen.isActive() || togglingFullscreen) return;
+  if (mode !== 'play' || game.paused || game.state !== STATE.PLAYING) return;
+  // Leaving fullscreen mid-press would otherwise hold the throttle open.
+  game.keys.clear();
+  setPaused(game.togglePause());
+}
+
+fullscreen.onChange(() => { syncFullscreenUi(); pauseOnFullscreenExit(); });
 
 const fsPromptOpen = () => !$('fsPrompt').classList.contains('hidden');
 
@@ -875,10 +899,15 @@ function setGhostEnabled(on) {
 }
 
 async function toggleFullscreen() {
-  const active = await fullscreen.toggle();
-  settings.fullscreen = active;
-  saveSettings();
-  syncFullscreenUi();
+  togglingFullscreen = true;
+  try {
+    const active = await fullscreen.toggle();
+    settings.fullscreen = active;
+    saveSettings();
+    syncFullscreenUi();
+  } finally {
+    togglingFullscreen = false;
+  }
 }
 
 function setSoundEnabled(on) {
@@ -946,9 +975,20 @@ window.addEventListener('keydown', (e) => {
     return;
   }
 
-  // Playing
+  // Playing. Esc is the desktop's gear: it stops the clock and opens the
+  // panel, and pressing it again puts you back on the bike. Leaving the
+  // level is one more click from there, which is the point — Esc used to
+  // throw the run away on the first press, with nothing on screen to warn
+  // you and nothing on screen to tell you that P was the softer key.
   if (e.code === 'Escape') {
     if (game.paused) { game.togglePause(); setPaused(false); return; }
+    // A test run out of the editor goes straight back, as the HUD line
+    // promises. There is no record to lose and the panel has nothing to
+    // offer it.
+    if (returnToEditor) { leavePlay(); return; }
+    // togglePause refuses once the run is over — crashed or finished. Then
+    // there is no pause to open and Esc stays the way out.
+    if (game.togglePause()) { setPaused(true); return; }
     leavePlay();
     return;
   }
@@ -1125,7 +1165,17 @@ $('rideCancel').addEventListener('click', closeRideChoice);
 $('btnBiomeBack').addEventListener('click', closeBiome);
 $('btnEditor').addEventListener('click', () => openEditor(emptyLevel()));
 $('btnImport').addEventListener('click', () => $('fileInput').click());
-$('btnResume').addEventListener('click', () => { game.togglePause(); setPaused(false); });
+// Back in where you left off, fullscreen and all. Most of the time this
+// panel was opened by an Esc that the browser read as "leave fullscreen",
+// so resuming without going back in would punish the player for using the
+// pause key. The click is itself the user gesture requestFullscreen needs.
+// settings.fullscreen still says yes after such an exit — only the F key
+// and the menu checkbox write a no there.
+$('btnResume').addEventListener('click', () => {
+  if (settings.fullscreen && !fullscreen.isActive()) fullscreen.request();
+  game.togglePause();
+  setPaused(false);
+});
 $('btnPauseRestart').addEventListener('click', restartRun);
 $('btnPauseRide').addEventListener('click', () => openRideChoice(currentIndex, 'pause'));
 $('btnPauseMenu').addEventListener('click', () => { game.paused = false; leavePlay(); });

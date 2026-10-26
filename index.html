@@ -88,14 +88,42 @@
 <canvas id="view"></canvas>
 
 <!-- In-game HUD -->
+<!-- One column, in the top-left corner. The counter used to sit opposite,
+     which cost the eye a trip across the whole playfield between the two
+     numbers that change while you ride. Stacked, the clock and the kupor
+     are read in one glance, and the right-hand corner is left to the gear
+     on touch and to nothing at all on a desktop. -->
 <div id="hud" class="hidden">
   <div class="hud-left">
     <div class="hud-time" id="hudTime">00:00,00</div>
-    <div class="hud-sub"><span id="replayBadge" class="badge hidden">REPRIS</span><span id="hudLevel"></span></div>
-  </div>
-  <div class="hud-right">
-    <div class="hud-hives"><span class="hive-dot"></span><span id="hudHives">0</span></div>
-    <div class="hud-sub" id="hudBest"></div>
+    <div class="hud-hives">
+      <!-- The skep from the playfield, drawn again in SVG with the same
+           path, bands and colours as Renderer.drawHive. A plain gold disc
+           read as a coin, which is a different game. -->
+      <svg class="hive-icon" viewBox="0 0 24 24" aria-hidden="true">
+        <defs>
+          <linearGradient id="hiveStraw" x1="2" y1="2" x2="22" y2="22"
+                          gradientUnits="userSpaceOnUse">
+            <stop offset="0" stop-color="#e8c070"/>
+            <stop offset="1" stop-color="#b8863a"/>
+          </linearGradient>
+        </defs>
+        <path d="M3.5 21H20.5Q21.5 10 12 2Q2.5 10 3.5 21Z" fill="url(#hiveStraw)"
+              stroke="#7a5520" stroke-width="1.5" stroke-linejoin="round"/>
+        <path d="M3.3 9h17.4M3 12h18M3.3 15h17.4M4.2 18h15.6"
+              stroke="rgba(122,85,32,0.55)" stroke-width="1"/>
+        <ellipse cx="12" cy="17" rx="1.8" ry="2.6" fill="#4a3010"/>
+      </svg>
+      <span id="hudHives">0</span>
+    </div>
+    <!-- Level, record and replay badge on one quiet line. hudBest is empty
+         when there is no record: a line saying there is nothing to say was
+         only ever in the way. -->
+    <div class="hud-sub hud-meta">
+      <span id="replayBadge" class="badge hidden">REPRIS</span>
+      <span id="hudLevel"></span>
+      <span id="hudBest"></span>
+    </div>
     <div class="hud-sub" id="hudGhost"></div>
   </div>
 </div>
@@ -108,10 +136,11 @@
   <span class="hint-bike">
     <kbd>↑</kbd> gas &nbsp;·&nbsp; <kbd>↓</kbd> broms &nbsp;·&nbsp;
     <kbd>←</kbd><kbd>→</kbd> volt &nbsp;·&nbsp; <kbd>Space</kbd> vänd
+    &nbsp;·&nbsp; <kbd>Esc</kbd> paus
   </span>
   <span class="hint-car">
     <kbd>↑</kbd> gas &nbsp;·&nbsp; <kbd>↓</kbd> broms &nbsp;·&nbsp;
-    <kbd>Space</kbd> tryckluft
+    <kbd>Space</kbd> tryckluft &nbsp;·&nbsp; <kbd>Esc</kbd> paus
   </span>
 </div>
 
@@ -394,11 +423,11 @@
             även när du vänt. Båda samtidigt = supervolt.</td></tr>
         <tr><td><kbd>Space</kbd></td><td>Vänd cykeln</td></tr>
         <tr><td><kbd>Enter</kbd> / <kbd>R</kbd></td><td>Börja om</td></tr>
-        <tr><td><kbd>P</kbd></td><td>Paus</td></tr>
+        <tr><td><kbd>Esc</kbd> / <kbd>P</kbd></td><td>Paus — panelen med fortsätt,
+            börja om, byt maskin och tillbaka till menyn</td></tr>
         <tr><td><kbd>G</kbd></td><td>Visa/dölj ghost (ditt bästa lopp)</td></tr>
         <tr><td><kbd>M</kbd></td><td>Ljud av/på</td></tr>
         <tr><td><kbd>F</kbd></td><td>Fullskärm av/på</td></tr>
-        <tr><td><kbd>Esc</kbd></td><td>Tillbaka till menyn</td></tr>
       </table>
       <p class="fine">Tiden mäts i hundradelar. Banan är inte klar förrän alla kupor är tagna —
          krukan gör ingenting innan dess.</p>

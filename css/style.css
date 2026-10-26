@@ -178,24 +178,23 @@ body.turn-180 #stage {
   line-height: 1;
 }
 
-.hud-right { text-align: right; }
-
+/* Under the clock, and deliberately a size down from it. Side by side at
+   the old 32px the two numbers were twins and neither led; the clock is
+   what you are racing, so it keeps the top line to itself. */
 .hud-hives {
-  font-size: 32px;
+  font-size: 26px;
   font-weight: 700;
   display: flex;
   align-items: center;
-  gap: 9px;
-  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 7px;
   line-height: 1;
 }
 
-.hive-dot {
-  width: 20px; height: 20px;
-  border-radius: 50% 50% 42% 42%;
-  background: linear-gradient(145deg, #e8c070, #b8863a);
-  border: 1.5px solid #7a5520;
-  box-shadow: 0 0 12px rgba(240, 168, 48, 0.35);
+.hive-icon {
+  width: 22px; height: 22px;
+  display: block;
+  filter: drop-shadow(0 0 7px rgba(240, 168, 48, 0.4));
 }
 
 .hud-sub {
@@ -203,6 +202,17 @@ body.turn-180 #stage {
   color: var(--muted);
   margin-top: 6px;
 }
+
+/* The badge, the level name and the record share a line. The separator is
+   the stylesheet's job because the record is often empty, and a dot left
+   hanging after a level name is worse than no dot. */
+.hud-meta {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+#hudBest:not(:empty)::before { content: '· '; }
 
 .hint {
   position: fixed;
@@ -927,7 +937,8 @@ p { line-height: 1.6; font-size: 14px; }
   h1 { font-size: 30px; }
   .panel { padding: 20px 18px 16px; }
   .hud-time { font-size: 28px; }
-  .hud-hives { font-size: 24px; }
+  .hud-hives { font-size: 22px; }
+  .hive-icon { width: 19px; height: 19px; }
   .tabs { overflow-x: auto; }
 }
 
@@ -1061,11 +1072,9 @@ body.touch #touchTop:not(.hidden) { display: flex; }
    still offers the switch. One button is also one less thing between a
    child and the gear. The markup went with it rather than being hidden.
 
-   Keep the hive counter clear of what is left. This number is derived, not
-   chosen: the gear's inset plus its width plus a gap, less the HUD's own
-   22 px of padding. It came down with the gear — left at the old value the
-   counter would sit staring across an empty strip at nothing. */
-body.touch #hud .hud-right { padding-right: 44px; }
+   The HUD used to need a right-hand inset to keep the hive counter clear
+   of the gear. The counter has moved to the left column, so the gear now
+   has the corner to itself and the inset is gone. */
 
 /* The per-turn mapping lives in :root now, so these need no override of
    their own — and the pair they used to set had two of the four edges the
@@ -1324,14 +1333,12 @@ body.thruster .hint-car { display: inline; }
 body.short .tbtn.volt { width: 54px; height: 54px; }
 body.short .tbtn.turn { width: 54px; height: 54px; }
 body.short .tbtn.small { width: 36px; height: 36px; }
-/* Same sum with the short screen's smaller gear: 18 + 36 + 8 - 22. */
-body.short.touch #hud .hud-right { padding-right: 40px; }
 body.short .tbtn.pedal { width: 64px; height: 88px; }
 body.short .tbtn.brake { height: 74px; }
 body.short .tbtn.turn .glyph { font-size: 21px; }
 body.short.touch .hud-time { font-size: 24px; }
-body.short.touch .hud-hives { font-size: 21px; }
-body.short.touch .hive-dot { width: 15px; height: 15px; }
+body.short.touch .hud-hives { font-size: 20px; margin-top: 5px; }
+body.short.touch .hive-icon { width: 17px; height: 17px; }
 body.short.touch .hud-sub { font-size: 11px; margin-top: 3px; }
 body.short.touch #hud { padding: 10px 14px; }
 
