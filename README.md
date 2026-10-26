@@ -308,14 +308,32 @@ ställe i stället för utspridd i `forces.js`.
 Ett fordon är bara värt att ha om det är bättre på något. En maskin som bara är
 långsammare är aldrig rätt svar på någon bana, så varje fordon byter bort något:
 
-| | Motorcykeln 🏍️ | Cykeln 🚲 | Elbilen 🚙 |
-|---|---|---|---|
-| Dragkraft | 600 | 420 | 950 |
-| Topp (hjulvarv × radie) | 110 × 0,4 | 98 × 0,36 | 62 × 0,38 |
-| Vikt | 200 | 120 | 260 |
-| Hjulbas | 1,7 | 1,3 | 3,4 |
-| Volt | 12 | 15 | — |
-| Tryckluft | — | — | 4200 N, 1,5 s |
+| | Motorcykeln 🏍️ | Cykeln 🚲 | Elbilen 🚙 | Måncykeln 🌙 | Magneten 🧲 |
+|---|---|---|---|---|---|
+| Dragkraft | 600 | 420 | 950 | 360 | 1000 |
+| Rivstart | — | — | ×2,2 | — | ×1,8 |
+| Topp (hjulvarv × radie) | 110 × 0,4 | 98 × 0,36 | 62 × 0,38 | 92 × 0,38 | 96 × 0,42 |
+| Vikt | 200 | 120 | 260 | 110 | 320 |
+| Hjulbas | 1,7 | 1,3 | 3,4 | 1,45 | 1,9 |
+| Volt | 12 | 15 | — | 13 | 8 |
+| Tyngdkraft | 10 | 10 | 13 | 4,2 | 17 |
+| Tryckluft | — | — | 5400 N, 1,5 s | — | — |
+
+De två sista erbjuds bara där de nämns vid namn (`general: false`), och de nämns bara
+på var sin Beta-bana — se **Beta** nedan.
+
+**Tyngdkraft är en egenskap hos maskinen, inte hos världen.** Det behövs eftersom massa
+inte gör det åt en: i en stelkroppssimulering faller allt lika fort oavsett vad det
+väger, så en maskin som *ska kännas* tung måste bli tillsagd det. `gravityScale` är en
+multipel av den portade tian, och 1 är ett rent `GRAVITY * 1`, vilket är exakt
+`GRAVITY` — cyklarna kommer ut ur samma aritmetik de alltid gjort, och
+`physics.test.js` håller med.
+
+**Rivstart är samma sak för draget.** En elmotor drar hårdast från stillastående, så
+dragkraften multipliceras med `launchBoost` vid noll hjulvarv och faller tillbaka till
+den vanliga siffran vid `launchFade` av toppfarten. Istaket i `forces.js` klampar med
+flit mot den *vanliga* siffran, så en rivstart på Isbanan är fortfarande en rivstart
+som inte tar en någonstans.
 
 Cykeln ger alltså upp fart och drag mot lätthet, kort hjulbas och snabbare volt — den
 att ta in i ett trångt schakt, och fel val på en lång öppen sträcka.
@@ -627,6 +645,33 @@ hittas någonstans, och längre ansatser för att den ska hinna byggas.
 
 Båda är med flit lätta. Det är inte cyklarnas spel — ingen volt, bilen rätar upp sig
 själv, och enda frågan är när luften ska gå åt.
+
+### De två maskinbanorna
+
+**Lätta steget** och **Tunga steget** är båda *1. Första steget*, oförändrad, ner till
+sista kupan. Det är designen och inte lathet: en ny maskin är bara värd att känna på
+mark man redan kan utantill. Kör samma kulle på Måncykeln och på Magneten och det enda
+som skiljer de två loppen åt är vad man sitter på; på ny mark hade man lärt sig marken.
+Kullen byggs därför av `firstHill()` i `levels.js` — en funktion, inte en konstant, så
+att de tre banorna får var sina fält och ingen kan räcka över och ändra de andras.
+
+**🌙 Måncykeln** faller under 4,2 i stället för 10. Ett hopp man hade fått förtjäna
+på motorcykeln är en promenad, och en landning som hade brutit nacken är en fjäder.
+Det den ger upp är inte fart utan grepp om sin egen nos: draget genom bakhjulet tippar
+ramen uppåt och det som håller framänden nere är tyngd, varav det nu finns två
+femtedelar. Gasen är alltså något man knackar på, inte håller. Under ett lågt tak är
+den spelets sämsta maskin: den tar en evighet på sig att komma ner igen.
+
+**🧲 Magneten** faller under 17, och namnet är förklaringen ett barn behöver: den
+dras mot marken. Tung, lång och stark — den klättrar det ingen annan klättrar och far
+i väg från en ramp som en kastad tegelsten. Och kommer rakt ner igen. Luften är vad
+den byter bort: över ett hål är den sämst här, och den långa volten (8 mot
+motorcykelns 12) räcker inte till för att reda ut något under den korta tid den är
+uppe. Flyg den plant eller flyg den inte.
+
+Ett fall på tre meter säger det kortast: 1,20 s på Måncykeln, 0,77 på
+motorcykeln, 0,59 på Magneten. Mer än dubbelt så länge i luften mellan ytterligheterna,
+på samma kulle, med samma knappar.
 
 ## Repriser och ghosts
 

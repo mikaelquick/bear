@@ -255,6 +255,76 @@ export const VEHICLES = [
       selfLevelDamping: 1100,
     }),
   },
+
+  // ---------------------------------------------------------------------
+  // The two below are Beta's, and they exist to be played with. Neither is
+  // offered anywhere a normal run goes: they have `general: false` and one
+  // level apiece, so a player who never opens Beta never meets them.
+  //
+  // They are the same idea twice, pointing opposite ways. Both are plain
+  // bikes with a volt — no new button to learn, nothing in the controls
+  // that is not already there — and the only thing really changed is what
+  // gravity they fall under. That is enough to make them feel like two
+  // different games, which is the thing worth finding out.
+  // ---------------------------------------------------------------------
+  {
+    id: 'moonbike',
+    name: 'Måncykeln',
+    emoji: '🌙',
+    general: false,
+    // 0.42 g. A gap you would have to earn on the motorbike is a stroll,
+    // and a landing that would break your neck is a feather.
+    //
+    // What it gives up is not speed, it is grip on its own nose. Torque
+    // through the back wheel pitches the frame up, and what holds the
+    // front down is weight — of which there is now two fifths. So the
+    // throttle is something you tap rather than hold, and the pull is a
+    // notch under the bicycle's to make that playable rather than cruel.
+    // Under a low ceiling it is the worst machine in the game: it takes an
+    // age to come back down and there is nothing to be done about it.
+    spec: build({
+      wheelbase: 1.45,
+      mass: 110,
+      inertia: 110 * 0.45 * 0.45,
+      wheelRadius: 0.38,
+      wheelMass: 6,
+      wheelInertia: 0.2 * 6 * 0.38 * 0.38,
+      gasTorque: 360,
+      maxAngularVelocity: 92,
+      voltAngularVelocity: 13,
+      frameColor: '#cfd6ff',
+      pedals: true,
+      gravityScale: 0.42,
+    }),
+  },
+  {
+    id: 'magnet',
+    name: 'Magneten',
+    emoji: '🧲',
+    general: false,
+    // 1.7 g, and the name is the explanation a child needs: it is pulled
+    // at the ground. Heavy, long and strong — it climbs what nothing else
+    // climbs and it launches off a ramp like a thrown brick.
+    //
+    // And then it comes straight back down. Air time is what it trades:
+    // over a gap it is the worst machine here, and the slow volt means
+    // that what little time it has in the air is not enough to sort
+    // itself out in. Fly it flat or do not fly it.
+    spec: build({
+      wheelbase: 1.9,
+      mass: 320,
+      inertia: 320 * 0.6 * 0.6,
+      wheelRadius: 0.42,
+      wheelMass: 16,
+      wheelInertia: 0.2 * 16 * 0.42 * 0.42,
+      gasTorque: 1000,
+      maxAngularVelocity: 96,
+      voltAngularVelocity: 8,
+      frameColor: '#7a45d6',
+      gravityScale: 1.7,
+      launchBoost: 1.8,
+    }),
+  },
 ];
 
 export const DEFAULT_VEHICLE = 'motorbike';

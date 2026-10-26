@@ -29,21 +29,35 @@ const hive = (x, y, gravity) =>
   gravity === undefined ? { type: OBJ.APPLE, x, y } : { type: OBJ.APPLE, x, y, gravity };
 const wasps = (x, y) => ({ type: OBJ.KILLER, x, y });
 
+// The first hill, built once. It is level one of Skogen, and it is also the
+// two Beta levels where a new machine is tried out — the whole point of
+// those is that the ground underneath is one you already know by heart, so
+// what you are feeling is the machine and nothing else. A function, not a
+// constant: each level gets its own arrays, and nothing can reach across
+// and edit the others.
+//
+// Changing these numbers changes level one of the game, and its ghosts go
+// with it. That is the price of the three staying the same hill, and it is
+// the right way round: three copies that drift apart would be worse.
+const firstHill = () => ({
+  polygons: [
+    ...grassyCave(
+      [[0, 0], [8, 0], [12, -0.6], [17, -0.6], [21, 0.6], [27, 0.6], [31, 0], [42, 0]],
+      [[0, 13], [42, 13]]
+    ),
+  ],
+  objects: [
+    start(4, 1.1),
+    hive(10, 0.5), hive(14.5, -0.1), hive(23, 1.2), hive(29, 1.1),
+    exit(39, 0.6),
+  ],
+});
+
 export const LEVELS = [
   {
     name: '1. Första steget',
     difficulty: 1,
-    polygons: [
-      ...grassyCave(
-        [[0, 0], [8, 0], [12, -0.6], [17, -0.6], [21, 0.6], [27, 0.6], [31, 0], [42, 0]],
-        [[0, 13], [42, 13]]
-      ),
-    ],
-    objects: [
-      start(4, 1.1),
-      hive(10, 0.5), hive(14.5, -0.1), hive(23, 1.2), hive(29, 1.1),
-      exit(39, 0.6),
-    ],
+    ...firstHill(),
   },
 
   {
@@ -652,5 +666,35 @@ export const LEVELS = [
       wasps(34, -11.4), wasps(71, -13.4), wasps(103, -13.4),
       exit(126, -6.4),
     ],
+  },
+
+  // ---------------------------------------------------------------------
+  // The two machine levels. Both are level one of Skogen, unchanged, down
+  // to the last hive — and that is the design, not laziness. A new machine
+  // is only worth feeling on ground you already know: ride the same hill
+  // on the Måncykeln and on the Magneten and the only thing that differs
+  // between the two runs is what you are sitting on. On new ground you
+  // would be learning the ground.
+  //
+  // They stay in Beta alone. Someone who never opens that shelf never
+  // meets either machine, which is the point of the shelf.
+  // ---------------------------------------------------------------------
+
+  {
+    name: 'Lätta steget',
+    biome: 'beta',
+    theme: 'forest',
+    vehicles: ['moonbike'],
+    difficulty: 1,
+    ...firstHill(),
+  },
+
+  {
+    name: 'Tunga steget',
+    biome: 'beta',
+    theme: 'forest',
+    vehicles: ['magnet'],
+    difficulty: 1,
+    ...firstHill(),
   },
 ];
