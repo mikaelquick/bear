@@ -29,22 +29,41 @@ const WHEEL_DROP = DEFAULT_BIKE.r.y - DEFAULT_LEFT_WHEEL.r.y; // 0.6
  * authored as "how long, how heavy, how strong" rather than as a pile of
  * absolute spawn coordinates.
  */
-function build({ wheelbase, mass, inertia, wheelRadius, wheelMass, wheelInertia,
+function build({ wheelbase, mass, inertia, wheelRadius, rearWheelRadius = null,
+                 wheelMass, wheelInertia,
                  gasTorque, maxAngularVelocity, voltAngularVelocity, frameColor,
                  pedals = false, body = 'bike', wheelStyle = null,
                  volt = true, canTurn = true,
                  bodyDy = BODY_DY, headUp = HEAD_UP,
                  thrust = 0, thrustTank = 0, thrustRefill = 1,
-                 selfLevel = 0, selfLevelDamping = 0,
+                 selfLevel = 0, selfLevelDamping = 0, balanceOnGround = false,
                  gravityScale = 1, launchBoost = 1, launchFade = 0.4 }) {
   const half = wheelbase / 2;
   const anchor = DEFAULT_BIKE.r;
   const wheelY = anchor.y - WHEEL_DROP;
-  const wheel = (x) => ({ radius: wheelRadius, mass: wheelMass, inertia: wheelInertia, r: { x, y: wheelY } });
+  // The two wheels are usually the same size, and `rearWheelRadius` is for
+  // the one machine that is a trike. Inertia follows the radius so a
+  // different wheel keeps the original's inertia-to-mr² ratio rather than
+  // being invented; same size means a multiply by exactly 1, so every
+  // other machine comes out of the arithmetic it always did.
+  //
+  // Note what a different rear wheel also does: the hubs hang at the same
+  // height, so a smaller one puts its contact point higher and the whole
+  // machine sits nose-up. On a trike that is not a bug, it is what a trike
+  // looks like.
+  const wheel = (x, radius) => ({
+    radius,
+    mass: wheelMass,
+    inertia: wheelInertia * (radius / wheelRadius) ** 2,
+    r: { x, y: wheelY },
+  });
+  const rear = rearWheelRadius || wheelRadius;
   return {
     bike: { radius: DEFAULT_BIKE.radius, mass, inertia, r: { ...anchor } },
-    leftWheel: wheel(anchor.x - half),
-    rightWheel: wheel(anchor.x + half),
+    // Spawned flipped, which is facing +x, so the left wheel is the one
+    // behind: the trailing wheel that drives, and the trike's small one.
+    leftWheel: wheel(anchor.x - half, rear),
+    rightWheel: wheel(anchor.x + half, wheelRadius),
     bodyR: { ...DEFAULT_BODY_R },
     leftWheelDx: -half,
     leftWheelDy: -WHEEL_DROP,
@@ -96,6 +115,9 @@ function build({ wheelbase, mass, inertia, wheelRadius, wheelMass, wheelInertia,
     // from the player.
     selfLevel,
     selfLevelDamping,
+    // Whether that spring also runs while a wheel is on the ground. True
+    // for the unicycle and nothing else: see the note in forces.js.
+    balanceOnGround,
     // What gravity this machine falls under, as a multiple of the ported
     // 10 m/s². Mass does not do this on its own: in a rigid-body sim every
     // body falls at the same rate whatever it weighs, so a heavy machine
@@ -341,6 +363,82 @@ export const VEHICLES = [
       wheelStyle: 'fat',
       gravityScale: 1.7,
       launchBoost: 1.8,
+    }),
+  },
+  {
+    id: 'trike',
+    name: 'Trehjulingen',
+    emoji: '🛺',
+    general: false,
+    // A child's trike, which from the side is a big front wheel, a little
+    // one at the back and not much in between. The small driven wheel is
+    // the whole character: top speed is the wheel cap times *its* radius,
+    // so 86 × 0.26 is about 22 m/s however hard it pulls.
+    //
+    // It trades air for footing. Long for its height, heavy down low and
+    // with a volt of 7 against the motorbike's 12, it is the one machine
+    // that will not loop itself when you open the throttle on a climb —
+    // and the one that cannot do anything useful once it leaves the
+    // ground. Nose-up at rest, because the back wheel is smaller than the
+    // front one and the hubs hang level.
+    spec: build({
+      wheelbase: 1.15,
+      mass: 150,
+      inertia: 150 * 0.5 * 0.5,
+      wheelRadius: 0.44,
+      rearWheelRadius: 0.26,
+      wheelMass: 8,
+      wheelInertia: 0.2 * 8 * 0.44 * 0.44,
+      gasTorque: 520,
+      maxAngularVelocity: 86,
+      voltAngularVelocity: 7,
+      frameColor: '#e2563f',
+      pedals: true,
+      body: 'trike',
+      wheelStyle: 'disc',
+    }),
+  },
+  {
+    id: 'unicycle',
+    name: 'Enhjulingen',
+    emoji: '🎪',
+    general: false,
+    // One wheel. The simulation has exactly two and always will — it is
+    // the ported one — so this is two wheels 14 cm apart with a single
+    // wheel drawn over the pair. That is a liberty, and it is the honest
+    // kind: with the contact patches that close together the machine
+    // pitches as freely as a real unicycle does, which is the thing being
+    // modelled. What it costs is a frame held up by two springs instead of
+    // one, so it rides a little stiffer than its weight suggests.
+    //
+    // Nothing holds the nose down, so the throttle loops it on sight and
+    // the gas torque is small for that reason. In return the volt is 20,
+    // far and away the quickest here: it can be anywhere in the air it
+    // wants to be. A machine for turning on a coin and for nothing else.
+    spec: build({
+      wheelbase: 0.14,
+      mass: 70,
+      // Not 70 × 0.28². The inertia is the one number this machine turns
+      // out to live or die by, and it was found by measurement rather than
+      // by taste: the scripted driver clears the level on 8 seeds in 10 at
+      // 70 × 0.41², on 2 to 6 anywhere in 11–14, and on *none at all* at
+      // 10 or below, where the thing simply loops itself off the start
+      // line. A cliff on one side and a plateau on the other, so this sits
+      // on the plateau. See the sweep in the commit message.
+      inertia: 70 * 0.41 * 0.41,
+      wheelRadius: 0.45,
+      wheelMass: 5,
+      wheelInertia: 0.2 * 5 * 0.45 * 0.45,
+      gasTorque: 220,
+      maxAngularVelocity: 80,
+      voltAngularVelocity: 20,
+      frameColor: '#f2c14e',
+      pedals: true,
+      body: 'uni',
+      wheelStyle: 'spoked',
+      selfLevel: 900,
+      selfLevelDamping: 300,
+      balanceOnGround: true,
     }),
   },
 ];

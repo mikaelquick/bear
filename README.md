@@ -308,18 +308,18 @@ ställe i stället för utspridd i `forces.js`.
 Ett fordon är bara värt att ha om det är bättre på något. En maskin som bara är
 långsammare är aldrig rätt svar på någon bana, så varje fordon byter bort något:
 
-| | Motorcykeln 🏍️ | Cykeln 🚲 | Elbilen 🚙 | Måncykeln 🌙 | Magneten 🧲 |
-|---|---|---|---|---|---|
-| Dragkraft | 600 | 420 | 950 | 360 | 1000 |
-| Rivstart | — | — | ×2,2 | — | ×1,8 |
-| Topp (hjulvarv × radie) | 110 × 0,4 | 98 × 0,36 | 62 × 0,38 | 92 × 0,38 | 96 × 0,42 |
-| Vikt | 200 | 120 | 260 | 110 | 320 |
-| Hjulbas | 1,7 | 1,3 | 3,4 | 1,45 | 1,9 |
-| Volt | 12 | 15 | — | 13 | 8 |
-| Tyngdkraft | 10 | 10 | 13 | 4,2 | 17 |
-| Tryckluft | — | — | 5400 N, 1,5 s | — | — |
+| | Motorcykeln 🏍️ | Cykeln 🚲 | Elbilen 🚙 | Måncykeln 🌙 | Magneten 🧲 | Trehjulingen 🛺 | Enhjulingen 🎪 |
+|---|---|---|---|---|---|---|---|
+| Dragkraft | 600 | 420 | 950 | 360 | 1000 | 520 | 220 |
+| Rivstart | — | — | ×2,2 | — | ×1,8 | — | — |
+| Topp (hjulvarv × radie) | 110 × 0,4 | 98 × 0,36 | 62 × 0,38 | 92 × 0,38 | 96 × 0,42 | 86 × 0,26 | 80 × 0,45 |
+| Vikt | 200 | 120 | 260 | 110 | 320 | 150 | 70 |
+| Hjulbas | 1,7 | 1,3 | 3,4 | 1,45 | 1,9 | 1,15 | 0,14 |
+| Volt | 12 | 15 | — | 13 | 8 | 7 | 20 |
+| Tyngdkraft | 10 | 10 | 13 | 4,2 | 17 | 10 | 10 |
+| Tryckluft | — | — | 5400 N, 1,5 s | — | — | — | — |
 
-De två sista erbjuds bara där de nämns vid namn (`general: false`), och de nämns bara
+De fyra sista erbjuds bara där de nämns vid namn (`general: false`), och de nämns bara
 på var sin Beta-bana — se **Beta** nedan.
 
 **Tyngdkraft är en egenskap hos maskinen, inte hos världen.** Det behövs eftersom massa
@@ -646,14 +646,14 @@ hittas någonstans, och längre ansatser för att den ska hinna byggas.
 Båda är med flit lätta. Det är inte cyklarnas spel — ingen volt, bilen rätar upp sig
 själv, och enda frågan är när luften ska gå åt.
 
-### De två maskinbanorna
+### De fyra maskinbanorna
 
-**Lätta steget** och **Tunga steget** är båda *1. Första steget*, oförändrad, ner till
-sista kupan. Det är designen och inte lathet: en ny maskin är bara värd att känna på
-mark man redan kan utantill. Kör samma kulle på Måncykeln och på Magneten och det enda
-som skiljer de två loppen åt är vad man sitter på; på ny mark hade man lärt sig marken.
+**Lätta steget**, **Tunga steget**, **Trampturen** och **Balansturen** är alla fyra
+*1. Första steget*, oförändrad, ner till sista kupan. Det är designen och inte lathet: en ny maskin är bara värd att känna på
+mark man redan kan utantill. Kör samma kulle på fyra maskiner och det enda
+som skiljer loppen åt är vad man sitter på; på ny mark hade man lärt sig marken.
 Kullen byggs därför av `firstHill()` i `levels.js` — en funktion, inte en konstant, så
-att de tre banorna får var sina fält och ingen kan räcka över och ändra de andras.
+att de fem banorna får var sina fält och ingen kan räcka över och ändra de andras.
 
 Och de ska **se ut** som det de är. En maskin som bara har en annan färg är samma
 maskin, så `body` har två nya värden (`'space'` och `'heavy'`) och hjulen har tre
@@ -697,6 +697,40 @@ kan räkna — mest gummi och lite fälg, tvärtemot motorcykelns skiva.
 Ett fall på tre meter säger det kortast: 1,20 s på Måncykeln, 0,77 på
 motorcykeln, 0,59 på Magneten. Mer än dubbelt så länge i luften mellan ytterligheterna,
 på samma kulle, med samma knappar.
+
+**🛺 Trehjulingen** (Trampturen) är en barntrehjuling: stort framhjul, litet bakhjul
+och inte mycket däremellan. Det lilla *drivande* hjulet är hela karaktären — toppfarten
+är hjultaket gånger *dess* radie, alltså 86 × 0,26, hur hårt den än drar. Den byter luft
+mot fotfäste: lång för sin höjd, tung långt ner och med en volt på 7, är den enda
+maskinen som inte slår runt när man gasar i en backe — och den som inte kan göra
+någonting vettigt när den väl lämnat marken. Den står med nosen upp i vila, för
+bakhjulet är mindre än framhjulet medan naven hänger på samma höjd. Det är inte ett
+fel; det är hur en trehjuling ser ut. (`rearWheelRadius` finns för den här enda
+maskinen, och tröghetsmomentet följer radien så att förhållandet till *mr²* är
+originalets även när hjulet inte är det. Samma radie är en multiplikation med exakt 1.)
+
+**🎪 Enhjulingen** (Balansturen) är ett hjul. Simuleringen har exakt två och kommer
+alltid att ha det — den är portad — så det här är två hjul 14 cm isär med *ett* ritat
+över paret. Friheten är av det ärliga slaget: med kontaktpunkterna så nära varandra
+tippar maskinen lika fritt som en riktig enhjuling, vilket är det som ska modelleras,
+och det ritade täcker allt utom sju centimeter av varje träffyta — mindre än däcket är
+tjockt. Vad det kostar är en ram som bärs av två fjädrar i stället för en, så den åker
+lite styvare än sin vikt antyder.
+
+Två saker var tvungna att mätas fram på den, inte tyckas fram:
+
+- **Tröghetsmomentet är en klippa på ena sidan och en platå på den andra.** Den
+  skriptade föraren klarar banan på 8 frön av 10 vid 70 × 0,41², på 2–6 var som helst i
+  11–14, och på *inget alls* vid 10 eller lägre, där saken helt enkelt slår runt på
+  startlinjen. Värdet ligger på platån.
+- **Att boten klarar den bevisar inte att en människa gör det.** Boten styr varje
+  bildruta. Med enbart gas och mänsklig reaktionstid låg enhjulingen på rygg efter en
+  sekund, varje gång. Det är därför `balanceOnGround` finns: den låter
+  självrätningsfjädern gå även när hjulet rör marken, vilket är vad en enhjulist
+  faktiskt gör — håller balansen själv i stället för att få den av marken. Den är svag
+  nog att vara en ryttare och inte ett gyro: full gas har fortfarande nosen i vädret,
+  den slutar bara innan golvet. Flaggan gäller den här maskinen och ingen annan; på
+  bilen är fjädern luft-bara, så att den aldrig slåss med fjädringen på ojämn mark.
 
 ## Repriser och ghosts
 

@@ -697,4 +697,22 @@ export const LEVELS = [
     difficulty: 1,
     ...firstHill(),
   },
+
+  {
+    name: 'Trampturen',
+    biome: 'beta',
+    theme: 'forest',
+    vehicles: ['trike'],
+    difficulty: 1,
+    ...firstHill(),
+  },
+
+  {
+    name: 'Balansturen',
+    biome: 'beta',
+    theme: 'forest',
+    vehicles: ['unicycle'],
+    difficulty: 1,
+    ...firstHill(),
+  },
 ];

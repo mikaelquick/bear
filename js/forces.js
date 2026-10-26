@@ -359,11 +359,25 @@ export function simulateBikePhysics(level, mot, time, dt, gas, brake, rightVolt,
   const jet = mot.thrusting ? mot.spec.thrust : 0;
 
   // Fly-by-wire, for a machine that has no volt to straighten itself with.
-  // An angular spring towards upright, running only while both wheels are
-  // off the ground so it never fights the suspension on a bumpy road.
-  // Upright means "opposing gravity", so it keeps working after a flip.
+  // An angular spring towards upright. Normally it runs only while both
+  // wheels are off the ground, so it never fights the suspension on a
+  // bumpy road. Upright means "opposing gravity", so it keeps working
+  // after a flip.
+  //
+  // `balanceOnGround` lets it run while touching as well, and exists for
+  // exactly one machine. A unicycle's two contact patches are 14 cm apart,
+  // which is to say it has none: nothing about the ground resists a pitch,
+  // so the throttle alone lays it on its back in about a second and no
+  // hand on a keyboard is quick enough to catch it. A real unicyclist is
+  // not relying on the ground either — they are balancing — and this is
+  // that. It is weak enough to be a rider and not a gyroscope: full
+  // throttle still has the nose up, it just stops short of the floor.
+  //
+  // There is no suspension for it to fight on that machine, either, since
+  // the wheels are on top of each other.
   let levelTorque = 0;
-  if (mot.spec.selfLevel > 0 && !mot.leftWheel.touchingEdge && !mot.rightWheel.touchingEdge) {
+  const grounded = mot.leftWheel.touchingEdge || mot.rightWheel.touchingEdge;
+  if (mot.spec.selfLevel > 0 && (!grounded || mot.spec.balanceOnGround)) {
     const upright = Math.atan2(-direction.y, -direction.x) - Math.PI / 2;
     let err = (upright - mot.bike.rotation) % (2 * Math.PI);
     if (err > Math.PI) err -= 2 * Math.PI;

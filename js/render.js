@@ -637,10 +637,27 @@ export class Renderer {
     ctx.moveTo(bx, by); ctx.lineTo(this.sx(mot.leftWheel.r.x), this.sy(mot.leftWheel.r.y));
     ctx.moveTo(bx, by); ctx.lineTo(this.sx(mot.rightWheel.r.x), this.sy(mot.rightWheel.r.y));
     ctx.stroke();
+    // Both struts are drawn for every machine including the unicycle's,
+    // where they sit 14 cm apart and read as the two legs of one fork,
+    // which is exactly what a unicycle has.
 
     const style = mot.wheelStyle || (mot.pedals ? 'spoked' : 'disc');
-    this.drawWheel(mot.leftWheel, style);
-    this.drawWheel(mot.rightWheel, style);
+    if (mot.body === 'uni') {
+      // One wheel over the pair. They are 14 cm apart and 90 cm across, so
+      // what is drawn covers all but a sliver of both hitboxes — the
+      // drawing is honest to within seven centimetres, which is less than
+      // the tyre is thick. Drawn on the driven wheel's rotation, since
+      // that is the one the bear's feet are turning.
+      const a = mot.leftWheel;
+      const b = mot.rightWheel;
+      const mid = { r: { x: (a.r.x + b.r.x) / 2, y: (a.r.y + b.r.y) / 2 },
+                    radius: a.radius,
+                    rotation: (mot.flipped ? a : b).rotation };
+      this.drawWheel(mid, style);
+    } else {
+      this.drawWheel(mot.leftWheel, style);
+      this.drawWheel(mot.rightWheel, style);
+    }
     this.drawFrame(mot, bx, by, rot, face);
     this.drawBear(mot, handlebar, toWorld, face, dead, rider);
   }
@@ -664,6 +681,8 @@ export class Renderer {
     ctx.lineCap = 'round';
     if (mot.body === 'space') { this.drawSpaceFrame(mot); ctx.restore(); return; }
     if (mot.body === 'heavy') { this.drawHeavyFrame(mot); ctx.restore(); return; }
+    if (mot.body === 'trike') { this.drawTrikeFrame(mot); ctx.restore(); return; }
+    if (mot.body === 'uni') { this.drawUniFrame(mot); ctx.restore(); return; }
 
     // Exhaust
     ctx.strokeStyle = '#9aa0aa';
@@ -964,6 +983,156 @@ export class Renderer {
     ctx.fill();
     ctx.strokeStyle = shade(base, -0.6);
     ctx.lineWidth = 0.03;
+    ctx.stroke();
+  }
+
+  /**
+   * Trehjulingen. A child's trike, which from the side is a big front
+   * wheel, a little one at the back and not much in between: a bent bar
+   * from the headstock down to the back axle, a low saddle on top of it,
+   * and the second rear wheel showing past the first.
+   *
+   * Drawn in bike-local metres inside the caller's transform.
+   */
+  drawTrikeFrame(mot) {
+    const { ctx } = this;
+    const base = mot.frameColor || '#e2563f';
+    const rot = mot.bike.rotation;
+    const i = { x: Math.cos(rot), y: Math.sin(rot) };
+    const j = rot90(i);
+    const face = mot.flipped ? 1 : -1;
+    const toLocal = (p) => {
+      const dx = p.x - mot.bike.r.x;
+      const dy = p.y - mot.bike.r.y;
+      return { x: (dx * i.x + dy * i.y) * face, y: dx * j.x + dy * j.y };
+    };
+
+    // The far rear wheel, behind the near one and darker, which is the
+    // whole "three wheels" of it. A trike's back pair stand side by side,
+    // so from here the second one is a disc peeping out past the first.
+    const rear = toLocal((mot.flipped ? mot.leftWheel : mot.rightWheel).r);
+    const rr = (mot.flipped ? mot.leftWheel : mot.rightWheel).radius;
+    ctx.beginPath();
+    ctx.arc(rear.x - 0.1, rear.y + 0.07, rr * 0.92, 0, TURN);
+    ctx.fillStyle = '#1a1d24';
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(rear.x - 0.1, rear.y + 0.07, rr * 0.45, 0, TURN);
+    ctx.fillStyle = '#596170';
+    ctx.fill();
+
+    // The backbone: one bent tube from the headstock back over the axle.
+    ctx.strokeStyle = base;
+    ctx.lineWidth = 0.13;
+    ctx.beginPath();
+    ctx.moveTo(0.34, 0.2);
+    ctx.lineTo(0.0, -0.06);
+    ctx.lineTo(-0.44, -0.08);
+    ctx.stroke();
+
+    // The step between the wheels, which is the bit a child stands on.
+    roundRect(ctx, -0.46, -0.16, 0.34, 0.09, 0.04);
+    ctx.fillStyle = shade(base, -0.35);
+    ctx.fill();
+
+    // Saddle: low, wide and plastic, sitting over the back axle.
+    ctx.beginPath();
+    ctx.moveTo(-0.46, 0.0);
+    ctx.quadraticCurveTo(-0.5, 0.22, -0.26, 0.24);
+    ctx.lineTo(0.02, 0.22);
+    ctx.quadraticCurveTo(0.14, 0.2, 0.08, 0.08);
+    ctx.lineTo(-0.2, 0.02);
+    ctx.closePath();
+    const g = ctx.createLinearGradient(-0.5, 0, 0.1, 0.26);
+    g.addColorStop(0, shade(base, -0.28));
+    g.addColorStop(1, shade(base, 0.3));
+    ctx.fillStyle = g;
+    ctx.fill();
+    ctx.strokeStyle = shade(base, -0.55);
+    ctx.lineWidth = 0.03;
+    ctx.stroke();
+
+    // Headstock up to a high, wide bar — the other half of what makes a
+    // trike look like a trike: the bear reaches up to it, not down.
+    ctx.strokeStyle = shade(base, -0.2);
+    ctx.lineWidth = 0.09;
+    ctx.beginPath();
+    ctx.moveTo(0.34, 0.2);
+    ctx.lineTo(0.56, 0.44);
+    ctx.stroke();
+    ctx.strokeStyle = '#d8dee8';
+    ctx.lineWidth = 0.08;
+    ctx.beginPath();
+    ctx.moveTo(0.44, 0.46);
+    ctx.lineTo(0.7, 0.44);
+    ctx.stroke();
+    // A streamer off the end of the bar, because it is that kind of
+    // machine.
+    ctx.strokeStyle = '#ffd27a';
+    ctx.lineWidth = 0.035;
+    ctx.beginPath();
+    ctx.moveTo(0.7, 0.44);
+    ctx.quadraticCurveTo(0.86, 0.4, 0.94, 0.3);
+    ctx.moveTo(0.7, 0.44);
+    ctx.quadraticCurveTo(0.88, 0.46, 0.98, 0.42);
+    ctx.stroke();
+  }
+
+  /**
+   * Enhjulingen. A post, a saddle and a grip to hold, over the one wheel
+   * drawBike has already drawn as a single circle.
+   *
+   * There is deliberately no handlebar on the machine and there is
+   * deliberately a grip: the bear's arm is drawn to a fixed point out
+   * front on every two-wheeler, so with nothing there he reaches into
+   * space. A seat-post handle is a real thing on a real unicycle and it
+   * gives the arm somewhere to go.
+   *
+   * Drawn in bike-local metres inside the caller's transform.
+   */
+  drawUniFrame(mot) {
+    const { ctx } = this;
+    const base = mot.frameColor || '#f2c14e';
+
+    // The post, from the hub up to the saddle. Short and fat, and the
+    // only thing between the wheel and the bear.
+    roundRect(ctx, -0.07, -0.5, 0.14, 0.76, 0.06);
+    const g = ctx.createLinearGradient(-0.07, 0, 0.07, 0);
+    g.addColorStop(0, shade(base, -0.4));
+    g.addColorStop(0.5, base);
+    g.addColorStop(1, shade(base, -0.25));
+    ctx.fillStyle = g;
+    ctx.fill();
+    ctx.strokeStyle = shade(base, -0.6);
+    ctx.lineWidth = 0.03;
+    ctx.stroke();
+
+    // Saddle: narrow, and tipped the way you are going.
+    ctx.beginPath();
+    ctx.moveTo(-0.26, 0.24);
+    ctx.quadraticCurveTo(-0.3, 0.36, -0.16, 0.36);
+    ctx.lineTo(0.18, 0.34);
+    ctx.quadraticCurveTo(0.3, 0.32, 0.24, 0.24);
+    ctx.closePath();
+    ctx.fillStyle = '#2a3140';
+    ctx.fill();
+    ctx.strokeStyle = '#191d26';
+    ctx.lineWidth = 0.03;
+    ctx.stroke();
+
+    // The grip: a stalk off the nose of the saddle with a bar across it,
+    // right where the bear's hand already goes.
+    ctx.strokeStyle = shade(base, -0.15);
+    ctx.lineWidth = 0.055;
+    ctx.beginPath();
+    ctx.moveTo(0.22, 0.3);
+    ctx.lineTo(0.56, 0.44);
+    ctx.stroke();
+    ctx.strokeStyle = '#d8dee8';
+    ctx.lineWidth = 0.07;
+    ctx.beginPath();
+    ctx.moveTo(0.5, 0.45);
+    ctx.lineTo(0.66, 0.43);
     ctx.stroke();
   }
 
